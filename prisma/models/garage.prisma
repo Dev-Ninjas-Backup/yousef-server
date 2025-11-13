@@ -1,0 +1,102 @@
+// ======================
+//  GARAGE MODEL
+// ======================
+
+model Garage {
+    id           String  @id @default(uuid())
+    name         String  @unique
+    coverPhoto   String?
+    profileImage String?
+    phone        String?
+    email        String? @unique
+    street       String?
+    city         String?
+    emirate      String?
+
+    description    String?
+    certifications String?
+
+    // Relations
+    workingHours   WorkingHour[]
+    services       GarageService[]
+    brandExpertise GarageBrand[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// ======================
+//  WORKING HOURS
+// ======================
+
+model WorkingHour {
+    id        String  @id @default(uuid())
+    dayType   DayType // ENUM (Weekdays / Weekends)
+    startTime String
+    endTime   String
+
+    garageId String
+    garage   Garage @relation(fields: [garageId], references: [id])
+
+    @@unique([garageId, dayType]) // Only one record per dayType/garage
+}
+
+// ======================
+//  SERVICE MASTER LIST
+// ======================
+
+model Service {
+    id   String @id @default(uuid())
+    icon String
+    name String @unique
+
+    garages GarageService[]
+}
+
+// ======================
+//  GARAGE ↔ SERVICE (M2M)
+// ======================
+
+model GarageService {
+    garageId  String
+    serviceId String
+
+    garage  Garage  @relation(fields: [garageId], references: [id])
+    service Service @relation(fields: [serviceId], references: [id])
+
+    @@id([garageId, serviceId])
+}
+
+// ======================
+//  BRAND MASTER LIST
+// ======================
+
+model BrandExpertise {
+    id   String @id @default(uuid())
+    name String @unique
+
+    garages GarageBrand[]
+}
+
+// ======================
+// GARAGE ↔ BRAND (M2M)
+// ======================
+
+model GarageBrand {
+    garageId String
+    brandId  String
+
+    garage Garage         @relation(fields: [garageId], references: [id])
+    brand  BrandExpertise @relation(fields: [brandId], references: [id])
+
+    @@id([garageId, brandId])
+}
+
+// =====================
+// ENUMS
+// =====================
+
+enum DayType {
+    WEEKDAYS
+    WEEKENDS
+}
