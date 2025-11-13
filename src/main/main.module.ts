@@ -11,6 +11,7 @@ import { awsModule } from './shared/aws/aws.module';
 
 import { TestawsModule } from './testaws/testaws.module';
 import { UsersModule } from './users/users.module';
+import { GarageModule } from './garage/garage.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UsersModule } from './users/users.module';
     awsModule,
     TestawsModule,
     UsersModule,
+    GarageModule,
   ],
   controllers: [],
   providers: [],
