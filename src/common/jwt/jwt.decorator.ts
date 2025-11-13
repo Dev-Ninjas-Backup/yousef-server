@@ -40,11 +40,11 @@ export function ValidateSuperAdmin() {
 }
 
 export function ValidateContibutor() {
-  return ValidateAuth(UserEnum.CONTIBUTOR, UserEnum.SUPER_ADMIN);
+  return ValidateAuth(UserEnum.CAR_OWNER, UserEnum.SUPER_ADMIN);
 }
 
 export function ValidateAdmin() {
-  return ValidateAuth(UserEnum.ADMIN, UserEnum.SUPER_ADMIN);
+  return ValidateAuth(UserEnum.GARAGE_OWNER, UserEnum.SUPER_ADMIN);
 }
 export function ValidateMember() {
   return ValidateAuth(UserEnum.MEMBER, UserEnum.SUPER_ADMIN);
@@ -52,10 +52,10 @@ export function ValidateMember() {
 
 export function ValidateUser() {
   return ValidateAuth(
-    UserEnum.USER,
+    UserEnum.CAR_OWNER,
     UserEnum.SUPER_ADMIN,
     UserEnum.MEMBER,
-    UserEnum.ADMIN,
-    UserEnum.CONTIBUTOR,
+    UserEnum.GARAGE_OWNER,
+  
   );
 }

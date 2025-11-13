@@ -33,38 +33,59 @@ export class AuthService {
 
   // ---------- ----------REGISTER (send email verification OTP) ----------
 
-  @HandleError('Failed to Register profile', 'Register ')
+  @HandleError('Failed to Register profile', 'Register')
   async register(payload: RegisterDto) {
-    const { email, password, confirmPassword, fullName } = payload;
+    const {
+      email,
+      password,
+      confirmPassword,
+      fullName,
+      phone,
+      role,
+      serviceCategory,
+      reviewAlerts,
+    } = payload;
 
-    // Check if passwords match
+    // Step 1: Validate password match
     if (password !== confirmPassword) {
       throw new AppError(400, 'Passwords do not match');
     }
 
-    // Check if user already exists
-    const existing = await this.prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      throw new AppError(400, 'User already exists with this email');
+    // Step 2: Check if user already exists by email or phone
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { phone }],
+      },
+    });
+
+    if (existingUser) {
+      throw new AppError(
+        400,
+        'User already exists with this email or phone number',
+      );
     }
 
-    // Hash the password
+    // Step 3: Hash password
     const hashedPassword = await this.utils.hash(password);
 
-    // Create new user
+    // Step 4: Create new user
     const newUser = await this.prisma.user.create({
       data: {
-        email,
         fullName,
+        email,
+        phone,
         password: hashedPassword,
+        role,
+        serviceCategory, 
+
         isVerified: false,
       },
     });
 
-    // Generate OTP
+    // Step 5: Generate OTP and expiry
     const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
 
-    // Store OTP and expiry in user record
+    // Step 6: Store OTP + expiry
     await this.prisma.user.update({
       where: { id: newUser.id },
       data: {
@@ -73,25 +94,29 @@ export class AuthService {
       },
     });
 
-    // Send OTP email
+    // Step 7: Send verification email
     await this.mail.sendEmail(
       email,
       'Verify Your Email',
       `
-      <h3>Hi,</h3>
-      <p>Use the OTP below to verify your email:</p>
-      <h2>${otp}</h2>
-      <p>This OTP will expire in 10 minutes.</p>
+    <h3>Hi ${fullName || 'User'},</h3>
+    <p>Use the OTP below to verify your email:</p>
+    <h2>${otp}</h2>
+    <p>This OTP will expire in 10 minutes.</p>
     `,
     );
 
-    // Generate JWT token for verification
-    const jwtPayload = { id: newUser.id };
-    const resetToken = await this.jwt.signAsync(jwtPayload, {
+    // Step 8: Generate JWT token for email verification
+    const jwtPayload = { id: newUser.id, email };
+    const verifyToken = await this.jwt.signAsync(jwtPayload, {
       expiresIn: '10m',
     });
 
-    return { resetToken };
+    return {
+      message:
+        'Registration successful. Please verify your email with the OTP sent.',
+      verifyToken,
+    };
   }
 
   // ---------- LOGIN (require verified) ----------
@@ -123,7 +148,7 @@ export class AuthService {
     return successResponse({ token, user: safeUser }, 'Login successful');
   }
 
-  //  ------------------forgot passowrd--------------
+  //  ------------------forgot password--------------
 
   async forgetPassword(payload: ForgotPasswordDto) {
     const { email } = payload;
