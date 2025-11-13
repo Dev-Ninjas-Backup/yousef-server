@@ -1,18 +1,21 @@
+// src/auth/dto/register.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { 
-  IsEmail, 
-  IsEnum, 
-  IsNotEmpty, 
-  IsOptional, 
-  IsString, 
-  MinLength, 
-  IsBoolean 
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+  IsArray,
+  ArrayNotEmpty,
+  ValidateIf,
 } from 'class-validator';
-import { UserRole, ServiceCategory } from '@prisma/client'; // import enums directly from Prisma types
+import { UserRole, ServiceCategory } from '@prisma/client';
 
 export class RegisterDto {
   @ApiProperty({
-    example: 'Md Nadim',
+    example: 'Md joy',
     description: 'Full name of the user',
     required: false,
   })
@@ -54,27 +57,27 @@ export class RegisterDto {
   @ApiProperty({
     example: 'GARAGE_OWNER',
     enum: UserRole,
-    description: 'Role of the user (CAR_OWNER, GARAGE_OWNER, SUPER_ADMIN, MEMBER)',
+    description: 'Role of the user',
   })
   @IsEnum(UserRole)
   role: UserRole;
 
+  // ---------- MULTIPLE CATEGORIES ----------
   @ApiProperty({
-    example: 'MECHANICAL_REPAIR',
+    type: [String],
     enum: ServiceCategory,
+    example: ['MECHANICAL_REPAIR', 'BODY_AND_PAINT'],
+    description:
+      'Service categories the garage offers. **Required when role = GARAGE_OWNER**',
     required: false,
-    description: 'Service category (optional, required for GARAGE_OWNER)',
   })
-  @IsOptional()
-  @IsEnum(ServiceCategory)
-  serviceCategory?: ServiceCategory;
 
-  @ApiProperty({
-    example: false,
-    description: 'Whether review alerts are enabled',
-    required: false,
-  })
   @IsOptional()
-  @IsBoolean()
-  reviewAlerts?: boolean;
+  @IsArray()
+  @IsEnum(ServiceCategory, { each: true })
+  @ValidateIf((o) => o.role === UserRole.GARAGE_OWNER)
+  @ArrayNotEmpty({
+    message: 'At least one service category is required for GARAGE_OWNER',
+  })
+  serviceCategories?: ServiceCategory[];
 }

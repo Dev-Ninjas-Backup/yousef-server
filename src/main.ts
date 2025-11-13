@@ -21,6 +21,7 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       const allowedOrigins = [
+        'http://localhost:5050',
         'https://beta.australiancanvas.com',
         'https://indiansydny.vercel.app',
         'http://localhost:3000',
@@ -60,7 +61,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '5000', 10);
   await app.listen(port);
-  console.log(`🚀 Server running on http://localhost:${port}`);
-  console.log(`📑 Swagger docs available at http://localhost:${port}/docs`);
+  console.log(` Server running on http://localhost:${port}`);
+  console.log(`Swagger docs available at http://localhost:${port}/docs`);
 }
 bootstrap();
