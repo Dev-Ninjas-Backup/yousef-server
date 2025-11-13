@@ -5,10 +5,14 @@ import { UpdateGarageDto } from '../dto/update-garage.dto';
 
 @Injectable()
 export class GarageService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // CREATE
   async create(createGarageDto: CreateGarageDto) {
+    const brandArray = createGarageDto.brandExpertise
+      ? createGarageDto.brandExpertise.split(',').map(b => b.trim())
+      : [];
+
     return this.prisma.garage.create({
       data: {
         name: createGarageDto.name,
@@ -21,6 +25,9 @@ export class GarageService {
         emirate: createGarageDto.emirate,
         description: createGarageDto.description,
         certifications: createGarageDto.certifications,
+        weekdaysHours: createGarageDto.weekdaysHours,
+        weekendsHours: createGarageDto.weekendsHours,
+        brandExpertise: brandArray,
       },
     });
   }
@@ -29,9 +36,7 @@ export class GarageService {
   async findAll() {
     return this.prisma.garage.findMany({
       include: {
-        workingHours: true,
         services: { include: { service: true } },
-        brandExpertise: { include: { brand: true } },
       },
     });
   }
@@ -41,9 +46,7 @@ export class GarageService {
     const garage = await this.prisma.garage.findUnique({
       where: { id },
       include: {
-        workingHours: true,
         services: { include: { service: true } },
-        brandExpertise: { include: { brand: true } },
       },
     });
     if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
@@ -55,9 +58,13 @@ export class GarageService {
     const garage = await this.prisma.garage.findUnique({ where: { id } });
     if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
 
-    const data = Object.fromEntries(
-      Object.entries(updateGarageDto).filter(([_, v]) => v !== undefined),
-    );
+    const data: any = { ...updateGarageDto };
+
+    if (updateGarageDto.brandExpertise) {
+      data.brandExpertise = updateGarageDto.brandExpertise.split(',').map(b => b.trim());
+    }
+
+    Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
 
     return this.prisma.garage.update({ where: { id }, data });
   }

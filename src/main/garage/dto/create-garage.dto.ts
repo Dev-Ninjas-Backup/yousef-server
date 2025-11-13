@@ -16,38 +16,53 @@ export class CreateGarageDto {
   @IsOptional()
   profileImage?: string;
 
-  @ApiProperty({ description: 'Contact phone number of the garage', example: '+971-50-123-4567', required: false })
+  @ApiProperty({ description: 'Contact phone number', example: '+971-50-123-4567', required: false })
   @IsString()
   @IsOptional()
   phone?: string;
 
-  @ApiProperty({ description: 'Contact email of the garage', example: 'contact@eliteauto.com', required: false })
+  @ApiProperty({ description: 'Contact email', example: 'contact@eliteauto.com', required: false })
   @IsEmail()
   @IsOptional()
   email?: string;
 
-  @ApiProperty({ description: 'Street address of the garage', example: '123 Sheikh Zayed Road', required: false })
+  @ApiProperty({ description: 'Street address', example: '123 Sheikh Zayed Road', required: false })
   @IsString()
   @IsOptional()
   street?: string;
 
-  @ApiProperty({ description: 'City where the garage is located', example: 'Dubai', required: false })
+  @ApiProperty({ description: 'City', example: 'Dubai', required: false })
   @IsString()
   @IsOptional()
   city?: string;
 
-  @ApiProperty({ description: 'Emirate where the garage is located', example: 'Dubai', required: false })
+  @ApiProperty({ description: 'Emirate', example: 'Dubai', required: false })
   @IsString()
   @IsOptional()
   emirate?: string;
 
-  @ApiProperty({ description: 'Description of the garage services', example: 'Specialized in luxury car repairs', required: false })
+  @ApiProperty({ description: 'Description', example: 'Specialized in luxury car repairs', required: false })
   @IsString()
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ description: 'Certifications held by the garage', example: 'ISO 9001, ASE Certified', required: false })
+  @ApiProperty({ description: 'Certifications', example: 'ISO 9001, ASE Certified', required: false })
   @IsString()
   @IsOptional()
   certifications?: string;
+
+  @ApiProperty({ description: 'Weekdays working hours', example: '08:00 AM - 08:00 PM', required: false })
+  @IsString()
+  @IsOptional()
+  weekdaysHours?: string;
+
+  @ApiProperty({ description: 'Weekends working hours', example: '09:00 AM - 06:00 PM', required: false })
+  @IsString()
+  @IsOptional()
+  weekendsHours?: string;
+
+  @ApiProperty({ description: 'Comma-separated brand expertise', example: 'BMW,Toyota,Nissan', required: false })
+  @IsString()
+  @IsOptional()
+  brandExpertise?: string;
 }

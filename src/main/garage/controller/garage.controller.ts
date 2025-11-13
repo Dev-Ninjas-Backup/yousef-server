@@ -31,7 +31,7 @@ export class GarageController {
   @ApiResponse({ status: 201, description: 'The garage has been successfully created.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   create(@Body() createGarageDto: CreateGarageDto) {
-    console.log("Test debug");
+    console.log('POST /garages hit', createGarageDto);
     return this.garageService.create(createGarageDto);
   }
 
