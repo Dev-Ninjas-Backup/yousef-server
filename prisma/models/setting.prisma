@@ -1,0 +1,148 @@
+model PrivacyPolicy {
+  id      String @id @default(uuid())
+  title   String @unique
+  subtext String
+}
+
+model TermsConditions {
+  id      String @id @default(uuid())
+  title   String @unique
+  content String
+}
+
+// -----------------faq sections----------------------
+model FaqSection {
+  id           String @id @default(uuid())
+  sectionTitle String
+
+  faqs Faq[]
+}
+
+model Faq {
+  id        String     @id @default(uuid())
+  question  String
+  answer    String
+  sectionId String
+  section   FaqSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+}
+
+model Language {
+  id          String       @id @default(uuid())
+  languageuse Int?         @default(0)
+  language    LanguageType
+}
+
+model Ads {
+  id         String      @id @default(uuid())
+  title      String
+  link       String?
+  adsimage   String
+  subtitle   String?
+  adsposition AdsPostion?
+}
+
+enum AdsPostion {
+  FRONTPAGE
+  CATEGORYPAGE
+}
+
+enum LanguageType {
+  Afrikaans
+  Albanian
+  Amharic
+  Arabic
+  Armenian
+  Assamese
+  Azerbaijani
+  Basque
+  Belarusian
+  Bengali
+  Bosnian
+  Bulgarian
+  Burmese
+  Catalan
+  Chinese
+  Croatian
+  Czech
+  Danish
+  Dutch
+  English
+  Estonian
+  Filipino
+  Finnish
+  French
+  Galician
+  Georgian
+  German
+  Greek
+  Gujarati
+  HaitianCreole
+  Hausa
+  Hebrew
+  Hindi
+  Hungarian
+  Icelandic
+  Igbo
+  Indonesian
+  Irish
+  Italian
+  Japanese
+  Javanese
+  Kannada
+  Kazakh
+  Khmer
+  Korean
+  Kurdish
+  Kyrgyz
+  Lao
+  Latvian
+  Lithuanian
+  Macedonian
+  Malagasy
+  Malay
+  Malayalam
+  Maltese
+  Maori
+  Marathi
+  Mongolian
+  Nepali
+  Norwegian
+  Odia
+  Pashto
+  Persian
+  Polish
+  Portuguese
+  Punjabi
+  Romanian
+  Russian
+  Samoan
+  ScotsGaelic
+  Serbian
+  Sesotho
+  Shona
+  Sindhi
+  Sinhala
+  Slovak
+  Slovenian
+  Somali
+  Spanish
+  Sundanese
+  Swahili
+  Swedish
+  Tajik
+  Tamil
+  Tatar
+  Telugu
+  Thai
+  Turkish
+  Turkmen
+  Ukrainian
+  Urdu
+  Uzbek
+  Vietnamese
+  Welsh
+  Xhosa
+  Yiddish
+  Yoruba
+  Zulu
+}

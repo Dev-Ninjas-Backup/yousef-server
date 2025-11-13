@@ -1,0 +1,37 @@
+model Notification {
+  id String @id @default(uuid())
+
+  type    NotificationType
+  title   String
+  message String
+  meta Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  users UserNotification[] 
+}
+
+enum NotificationType {
+ contentStatus
+  LiveEvent
+  Shift
+  UserRolechange
+}
+
+model UserNotification {
+  id String @id @default(uuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notificationId String
+
+  read Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, notificationId]) 
+}

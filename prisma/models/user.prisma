@@ -1,0 +1,45 @@
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  fullName     String?
+  password     String?
+  role         UserRole @default(USER)
+  profilePhoto String?
+  bio          String?
+  // ------------------google -varify------------------------------------
+
+  googleId       String?   @unique
+  emailOtp       Int?
+  otpExpiry      DateTime?
+  isVerified     Boolean   @default(false)
+  ReviewAlerts   Boolean   @default(false)
+  // ---------------Password reset OTP----------------------
+  resetOtp       Int?
+  resetOtpExpiry DateTime?
+
+  isActive    Boolean   @default(true)
+  isDeleted   Boolean   @default(false)
+  isContibute Boolean   @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  // ------ Relations----------------------
+
+  UserNotification   UserNotification[]
+  notificationToggle NotificationToggle?
+
+  // -----------------Membership----------------------
+  Payment            Payment[]
+  subscriptionEndsAt DateTime?
+  isMembership       Boolean   @default(false)
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+  MEMBER
+  CONTIBUTOR
+}

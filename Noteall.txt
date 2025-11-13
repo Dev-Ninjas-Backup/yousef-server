@@ -1,0 +1,88 @@
+
+superadmin=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDllMDMxNy05MjExLTRkMDktYTQ4ZS1lZGZjYmJlZDFhZDMiLCJlbWFpbCI6ImNvZGluZ3g0M0BnbWFpbC5jb20iLCJyb2xlcyI6IlNVUEVSX0FETUlOIiwiaWF0IjoxNzU2ODkwNTE2LCJleHAiOjE3NjQ2NjY1MTZ9.
+EcXb9g3FNSe4jSrwPBjIU5WfyeHrakzn6rXpnBcrxT4
+ngrok http --url=ruling-kitten-evolved.ngrok-free.app 5000
+https://ruling-kitten-evolved.ngrok-free.app/docs
+
+npx prisma migrate dev --name init
+ npx nest g resource main/recommendation
+
+
+#------------- agora --------------------
+Secret will not be stored or displayed on the console after download. Please keep it in a safe place.
+Key: 1477f33546b0489caf01e3c460ffc700
+Secret: ee5031a115364163a97fdca89b19b971
+
+
+ Prisma CLI Commands
+🔹 Project Setup
+npx prisma init
+
+
+Setup Prisma in your app (schema.prisma, .env, etc.)
+
+🔹Code Generation
+prisma generate
+
+
+Generate Prisma Client (query builder for DB)
+
+🔹 Migrations
+prisma migrate dev --name <migration_name>
+
+
+🔹Create & apply migrations during development
+
+npx prisma migrate deploy
+
+
+🔹Apply pending migrations in production
+
+npx prisma migrate reset
+
+
+Drop DB, reapply migrations & seed (⚠️ deletes data)
+
+🔹 Database Commands
+prisma db push
+
+
+🔹🔹Push schema state to DB without migrations
+
+prisma db pull
+
+
+🔹Introspect DB → update schema.prisma
+
+prisma db seed
+
+
+Run the seeding script (e.g., prisma/seed.ts)
+
+🔹 Tools
+prisma studio
+
+
+🔹Open Prisma Studio (GUI for DB)
+
+npx prisma format
+
+
+🔹Format schema.prisma
+
+npx prisma validate
+
+
+🔹Validate schema for errors
+
+prisma version
+
+
+🔹Show Prisma CLI & Engine versions
+
+prisma --help
+
+
+Show help menu (list of all
+
+/uploads/nest_uploads/1757245807910_imgi_205_360_F_191891230_LRAZDEd8EZuG1SPmLMWGZfgVTRMP2zyD.jpg
