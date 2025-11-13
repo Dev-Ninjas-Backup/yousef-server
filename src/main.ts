@@ -6,14 +6,14 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filter/http-exception.filter';
 import * as bodyParser from 'body-parser';
-import { credential } from 'firebase-admin';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // --------------Swagger config with Bearer Auth------------------
   const config = new DocumentBuilder()
-    .setTitle('indianssydney backend')
-    .setDescription('Team indianssydney API description')
+    .setTitle('yousel-backend')
+    .setDescription('Team yousel-backend API description')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -28,7 +28,7 @@ async function bootstrap() {
         'https://api.australiancanvas.com/docs',
         'https://australiancanvas.com',
         'https://beta.australiancanvas.com',
-        'https://ai.australiancanvas.com'
+        'https://ai.australiancanvas.com',
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
