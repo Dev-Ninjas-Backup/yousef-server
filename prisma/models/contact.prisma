@@ -1,0 +1,14 @@
+model Contact {
+    id        String @id @default(uuid())
+    FirstName String
+    LastName  String
+    email     String
+    subject   ContactSubject  
+    message   String
+}
+
+enum ContactSubject {
+ CAR_PARTS
+ CAR_SERVICE
+ OTHERS
+}

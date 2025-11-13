@@ -33,38 +33,74 @@ export class AuthService {
 
   // ---------- ----------REGISTER (send email verification OTP) ----------
 
-  @HandleError('Failed to Register profile', 'Register ')
+  @HandleError('Failed to Register profile', 'Register')
   async register(payload: RegisterDto) {
-    const { email, password, confirmPassword, fullName } = payload;
+    const {
+      email,
+      password,
+      confirmPassword,
+      fullName,
+      phone,
+      role,
+      serviceCategories,
+    } = payload;
 
-    // Check if passwords match
+    console.log('fix the issue', payload);
+    // Validate password match
     if (password !== confirmPassword) {
       throw new AppError(400, 'Passwords do not match');
     }
 
-    // Check if user already exists
-    const existing = await this.prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      throw new AppError(400, 'User already exists with this email');
+    // Check if user already exists by email or phone
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { phone }],
+      },
+    });
+
+    if (existingUser) {
+      throw new AppError(
+        400,
+        'User already exists with this email or phone number',
+      );
     }
 
-    // Hash the password
+    // Hash password
     const hashedPassword = await this.utils.hash(password);
+
+    // Setup trial for GARAGE_OWNER (2 months free)
+    let trialStart: Date | null = null;
+    let trialEnd: Date | null = null;
+    let isTrialActive = false;
+
+    if (role === 'GARAGE_OWNER') {
+      trialStart = new Date();
+      trialEnd = new Date(trialStart);
+      trialEnd.setMonth(trialEnd.getMonth() + 2);
+      isTrialActive = true;
+    }
 
     // Create new user
     const newUser = await this.prisma.user.create({
       data: {
-        email,
         fullName,
+        email,
+        phone,
         password: hashedPassword,
+        role,
+        serviceCategories: { set: serviceCategories || [] },
         isVerified: false,
+        trialStartDate: trialStart,
+        trialEndDate: trialEnd,
+        isTrialActive,
+        freeProductsListing: 0,
       },
     });
 
-    // Generate OTP
+    // Generate OTP and expiry
     const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
 
-    // Store OTP and expiry in user record
+    // Store OTP + expiry
     await this.prisma.user.update({
       where: { id: newUser.id },
       data: {
@@ -73,25 +109,29 @@ export class AuthService {
       },
     });
 
-    // Send OTP email
+    // Send verification email
     await this.mail.sendEmail(
       email,
       'Verify Your Email',
       `
-      <h3>Hi,</h3>
-      <p>Use the OTP below to verify your email:</p>
-      <h2>${otp}</h2>
-      <p>This OTP will expire in 10 minutes.</p>
+    <h3>Hi ${fullName || 'User'},</h3>
+    <p>Use the OTP below to verify your email:</p>
+    <h2>${otp}</h2>
+    <p>This OTP will expire in 10 minutes.</p>
     `,
     );
 
-    // Generate JWT token for verification
-    const jwtPayload = { id: newUser.id };
-    const resetToken = await this.jwt.signAsync(jwtPayload, {
+    // Generate JWT token for email verification
+    const jwtPayload = { id: newUser.id, email };
+    const verifyToken = await this.jwt.signAsync(jwtPayload, {
       expiresIn: '10m',
     });
 
-    return { resetToken };
+    return {
+      message:
+        'Registration successful. Please verify your email with the OTP sent.',
+      verifyToken,
+    };
   }
 
   // ---------- LOGIN (require verified) ----------
@@ -123,7 +163,7 @@ export class AuthService {
     return successResponse({ token, user: safeUser }, 'Login successful');
   }
 
-  //  ------------------forgot passowrd--------------
+  //  ------------------forgot password--------------
 
   async forgetPassword(payload: ForgotPasswordDto) {
     const { email } = payload;

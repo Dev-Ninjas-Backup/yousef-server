@@ -21,7 +21,7 @@ export class AuthController {
   ) {}
 
 //  -------------- User Registration --------------
-  @ApiOperation({ summary: 'User Registration with Email' })
+  @ApiOperation({ summary: 'User Registration with Email ' })
   @Post('register')
   async register(@Body() body: RegisterDto) {
     return this.authService.register(body);

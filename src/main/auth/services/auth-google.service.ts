@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { GoogleLoginDto } from '../dto/google-login.dto';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
@@ -13,6 +12,7 @@ import {
 } from 'src/common/utilsResponse/response.util';
 import { AppError } from 'src/common/error/handle-error.app';
 import { UserResponseDto } from 'src/common/dto/user-response.dto';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthGoogleService {
@@ -36,24 +36,29 @@ export class AuthGoogleService {
       throw new AppError(400, 'Google ID token is required');
     }
 
+    //  Verify Google token
     const payload = await this.verifyGoogleIdToken(idToken);
 
-    // * Check if user already exists
+    //  Find user by email
     let user = await this.prisma.user.findUnique({
       where: { email: payload.email },
     });
 
+    //  If user not found, create one
     if (!user) {
-      // * Create new user
       user = await this.prisma.user.create({
         data: {
           email: payload.email as string,
+          fullName: payload.name || '',
           googleId: payload.sub,
           isVerified: true,
+          role: UserRole.CAR_OWNER,
+          isActive: true,
+          isDeleted: false,
         },
       });
     } else if (!user.googleId) {
-      // * Link Google account to existing user
+      //  Link Google account if exists but not linked
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {
@@ -63,21 +68,24 @@ export class AuthGoogleService {
       });
     }
 
+    //  Generate JWT token
     const token = this.utils.generateToken({
       sub: user.id,
       email: user.email,
       roles: user.role,
     });
 
+    //  Return sanitized user + token
     return successResponse(
       {
         user: this.utils.sanitizedResponse(UserResponseDto, user),
         token,
       },
-      'User logged in successfully',
+      'User logged in successfully via Google',
     );
   }
 
+  // Verify the Google ID Token and extract user info
   private async verifyGoogleIdToken(idToken: string): Promise<TokenPayload> {
     const ticket = await this.googleClient.verifyIdToken({
       idToken,

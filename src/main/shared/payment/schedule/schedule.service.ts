@@ -31,7 +31,7 @@ export class ScheduleService {
       await this.prisma.user.update({
         where: { id: user.id },
         data: {
-          role: 'USER',
+          role: 'CAR_OWNER',
           isMembership: false,
           subscriptionEndsAt: null,
         },
