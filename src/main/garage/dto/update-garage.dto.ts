@@ -56,12 +56,20 @@ export class UpdateGarageDto {
   @IsOptional()
   street?: string;
 
-  @ApiProperty({ description: 'City (optional for update)', example: 'Dubai', required: false })
+  @ApiProperty({
+    description: 'City (optional for update)',
+    example: 'Dubai',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   city?: string;
 
-  @ApiProperty({ description: 'Emirate (optional for update)', example: 'Dubai', required: false })
+  @ApiProperty({
+    description: 'Emirate (optional for update)',
+    example: 'Dubai',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   emirate?: string;

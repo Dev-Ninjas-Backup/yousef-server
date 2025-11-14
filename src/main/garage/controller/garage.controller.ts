@@ -21,7 +21,11 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { GetUser, ValidateAuth, ValidateGarageOwner } from 'src/common/jwt/jwt.decorator';
+import {
+  GetUser,
+  ValidateAuth,
+  ValidateGarageOwner,
+} from 'src/common/jwt/jwt.decorator';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import { CreateGarageDto } from '../dto/create-garage.dto';
 import { UpdateGarageDto } from '../dto/update-garage.dto';
@@ -30,7 +34,7 @@ import { GarageService } from '../service/garage.service';
 @ApiTags('Garages')
 @Controller('garages')
 export class GarageController {
-  constructor(private readonly garageService: GarageService) { }
+  constructor(private readonly garageService: GarageService) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -67,7 +71,7 @@ export class GarageController {
     } = {},
   ) {
     console.log('POST /garages hit', { createGarageDto, files });
-    console.log("userId", userId);
+    console.log('userId', userId);
     return this.garageService.create(userId, createGarageDto, {
       coverPhoto: files.coverPhoto?.[0],
       profileImage: files.profileImage?.[0],
@@ -134,7 +138,7 @@ export class GarageController {
       profileImage?: Express.Multer.File[];
     } = {},
   ) {
-    console.log("userId", userId)
+    console.log('userId', userId);
     return this.garageService.update(userId, id, updateGarageDto, {
       coverPhoto: files.coverPhoto?.[0],
       profileImage: files.profileImage?.[0],
@@ -155,7 +159,7 @@ export class GarageController {
   @ApiResponse({ status: 404, description: 'Garage not found.' })
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@GetUser('userId') userId: string, @Param('id') id: string) {
-    console.log("userId", userId);
+    console.log('userId', userId);
     return this.garageService.remove(userId, id);
   }
 }
