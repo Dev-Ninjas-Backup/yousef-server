@@ -16,19 +16,17 @@ model Garage {
     description    String?
     certifications String?
 
-
-    weekdaysHours String?  
-    weekendsHours String?  
+    weekdaysHours String?
+    weekendsHours String?
 
     brandExpertise String[]
 
     // Relations
-    services       GarageService[]
+    services GarageService[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
-
 
 // ======================
 //  SERVICE MASTER LIST
@@ -50,12 +48,11 @@ model GarageService {
     garageId  String
     serviceId String
 
-    garage  Garage  @relation(fields: [garageId], references: [id])
-    service Service @relation(fields: [serviceId], references: [id])
+    garage  Garage  @relation(fields: [garageId], references: [id], onDelete: Cascade)
+    service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
     @@id([garageId, serviceId])
 }
-
 
 // =====================
 // ENUMS

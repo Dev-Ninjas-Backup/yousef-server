@@ -16,9 +16,9 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-import { GarageService } from '../service/garage.service';
 import { CreateGarageDto } from '../dto/create-garage.dto';
 import { UpdateGarageDto } from '../dto/update-garage.dto';
+import { GarageService } from '../service/garage.service';
 
 @ApiTags('Garages')
 @Controller('garages')
