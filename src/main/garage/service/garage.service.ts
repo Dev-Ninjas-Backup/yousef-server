@@ -14,7 +14,10 @@ export class GarageService {
   // CREATE
   async create(
     createGarageDto: CreateGarageDto,
-    files: { coverPhoto?: Express.Multer.File; profileImage?: Express.Multer.File } = {},
+    files: {
+      coverPhoto?: Express.Multer.File;
+      profileImage?: Express.Multer.File;
+    } = {},
   ) {
     let coverPhotoUrl: string | undefined;
     let profileImageUrl: string | undefined;
@@ -22,7 +25,9 @@ export class GarageService {
     // Process coverPhoto
     if (files.coverPhoto) {
       try {
-        const { url } = await this.s3FileService.processUploadedFile(files.coverPhoto);
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.coverPhoto,
+        );
         coverPhotoUrl = url;
       } catch (error) {
         throw new Error(`Failed to upload coverPhoto to S3: ${error.message}`);
@@ -32,10 +37,14 @@ export class GarageService {
     // Process profileImage
     if (files.profileImage) {
       try {
-        const { url } = await this.s3FileService.processUploadedFile(files.profileImage);
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.profileImage,
+        );
         profileImageUrl = url;
       } catch (error) {
-        throw new Error(`Failed to upload profileImage to S3: ${error.message}`);
+        throw new Error(
+          `Failed to upload profileImage to S3: ${error.message}`,
+        );
       }
     }
 
@@ -71,7 +80,10 @@ export class GarageService {
   async update(
     id: string,
     updateGarageDto: UpdateGarageDto,
-    files: { coverPhoto?: Express.Multer.File; profileImage?: Express.Multer.File } = {},
+    files: {
+      coverPhoto?: Express.Multer.File;
+      profileImage?: Express.Multer.File;
+    } = {},
   ) {
     const garage = await this.prisma.garage.findUnique({ where: { id } });
     if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
@@ -82,7 +94,9 @@ export class GarageService {
     // Process coverPhoto
     if (files.coverPhoto) {
       try {
-        const { url } = await this.s3FileService.processUploadedFile(files.coverPhoto);
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.coverPhoto,
+        );
         coverPhotoUrl = url;
       } catch (error) {
         throw new Error(`Failed to upload coverPhoto to S3: ${error.message}`);
@@ -92,10 +106,14 @@ export class GarageService {
     // Process profileImage
     if (files.profileImage) {
       try {
-        const { url } = await this.s3FileService.processUploadedFile(files.profileImage);
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.profileImage,
+        );
         profileImageUrl = url;
       } catch (error) {
-        throw new Error(`Failed to upload profileImage to S3: ${error.message}`);
+        throw new Error(
+          `Failed to upload profileImage to S3: ${error.message}`,
+        );
       }
     }
 
@@ -111,7 +129,9 @@ export class GarageService {
     if (brandArray) updateData.brandExpertise = brandArray;
 
     // Remove undefined fields
-    Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key],
+    );
 
     // Update database
     return this.prisma.garage.update({

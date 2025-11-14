@@ -40,10 +40,17 @@ export class GarageController {
         { name: 'coverPhoto', maxCount: 1 },
         { name: 'profileImage', maxCount: 1 },
       ],
-      new MulterService().createMulterOptions('./Uploads', 'content', FileType.IMAGE),
+      new MulterService().createMulterOptions(
+        './Uploads',
+        'content',
+        FileType.IMAGE,
+      ),
     ),
   )
-  @ApiResponse({ status: 201, description: 'The garage has been successfully created.' })
+  @ApiResponse({
+    status: 201,
+    description: 'The garage has been successfully created.',
+  })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   async create(
     @Body() createGarageDto: CreateGarageDto,
@@ -62,14 +69,21 @@ export class GarageController {
 
   @Get()
   @ApiOperation({ summary: 'Retrieve all garages' })
-  @ApiResponse({ status: 200, description: 'List of all garages with related data.' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all garages with related data.',
+  })
   findAll() {
     return this.garageService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a garage by ID' })
-  @ApiParam({ name: 'id', description: 'UUID of the garage', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID of the garage',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @ApiResponse({ status: 200, description: 'The garage details.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
   findOne(@Param('id') id: string) {
@@ -78,7 +92,11 @@ export class GarageController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a garage by ID' })
-  @ApiParam({ name: 'id', description: 'UUID of the garage', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID of the garage',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @ApiBody({ type: UpdateGarageDto })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -87,7 +105,11 @@ export class GarageController {
         { name: 'coverPhoto', maxCount: 1 },
         { name: 'profileImage', maxCount: 1 },
       ],
-      new MulterService().createMulterOptions('./Uploads', 'content', FileType.IMAGE),
+      new MulterService().createMulterOptions(
+        './Uploads',
+        'content',
+        FileType.IMAGE,
+      ),
     ),
   )
   @ApiResponse({ status: 200, description: 'The garage has been updated.' })
@@ -109,7 +131,11 @@ export class GarageController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a garage by ID' })
-  @ApiParam({ name: 'id', description: 'UUID of the garage', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @ApiParam({
+    name: 'id',
+    description: 'UUID of the garage',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @ApiResponse({ status: 204, description: 'The garage has been deleted.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
   @HttpCode(HttpStatus.NO_CONTENT)
