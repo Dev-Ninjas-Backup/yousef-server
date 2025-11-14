@@ -10,7 +10,7 @@ export class GarageService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) {}
+  ) { }
 
   // CREATE
   async create(

@@ -34,7 +34,7 @@ import { GarageService } from '../service/garage.service';
 @ApiTags('Garages')
 @Controller('garages')
 export class GarageController {
-  constructor(private readonly garageService: GarageService) {}
+  constructor(private readonly garageService: GarageService) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -70,8 +70,8 @@ export class GarageController {
       profileImage?: Express.Multer.File[];
     } = {},
   ) {
-    console.log('POST /garages hit', { createGarageDto, files });
-    console.log('userId', userId);
+    // console.log('POST /garages hit', { createGarageDto, files });
+    // console.log('userId', userId);
     return this.garageService.create(userId, createGarageDto, {
       coverPhoto: files.coverPhoto?.[0],
       profileImage: files.profileImage?.[0],
