@@ -10,7 +10,7 @@ export class GarageService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) { }
+  ) {}
 
   // CREATE
   async create(
@@ -104,9 +104,8 @@ export class GarageService {
     const isUser = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (userId !== garage.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
-      throw new Error("You are not authorized this route!");
+      throw new Error('You are not authorized this route!');
     }
-
 
     let coverPhotoUrl: string | undefined;
     let profileImageUrl: string | undefined;
@@ -239,7 +238,7 @@ export class GarageService {
     const isUser = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (userId !== isExist.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
-      throw new Error("You are not authorized this route!");
+      throw new Error('You are not authorized this route!');
     }
 
     const garage = await this.prisma.garage.findUnique({ where: { id } });
