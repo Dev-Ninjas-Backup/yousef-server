@@ -19,7 +19,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
-    private readonly fileService: FileService,
+
   ) {}
 
   // ------------------------- Update Password -----------------

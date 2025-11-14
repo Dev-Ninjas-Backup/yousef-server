@@ -1,14 +1,19 @@
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
+  id           String  @id @default(uuid())
+  email        String  @unique
   fullName     String?
   password     String?
   bio          String?
-  phone        String?   @unique
+  phone        String? @unique
   // ---------- file---------------------
   tradeLicense String?
   garageLogo   String?
   profilePhoto String?
+  // --------information-------
+  address      String?
+  city         String?
+  emirate      String?
+
   // ------------------ Google Authentication ------------------
   googleId     String?   @unique
   emailOtp     Int?
@@ -21,13 +26,27 @@ model User {
   resetOtpExpiry DateTime?
 
   // ------------------ Account Status -------------------------
-  isActive        Boolean          @default(true)
-  isDeleted       Boolean          @default(false)
-  deletedAt       DateTime?
-  isMembership    Boolean          @default(false)
+  isActive                Boolean   @default(true)
+  isDeleted               Boolean   @default(false)
+  deletedAt               DateTime?
+  isMembership            Boolean   @default(false)
+  isEmailNotification     Boolean   @default(false)
+  isCustomerInquiryAlerts Boolean   @default(false)
+  isSmsNotification       Boolean   @default(false)
+  isEmailPromotional      Boolean   @default(false)
+
+  // Trial tracking
+  trialStartDate        DateTime?
+  trialEndDate          DateTime?
+  isTrialActive         Boolean           @default(false)
+  productApprovalAlerts Boolean           @default(false)
+  freeProductsListing   Int               @default(0)
+  // Payment tracking
+  hasPaid               Boolean           @default(false)
+  nextBillingDate       DateTime?
   // ------------------ Role & Category ------------------------
-  role            UserRole
-  serviceCategory ServiceCategory?
+  role                  UserRole
+  serviceCategories     ServiceCategory[]
 
   // ------------------ Membership -----------------------------
   Payment            Payment[]

@@ -21,6 +21,7 @@ import { LoginDto } from '../dto/login.dto';
 import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
 import { ResetPasswordAuthDto } from '../dto/reset-password';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import { OtpEmailTemplate } from 'src/common/email/otp.template';
 
 @Injectable()
 export class AuthService {
@@ -42,16 +43,16 @@ export class AuthService {
       fullName,
       phone,
       role,
-      serviceCategory,
-      reviewAlerts,
+      serviceCategories,
     } = payload;
 
-    // Step 1: Validate password match
+    console.log('fix the issue', payload);
+    // Validate password match
     if (password !== confirmPassword) {
       throw new AppError(400, 'Passwords do not match');
     }
 
-    // Step 2: Check if user already exists by email or phone
+    // Check if user already exists by email or phone
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email }, { phone }],
@@ -65,10 +66,22 @@ export class AuthService {
       );
     }
 
-    // Step 3: Hash password
+    // Hash password
     const hashedPassword = await this.utils.hash(password);
 
-    // Step 4: Create new user
+    // Setup trial for GARAGE_OWNER (2 months free)
+    let trialStart: Date | null = null;
+    let trialEnd: Date | null = null;
+    let isTrialActive = false;
+
+    if (role === 'GARAGE_OWNER') {
+      trialStart = new Date();
+      trialEnd = new Date(trialStart);
+      trialEnd.setMonth(trialEnd.getMonth() + 2);
+      isTrialActive = true;
+    }
+
+    // Create new user
     const newUser = await this.prisma.user.create({
       data: {
         fullName,
@@ -76,16 +89,19 @@ export class AuthService {
         phone,
         password: hashedPassword,
         role,
-        serviceCategory, 
-
+        serviceCategories: { set: serviceCategories || [] },
         isVerified: false,
+        trialStartDate: trialStart,
+        trialEndDate: trialEnd,
+        isTrialActive,
+        freeProductsListing: 0,
       },
     });
 
-    // Step 5: Generate OTP and expiry
+    // Generate OTP and expiry
     const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
 
-    // Step 6: Store OTP + expiry
+    // Store OTP + expiry
     await this.prisma.user.update({
       where: { id: newUser.id },
       data: {
@@ -94,19 +110,19 @@ export class AuthService {
       },
     });
 
-    // Step 7: Send verification email
+    // Send verification email
+    // Send verification OTP using reusable template
     await this.mail.sendEmail(
       email,
       'Verify Your Email',
-      `
-    <h3>Hi ${fullName || 'User'},</h3>
-    <p>Use the OTP below to verify your email:</p>
-    <h2>${otp}</h2>
-    <p>This OTP will expire in 10 minutes.</p>
-    `,
+      OtpEmailTemplate({
+        name: fullName,
+        otp,
+        purpose: 'Verify Your Email',
+      }),
     );
 
-    // Step 8: Generate JWT token for email verification
+    // Generate JWT token for email verification
     const jwtPayload = { id: newUser.id, email };
     const verifyToken = await this.jwt.signAsync(jwtPayload, {
       expiresIn: '10m',
@@ -177,13 +193,11 @@ export class AuthService {
     // Send OTP email
     await this.mail.sendEmail(
       email,
-      'Verify Your Email',
-      `
-      <h3>Hi,</h3>
-      <p>Use the OTP below to verify your email:</p>
-      <h2>${otp}</h2>
-      <p>This OTP will expire in 10 minutes.</p>
-    `,
+      'Reset Password Verification',
+      OtpEmailTemplate({
+        otp,
+        purpose: 'Reset Your Password',
+      }),
     );
 
     // Generate JWT token for verification
