@@ -1,5 +1,14 @@
-import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  HttpStatus,
+  Post,
+  Res,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GoogleLoginDto } from '../dto/google-login.dto';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
@@ -8,7 +17,11 @@ import { AuthService } from '../services/auth.service';
 
 import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
 
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
+import { unlink } from 'fs/promises';
+import { FileType, MulterService } from 'src/lib/multer/multer.service';
+import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
 import { ForgetPasswordAuthDto } from '../dto/forgot-password.dto';
 import { ResetPasswordAuthDto } from '../dto/reset-password';
 
@@ -21,10 +34,73 @@ export class AuthController {
   ) {}
 
   //  -------------- User Registration --------------
-  @ApiOperation({ summary: 'User Registration with Email ' })
   @Post('register')
-  async register(@Body() body: RegisterDto) {
-    return this.authService.register(body);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'garageLogo', maxCount: 1 },
+        { name: 'tradeLicense', maxCount: 1 },
+      ],
+      new MulterService().createMulterOptions(
+        './uploads',
+        'register',
+        FileType.ANY,
+      ),
+    ),
+  )
+  async register(
+    @Body() body: RegisterDto,
+    @UploadedFiles()
+    files: {
+      garageLogo?: Express.Multer.File[];
+      tradeLicense?: Express.Multer.File[];
+    },
+  ) {
+    try {
+      let garageLogoUrl: string | undefined;
+      let tradeLicenseUrl: string | undefined;
+
+      // Upload garageLogo if present
+      if (files?.garageLogo?.[0]) {
+        const file = files.garageLogo[0];
+        const { url } = await uploadFileToS3(file.path);
+        garageLogoUrl = url;
+
+        try {
+          await unlink(file.path);
+        } catch (e) {}
+      }
+
+      // Upload tradeLicense if present
+      if (files?.tradeLicense?.[0]) {
+        const file = files.tradeLicense[0];
+        const { url } = await uploadFileToS3(file.path);
+        tradeLicenseUrl = url;
+        try {
+          await unlink(file.path);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      return this.authService.register(body, garageLogoUrl, tradeLicenseUrl);
+    } catch (err) {
+      // Clean up any local files if something went wrong
+      if (files) {
+        for (const farr of Object.values(files)) {
+          if (!farr) continue;
+          for (const f of farr) {
+            try {
+              await unlink(f.path);
+            } catch (e) {}
+          }
+        }
+      }
+      throw new BadRequestException(
+        'Failed to register user: ' + (err?.message || err),
+      );
+    }
   }
 
   @ApiOperation({ summary: 'User Registration with Google' })

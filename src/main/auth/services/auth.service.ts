@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -34,24 +35,26 @@ export class AuthService {
   // ---------- ----------REGISTER (send email verification OTP) ----------
 
   @HandleError('Failed to Register profile', 'Register')
-  async register(payload: RegisterDto) {
+  @HandleError('Failed to Register profile', 'Register')
+  async register(
+    payload: RegisterDto,
+    garageLogo?: string,
+    tradeLicense?: string,
+  ) {
     const {
       email,
       password,
       confirmPassword,
       fullName,
       phone,
-      role,
+  
       serviceCategories,
     } = payload;
 
-    console.log('fix the issue', payload);
-    // Validate password match
     if (password !== confirmPassword) {
-      throw new AppError(400, 'Passwords do not match');
+      throw new BadRequestException('Passwords do not match');
     }
 
-    // Check if user already exists by email or phone
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email }, { phone }],
@@ -59,48 +62,43 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new AppError(
-        400,
+      throw new BadRequestException(
         'User already exists with this email or phone number',
       );
     }
 
-    // Hash password
     const hashedPassword = await this.utils.hash(password);
 
-    // Setup trial for GARAGE_OWNER (2 months free)
+    // Setup trial only for GARAGE_OWNER
     let trialStart: Date | null = null;
     let trialEnd: Date | null = null;
     let isTrialActive = false;
 
-    if (role === 'GARAGE_OWNER') {
-      trialStart = new Date();
-      trialEnd = new Date(trialStart);
-      trialEnd.setMonth(trialEnd.getMonth() + 2);
-      isTrialActive = true;
-    }
+    // serviceCategories must be provided for GARAGE_OWNER (DTO enforced).
+    // Prisma expects enum array for `serviceCategories` field — assign set: serviceCategories or empty
+    const categoriesToSet = Array.isArray(serviceCategories)
+      ? serviceCategories
+      : [];
 
-    // Create new user
     const newUser = await this.prisma.user.create({
       data: {
         fullName,
         email,
         phone,
         password: hashedPassword,
-        role,
-        serviceCategories: { set: serviceCategories || [] },
+        serviceCategories: { set: categoriesToSet },
         isVerified: false,
         trialStartDate: trialStart,
         trialEndDate: trialEnd,
         isTrialActive,
         freeProductsListing: 0,
+        garageLogo: garageLogo ?? null,
+        tradeLicense: tradeLicense ?? null,
       },
     });
 
-    // Generate OTP and expiry
+    // Generate and store OTP
     const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
-
-    // Store OTP + expiry
     await this.prisma.user.update({
       where: { id: newUser.id },
       data: {
@@ -109,8 +107,7 @@ export class AuthService {
       },
     });
 
-    // Send verification email
-    // Send verification OTP using reusable template
+    // Send email
     await this.mail.sendEmail(
       email,
       'Verify Your Email',
@@ -121,15 +118,13 @@ export class AuthService {
       }),
     );
 
-    // Generate JWT token for email verification
     const jwtPayload = { id: newUser.id, email };
     const verifyToken = await this.jwt.signAsync(jwtPayload, {
       expiresIn: '10m',
     });
 
     return {
-      message:
-        'Registration successful. Please verify your email with the OTP sent.',
+      message: 'Registration successful. Please verify your email with the OTP sent.',
       verifyToken,
     };
   }

@@ -9,6 +9,8 @@ import { awsModule } from './shared/aws/aws.module';
 import { TestawsModule } from './testaws/testaws.module';
 import { UsersModule } from './users/users.module';
 import { ContactModule } from './shared/contact/contact.module';
+import { AdminModule } from './admin/admin.module';
+import { PartsFinancialsModule } from './parts-financials/parts-financials.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { ContactModule } from './shared/contact/contact.module';
     awsModule,
     TestawsModule,
     UsersModule,
+    AdminModule,
+    PartsFinancialsModule,
   ],
   controllers: [],
   providers: [],

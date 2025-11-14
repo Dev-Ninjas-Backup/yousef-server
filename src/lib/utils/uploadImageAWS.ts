@@ -1,8 +1,8 @@
 import { S3 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import fs from 'fs';
-import path from 'path';
 import mime from 'mime-types';
+import path from 'path';
 
 // Create the S3 client
 const s3 = new S3({
@@ -34,7 +34,7 @@ const uploadFileToS3 = async (
 
   try {
     const result = await upload.done();
-    fs.unlinkSync(filePath); // Delete file after upload
+    fs.unlinkSync(filePath); 
     console.log(`🧹 Deleted local file: ${filePath}`);
 
     return {
@@ -42,7 +42,7 @@ const uploadFileToS3 = async (
       key: fileName,
     };
   } catch (err) {
-    fs.unlinkSync(filePath); // Still delete on error
+    fs.unlinkSync(filePath); 
     console.error('❌ Failed to upload file to S3:', err);
     throw err;
   }

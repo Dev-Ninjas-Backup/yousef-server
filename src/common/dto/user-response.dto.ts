@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { ServiceCategory, UserRole } from '@prisma/client';
 import { Expose } from 'class-transformer';
 
 export class UserResponseDto {
@@ -9,17 +9,39 @@ export class UserResponseDto {
   email: string;
 
   @Expose()
-  address?: string;
+  fullName?: string;
+
+  @Expose()
+  phone?: string;
+
+  // ---------- FILES ----------
+  @Expose()
+  tradeLicense?: string;
+
+  @Expose()
+  garageLogo?: string;
 
   @Expose()
   profilePhoto?: string;
 
+  // ---------- LOCATION ----------
   @Expose()
-  fullName?: string;
+  address?: string;
 
+  @Expose()
+  city?: string;
+
+  @Expose()
+  emirate?: string;
+
+  // ---------- ROLE & CATEGORY ----------
   @Expose()
   role: UserRole;
 
+  @Expose()
+  serviceCategories?: ServiceCategory[];
+
+  // ---------- ACCOUNT STATUS ----------
   @Expose()
   isVerified: boolean;
 
@@ -30,11 +52,62 @@ export class UserResponseDto {
   isDeleted: boolean;
 
   @Expose()
+  deletedAt?: Date;
+
+  // ---------- GARAGE VERIFICATION ----------
+  @Expose()
+  isGarageVerified: boolean;
+
+  // ---------- MEMBERSHIP / PAYMENT ----------
+  @Expose()
+  hasPaid: boolean;
+
+  @Expose()
+  subscriptionEndsAt?: Date;
+
+  @Expose()
+  nextBillingDate?: Date;
+
+  @Expose()
+  isMembership: boolean;
+
+  // ---------- TRIAL ----------
+  @Expose()
+  trialStartDate?: Date;
+
+  @Expose()
+  trialEndDate?: Date;
+
+  @Expose()
+  isTrialActive: boolean;
+
+  // ---------- PRODUCT LISTING ----------
+  @Expose()
+  freeProductsListing: number;
+
+  // ---------- Alerts / Notifications ----------
+  @Expose()
+  isEmailNotification: boolean;
+
+  @Expose()
+  isCustomerInquiryAlerts: boolean;
+
+  @Expose()
+  isSmsNotification: boolean;
+
+  @Expose()
+  isEmailPromotional: boolean;
+
+  @Expose()
+  ReviewAlerts: boolean;
+
+  @Expose()
+  productApprovalAlerts: boolean;
+
+  // ---------- TIMESTAMPS ----------
+  @Expose()
   createdAt: Date;
 
   @Expose()
   updatedAt: Date;
-
-  @Expose()
-  deletedAt?: Date;
 }

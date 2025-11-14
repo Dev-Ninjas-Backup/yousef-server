@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { UserEnum } from '../enum/user.enum';
 
-import { RequestWithUser } from './jwt.interface';
 import { JwtAuthGuard, RolesGuard } from './jwt.gurd';
+import { RequestWithUser } from './jwt.interface';
 
 export const ROLES_KEY = 'roles';
 export const IS_PUBLIC_KEY = 'isPublic';
@@ -39,17 +39,20 @@ export function ValidateSuperAdmin() {
   return ValidateAuth(UserEnum.SUPER_ADMIN);
 }
 
-export function ValidateContibutor() {
+export function ValidateCarOwner() {
   return ValidateAuth(UserEnum.CAR_OWNER, UserEnum.SUPER_ADMIN);
 }
 
 export function ValidateAdmin() {
-  return ValidateAuth(UserEnum.GARAGE_OWNER, UserEnum.SUPER_ADMIN);
+  return ValidateAuth(UserEnum.SUPER_ADMIN);
 }
 export function ValidateMember() {
   return ValidateAuth(UserEnum.MEMBER, UserEnum.SUPER_ADMIN);
 }
 
+export function ValidateGarageOwner() {
+  return ValidateAuth(UserEnum.GARAGE_OWNER, UserEnum.SUPER_ADMIN);
+}
 export function ValidateUser() {
   return ValidateAuth(
     UserEnum.CAR_OWNER,
