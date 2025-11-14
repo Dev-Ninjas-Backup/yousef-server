@@ -8,6 +8,8 @@ import { awsModule } from './shared/aws/aws.module';
 
 import { TestawsModule } from './testaws/testaws.module';
 import { UsersModule } from './users/users.module';
+import { GarageModule } from './garage/garage.module';
+import { ServiceTypeModule } from './service-type/service-type.module';
 import { ContactModule } from './shared/contact/contact.module';
 import { AdminModule } from './admin/admin.module';
 import { PartsFinancialsModule } from './parts-financials/parts-financials.module';
@@ -23,6 +25,8 @@ import { PartsFinancialsModule } from './parts-financials/parts-financials.modul
     UsersModule,
     AdminModule,
     PartsFinancialsModule,
+    GarageModule,
+    ServiceTypeModule,
   ],
   controllers: [],
   providers: [],
