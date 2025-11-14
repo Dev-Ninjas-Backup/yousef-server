@@ -14,7 +14,6 @@ import { ValidateAdmin } from 'src/common/jwt/jwt.decorator';
 import { ContactService } from '../services/contact.service';
 import { CreateContactDto } from '../dto/create-subscribe.dto';
 
-
 @ApiTags('contact')
 @Controller('contact')
 export class ContactController {

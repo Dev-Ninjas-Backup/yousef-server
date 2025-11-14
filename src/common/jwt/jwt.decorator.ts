@@ -56,6 +56,5 @@ export function ValidateUser() {
     UserEnum.SUPER_ADMIN,
     UserEnum.MEMBER,
     UserEnum.GARAGE_OWNER,
-  
   );
 }

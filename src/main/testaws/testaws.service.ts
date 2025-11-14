@@ -1,12 +1,10 @@
-import { Injectable } from '@nestjs/common';
 import { S3 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as mime from 'mime-types';
+import * as path from 'path';
 import { promisify } from 'util';
-import { CreateTestawDto } from './dto/create-testaw.dto';
-import { UpdateTestawDto } from './dto/update-testaw.dto';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -24,10 +22,7 @@ export class TestawsService {
     });
   }
 
-  async uploadFileToS3(
-    localFilePath: string,
-    prefix: string,
-  ) {
+  async uploadFileToS3(localFilePath: string, prefix: string) {
     const fileContent = fs.readFileSync(localFilePath);
     const fileExt = path.extname(localFilePath);
     const fileName = `${prefix}-${path.basename(localFilePath)}`;
@@ -60,20 +55,12 @@ export class TestawsService {
     }
   }
 
-  create(createTestawDto: CreateTestawDto) {
-    return 'This action adds a new testaw';
-  }
-
   findAll() {
     return `This action returns all testaws`;
   }
 
   findOne(id: number) {
     return `This action returns a #${id} testaw`;
-  }
-
-  update(id: number, updateTestawDto: UpdateTestawDto) {
-    return `This action updates a #${id} testaw`;
   }
 
   remove(id: number) {

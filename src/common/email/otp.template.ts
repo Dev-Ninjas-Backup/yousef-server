@@ -1,7 +1,7 @@
 export const OtpEmailTemplate = (data: {
   name?: string;
   otp: number | string;
-  purpose: string; 
+  purpose: string;
 }) => {
   const username = data.name || 'User';
 

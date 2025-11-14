@@ -1,18 +1,19 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
-  Delete,
-  BadRequestException,
+  Post,
 } from '@nestjs/common';
-import { PaymentService } from '../service/payment.service';
-import { UpdatePaymentDto } from '../dto/update-payment.dto';
-import { GetUser, ValidateAuth, ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
-import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  GetUser,
+  ValidateAuth,
+  ValidateSuperAdmin,
+} from 'src/common/jwt/jwt.decorator';
+import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
+import { PaymentService } from '../service/payment.service';
 
 @Controller('payment')
 export class PaymentController {
@@ -30,8 +31,8 @@ export class PaymentController {
 
   @ApiBearerAuth()
   @ValidateAuth()
-  @Get("/my-payments")
-  async  findmyPayment(@GetUser('userId') userId: string) {
+  @Get('/my-payments')
+  async findmyPayment(@GetUser('userId') userId: string) {
     return this.paymentService.findmyPayment(userId);
   }
 
@@ -47,7 +48,4 @@ export class PaymentController {
   findOne(@Param('id') id: string) {
     return this.paymentService.findOne(+id);
   }
-
-
-
 }

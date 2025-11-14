@@ -1,21 +1,19 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseInterceptors,
+  Get,
+  Param,
+  Post,
   UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { TestawsService } from './testaws.service';
-import { CreateTestawDto } from './dto/create-testaw.dto';
-import { UpdateTestawDto } from './dto/update-testaw.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import { ApiConsumes } from '@nestjs/swagger';
+import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
+import { CreateTestawDto } from './dto/create-testaw.dto';
+import { TestawsService } from './testaws.service';
 
 @Controller('testaws')
 export class TestawsController {
@@ -42,7 +40,7 @@ export class TestawsController {
     }
 
     //  Upload to AWS S3
-    const s3Result = await uploadFileToS3(file?.path)
+    const s3Result = await uploadFileToS3(file?.path);
     console.log(' Uploaded to S3:', s3Result.url);
 
     return {
@@ -60,11 +58,6 @@ export class TestawsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.testawsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTestawDto: UpdateTestawDto) {
-    return this.testawsService.update(+id, updateTestawDto);
   }
 
   @Delete(':id')

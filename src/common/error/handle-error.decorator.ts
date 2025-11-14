@@ -1,5 +1,4 @@
-import { simplifyError } from "./handle.-error.simplify";
-
+import { simplifyError } from './handle.-error.simplify';
 
 export function HandleError(customMessage?: string, record?: string) {
   return function <T>(

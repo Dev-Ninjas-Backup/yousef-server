@@ -1,4 +1,4 @@
-import { Controller, Patch, Get } from '@nestjs/common';
+import { Controller, Patch } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -11,8 +11,6 @@ import { AccountSettingService } from '../service/account-setting.service';
 export class UserSettingAccountController {
   constructor(private readonly UserAccountSettings: AccountSettingService) {}
 
-  
-
   // --------Review Alerts---
 
   @ApiBearerAuth()
@@ -23,7 +21,7 @@ export class UserSettingAccountController {
     return this.UserAccountSettings.changeReviewAlert(userId);
   }
 
-//   ------------------toggle email-notification------------
+  //   ------------------toggle email-notification------------
   @ApiBearerAuth()
   @ValidateAuth()
   @ApiOperation({ summary: 'Toggle email notification for logged-in user' })
@@ -31,31 +29,31 @@ export class UserSettingAccountController {
   changeEmailNotification(@GetUser('userId') userId: string) {
     return this.UserAccountSettings.changeEmailNotification(userId);
   }
-// ------------------  isSmsNotification--------------
+  // ------------------  isSmsNotification--------------
 
-@ApiBearerAuth()
-@ValidateAuth()
-@ApiOperation({ summary: 'Toggle SMS notification for logged-in user' })
-@Patch('toggle-sms-notification')
-changeSmsNotification(@GetUser('userId') userId: string) {
-  return this.UserAccountSettings.changeSmsNotification(userId);
-}
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ApiOperation({ summary: 'Toggle SMS notification for logged-in user' })
+  @Patch('toggle-sms-notification')
+  changeSmsNotification(@GetUser('userId') userId: string) {
+    return this.UserAccountSettings.changeSmsNotification(userId);
+  }
 
-// ----------------- isEmailPromotional ---------------
-@ApiBearerAuth()
-@ValidateAuth()
-@ApiOperation({ summary: 'Toggle email promotional for logged-in user' })
-@Patch('toggle-email-promotional')
-changeEmailPromotional(@GetUser('userId') userId: string) {
-  return this.UserAccountSettings.changeEmailPromotional(userId);
-}
+  // ----------------- isEmailPromotional ---------------
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ApiOperation({ summary: 'Toggle email promotional for logged-in user' })
+  @Patch('toggle-email-promotional')
+  changeEmailPromotional(@GetUser('userId') userId: string) {
+    return this.UserAccountSettings.changeEmailPromotional(userId);
+  }
 
-// ----------------delete user-----------------
-@ApiBearerAuth()
-@ValidateAuth()
-@ApiOperation({ summary: 'delete user' })
-@Patch('delete-user')
-deleteUser(@GetUser('userId') userId: string) {
-  return this.UserAccountSettings.deleteUser(userId);
-}
+  // ----------------delete user-----------------
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ApiOperation({ summary: 'delete user' })
+  @Patch('delete-user')
+  deleteUser(@GetUser('userId') userId: string) {
+    return this.UserAccountSettings.deleteUser(userId);
+  }
 }

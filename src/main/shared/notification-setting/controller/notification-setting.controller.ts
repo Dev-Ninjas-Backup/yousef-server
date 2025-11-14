@@ -5,16 +5,10 @@ import {
   ValidateAuth,
   ValidateUser,
 } from 'src/common/jwt/jwt.decorator';
-import { NotificationSettingService } from '../service/notification-setting.service';
-import {
-  successResponse,
-  TResponse,
-} from 'src/common/utilsResponse/response.util';
-import { NotificationToggleDto } from '../dto/notification-toggle.dto';
-import { get } from 'axios';
-import { HandleError } from 'src/common/error/handle-error.decorator';
+import { TResponse } from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { AppError } from 'src/common/error/handle-error.app';
+import { NotificationToggleDto } from '../dto/notification-toggle.dto';
+import { NotificationSettingService } from '../service/notification-setting.service';
 
 @ApiTags('Notification Setting')
 @Controller('notification-setting')

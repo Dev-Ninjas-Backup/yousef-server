@@ -1,22 +1,20 @@
 import {
-  Controller,
-  Post,
   Body,
-  Patch,
-  UseInterceptors,
-  UploadedFile,
+  Controller,
   Get,
-  UploadedFiles,
-  Req,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiConsumes,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
 
 import { UpdateProfileDto } from '../dto/update.profile.dto';
