@@ -8,6 +8,8 @@ import { awsModule } from './shared/aws/aws.module';
 
 import { TestawsModule } from './testaws/testaws.module';
 import { UsersModule } from './users/users.module';
+import { GarageModule } from './garage/garage.module';
+import { ServiceTypeModule } from './service-type/service-type.module';
 import { ContactModule } from './shared/contact/contact.module';
 
 @Module({
@@ -19,6 +21,8 @@ import { ContactModule } from './shared/contact/contact.module';
     awsModule,
     TestawsModule,
     UsersModule,
+    GarageModule,
+    ServiceTypeModule,
   ],
   controllers: [],
   providers: [],

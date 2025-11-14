@@ -12,8 +12,8 @@ async function bootstrap() {
 
   // --------------Swagger config with Bearer Auth------------------
   const config = new DocumentBuilder()
-    .setTitle('yousel-backend')
-    .setDescription('Team yousel-backend API description')
+    .setTitle('yousef-backend')
+    .setDescription('Team yousef-backend API description')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -24,7 +24,7 @@ async function bootstrap() {
         'http://localhost:5050',
         'https://beta.australiancanvas.com',
         'https://indiansydny.vercel.app',
-        'http://localhost:3000',
+        'http://localhost:5050',
         'http://localhost:5173',
         'https://api.australiancanvas.com/docs',
         'https://australiancanvas.com',

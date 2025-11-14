@@ -1,0 +1,64 @@
+// ======================
+//  GARAGE MODEL
+// ======================
+
+model Garage {
+    id           String  @id @default(uuid())
+    name         String  @unique
+    coverPhoto   String?
+    profileImage String?
+    phone        String?
+    email        String? @unique
+    street       String?
+    city         String?
+    emirate      String?
+
+    description    String?
+    certifications String?
+
+    weekdaysHours String?
+    weekendsHours String?
+
+    brandExpertise String[]
+
+    // Relations
+    services GarageService[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+// ======================
+//  SERVICE MASTER LIST
+// ======================
+
+model Service {
+    id   String @id @default(uuid())
+    icon String
+    name String @unique
+
+    garages GarageService[]
+}
+
+// ======================
+//  GARAGE ↔ SERVICE (M2M)
+// ======================
+
+model GarageService {
+    garageId  String
+    serviceId String
+
+    garage  Garage  @relation(fields: [garageId], references: [id], onDelete: Cascade)
+    service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+    @@id([garageId, serviceId])
+}
+
+// =====================
+// ENUMS
+// =====================
+
+enum DayType {
+    WEEKDAYS
+    WEEKENDS
+}
