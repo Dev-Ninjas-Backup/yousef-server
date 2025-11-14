@@ -1,21 +1,19 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
-  Delete,
-  UseInterceptors,
+  Post,
   UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
-import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import { ApiConsumes } from '@nestjs/swagger';
+import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
-import { AdditionalS3Service } from './additional.service';
 import { Additionaldto } from '../uploadadditional.dto';
+import { AdditionalS3Service } from './additional.service';
 
 @Controller('aws-additional')
 export class AdditionalS3Controller {

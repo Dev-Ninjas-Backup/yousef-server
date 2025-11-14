@@ -6,7 +6,6 @@ import {
 } from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { NotificationToggleDto } from '../dto/notification-toggle.dto';
-import { AppError } from 'src/common/error/handle-error.app';
 
 @Injectable()
 export class NotificationSettingService {

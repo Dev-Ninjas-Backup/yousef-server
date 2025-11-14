@@ -47,11 +47,7 @@ export class ScheduleService {
           <p>Upgrade your plan anytime to regain full access.</p>
         `;
         try {
-          await this.mailService.sendEmail(
-            user.email,
-            'Your Premium Access Has Ended',
-            message,
-          );
+          await this.mailService.sendEmail(user.email, text, message);
           this.logger.log(`MEMBER → USER email sent to ${user.email}`);
         } catch (err) {
           this.logger.error(

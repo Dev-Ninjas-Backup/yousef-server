@@ -4,9 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 
 import * as bcrypt from 'bcrypt';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
-import { PrismaService } from '../prisma/prisma.service';
-import { JWTPayload } from 'src/common/jwt/jwt.interface';
 import { ENVEnum } from 'src/common/enum/env.enum';
+import { JWTPayload } from 'src/common/jwt/jwt.interface';
 
 @Injectable()
 export class UtilsService {

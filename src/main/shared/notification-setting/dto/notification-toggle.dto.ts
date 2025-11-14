@@ -18,9 +18,6 @@ export class NotificationToggleDto {
   @IsBoolean()
   communication?: boolean = false;
 
-
-
-  
   @ApiPropertyOptional({
     description: 'Receive tasks and projects content status notifications',
     default: false,

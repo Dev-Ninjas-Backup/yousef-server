@@ -2,26 +2,25 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  Res,
 } from '@nestjs/common';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { UtilsService } from 'src/lib/utils/utils.service';
-import { MailService } from 'src/lib/mail/mail.service';
 import { AppError } from 'src/common/error/handle-error.app';
 import {
   successResponse,
   TResponse,
 } from 'src/common/utilsResponse/response.util';
+import { MailService } from 'src/lib/mail/mail.service';
+import { PrismaService } from 'src/lib/prisma/prisma.service';
+import { UtilsService } from 'src/lib/utils/utils.service';
 
-import { UserResponseDto } from 'src/common/dto/user-response.dto';
 import { JwtService } from '@nestjs/jwt';
-import { RegisterDto } from '../dto/register.dto';
-import { ForgotPasswordDto } from '../dto/uer.dto';
-import { LoginDto } from '../dto/login.dto';
-import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
-import { ResetPasswordAuthDto } from '../dto/reset-password';
-import { HandleError } from 'src/common/error/handle-error.decorator';
+import { UserResponseDto } from 'src/common/dto/user-response.dto';
 import { OtpEmailTemplate } from 'src/common/email/otp.template';
+import { HandleError } from 'src/common/error/handle-error.decorator';
+import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
+import { ResetPasswordAuthDto } from '../dto/reset-password';
+import { ForgotPasswordDto } from '../dto/uer.dto';
+import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -215,7 +214,7 @@ export class AuthService {
     try {
       decoded = await this.jwt.verifyAsync(payload.resetToken);
     } catch (err) {
-      throw new ForbiddenException('Invalid or expired token!');
+      throw new ForbiddenException(err.message ?? 'Invalid or expired token!');
     }
 
     // Find user by ID from the token
@@ -270,7 +269,7 @@ export class AuthService {
     try {
       decoded = await this.jwt.verifyAsync(payload.resetToken);
     } catch (err) {
-      throw new ForbiddenException('Invalid or expired token!');
+      throw new ForbiddenException(err.message ?? 'Invalid or expired token!');
     }
 
     // Find user by ID from the token
@@ -313,7 +312,7 @@ export class AuthService {
     try {
       decoded = await this.jwt.verifyAsync(payload.resetToken);
     } catch (err) {
-      throw new ForbiddenException('Invalid or expired token!');
+      throw new ForbiddenException(err.message ?? 'Invalid or expired token!');
     }
 
     // Find user by ID

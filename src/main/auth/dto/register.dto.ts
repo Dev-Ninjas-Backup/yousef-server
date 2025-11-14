@@ -71,7 +71,6 @@ export class RegisterDto {
       'Service categories the garage offers. **Required when role = GARAGE_OWNER**',
     required: false,
   })
-
   @IsOptional()
   @IsArray()
   @IsEnum(ServiceCategory, { each: true })

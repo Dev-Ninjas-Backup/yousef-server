@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { UtilsService } from 'src/lib/utils/utils.service';
 
 import { AppError } from 'src/common/error/handle-error.app';
 import {
@@ -11,7 +10,7 @@ import {
 
 @Injectable()
 export class AccountSettingService {
-  constructor( private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   //----------------- changeEmailNotification----
 

@@ -1,16 +1,16 @@
 import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GoogleLoginDto } from '../dto/google-login.dto';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
-import { AuthService } from '../services/auth.service';
 import { AuthGoogleService } from '../services/auth-google.service';
+import { AuthService } from '../services/auth.service';
 
 import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
 
+import type { Response } from 'express';
 import { ForgetPasswordAuthDto } from '../dto/forgot-password.dto';
 import { ResetPasswordAuthDto } from '../dto/reset-password';
-import type { Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -20,7 +20,7 @@ export class AuthController {
     private readonly authGoogleService: AuthGoogleService,
   ) {}
 
-//  -------------- User Registration --------------
+  //  -------------- User Registration --------------
   @ApiOperation({ summary: 'User Registration with Email ' })
   @Post('register')
   async register(@Body() body: RegisterDto) {
@@ -32,7 +32,7 @@ export class AuthController {
   @ApiOperation({ summary: 'User Login with Email' })
   async login(
     @Body() body: LoginDto,
-    @Res({ passthrough: true }) res: Response, 
+    @Res({ passthrough: true }) res: Response,
   ) {
     const result = (await this.authService.login(body)) as any;
 
@@ -53,8 +53,7 @@ export class AuthController {
     return this.authGoogleService.googleLogin(body);
   }
 
-
-@ApiOperation({ summary: 'User Registration signup-verify-otp' })
+  @ApiOperation({ summary: 'User Registration signup-verify-otp' })
   @Post('signup-verify-otp')
   async verifyOtp(@Body() payload: VerifyOtpAuthDto) {
     const result = await this.authService.verifyOtp(payload);
@@ -67,7 +66,7 @@ export class AuthController {
   }
 
   // -------------- Reset otp --------------
-@ApiOperation({ summary: 'User Registration reset-verify-otp' })
+  @ApiOperation({ summary: 'User Registration reset-verify-otp' })
   @Post('reset-verify-otp')
   async resetverifyOtp(@Body() payload: VerifyOtpAuthDto) {
     const result = await this.authService.verifyOtp(payload);
@@ -78,7 +77,6 @@ export class AuthController {
       data: result,
     };
   }
-
 
   @ApiOperation({ summary: 'forget-password' })
   @Post('forget-password')
@@ -93,7 +91,7 @@ export class AuthController {
     };
   }
 
-  @ApiOperation({ summary:'reset-password' })
+  @ApiOperation({ summary: 'reset-password' })
   @Post('reset-password')
   async resetPassword(@Body() payload: ResetPasswordAuthDto) {
     const result = await this.authService.resetPassword(payload);
