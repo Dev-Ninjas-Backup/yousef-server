@@ -24,7 +24,7 @@ export class MailService {
     code: string,
   ): Promise<nodemailer.SentMessageInfo> {
     const mailOptions = {
-      from: `"No Reply" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
+      from: `"SAYARA HUB" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
       to: email,
       subject: 'Login Code',
       html: `
@@ -43,7 +43,7 @@ export class MailService {
     message: string,
   ): Promise<nodemailer.SentMessageInfo> {
     const mailOptions = {
-      from: `"No Reply" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
+      from: `"SAYARA HUB" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
       to: email,
       subject,
       html: message,

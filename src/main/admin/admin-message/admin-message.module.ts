@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AdminMessageService } from './admin-message.service';
-import { AdminMessageController } from './admin-message.controller';
+import { AdminMessageController } from './controller/admin-message.controller';
+import { AdminMessageService } from './service/admin-message.service';
 
 @Module({
   controllers: [AdminMessageController],
