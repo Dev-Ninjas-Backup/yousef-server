@@ -1,56 +1,78 @@
+// src/main/shared/admin-message/service/admin-message.service.ts
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { MailService } from 'src/lib/mail/mail.service';
-import { HandleError } from 'src/common/error/handle-error.decorator';
 import { AppError } from 'src/common/error/handle-error.app';
+import { HandleError } from 'src/common/error/handle-error.decorator';
 import {
   successResponse,
   TResponse,
 } from 'src/common/utilsResponse/response.util';
-import { PaginationDto } from 'src/common/dto/pagination';
-import { CreateContactDto } from '../dto/create-subscribe.dto';
-import { ENVEnum } from 'src/common/enum/env.enum';
-import { ConfigService } from '@nestjs/config';
+import { MailService } from 'src/lib/mail/mail.service';
+import { PrismaService } from 'src/lib/prisma/prisma.service';
+
 import { ContactEmailTemplate } from 'src/common/email/contact';
+import { CreateAdminReplyDto } from '../dto/create-admin-message.dto';
+import { PaginationDto } from 'src/common/dto/pagination';
 
 @Injectable()
-export class ContactService {
-  private readonly logger = new Logger(ContactService.name);
+export class AdminMessageService {
+  private readonly logger = new Logger(AdminMessageService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
-    private readonly configService: ConfigService,
   ) {}
 
-  @HandleError('Failed to create contact message', 'Contact')
-  async create(payload: CreateContactDto): Promise<TResponse<any>> {
-    const contact = await this.prisma.contact.create({
-      data: { ...payload },
+  @HandleError('Failed to send admin reply', 'AdminMessage')
+  async reply(
+    dto: CreateAdminReplyDto,
+    adminEmail: string,
+  ): Promise<TResponse<any>> {
+    // 1. Fetch contact
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: dto.contactId },
+      select: {
+        id: true,
+        FirstName: true,
+        LastName: true,
+        email: true,
+      },
     });
 
-    const adminEmail = this.configService.get<string>(ENVEnum.MAIL_USER);
-
-    if (!adminEmail) {
-      this.logger.error('MAIL_USER not configured in environment');
-      throw new AppError(400, 'Admin email not configured');
+    if (!contact) {
+      throw new AppError(404, 'Contact not found');
     }
 
-    // ----- Admin Notification Email -----
+    // 2. Save admin reply
+    const message = await this.prisma.message.create({
+      data: {
+        contactId: dto.contactId,
+        isFromAdmin: true,
+        content: dto.content,
+      },
+    });
+
+    // 3. Send email to user
+    await this.mailService.sendEmail(
+      contact.email,
+      'Support Team Reply',
+      ContactEmailTemplate.adminReply({
+        firstName: contact.FirstName,
+        lastName: contact.LastName,
+        content: dto.content,
+      }),
+    );
+
+    // 4. Optional: Notify admin
     await this.mailService.sendEmail(
       adminEmail,
-      'New Contact Form Submission',
-      ContactEmailTemplate.contactAdmin(payload),
+      `Reply sent to ${contact.email}`,
+      `
+        <p>You replied to <strong>${contact.FirstName} ${contact.LastName}</strong>:</p>
+        <blockquote>${dto.content}</blockquote>
+      `,
     );
 
-    // ----- User Confirmation Email -----
-    await this.mailService.sendEmail(
-      payload.email,
-      'We Received Your Message',
-      ContactEmailTemplate.contactUser(payload),
-    );
-
-    return successResponse(contact, 'Contact message created successfully');
+    return successResponse(message, 'Reply sent successfully');
   }
 
   @HandleError('Failed to fetch contacts', 'Contact')

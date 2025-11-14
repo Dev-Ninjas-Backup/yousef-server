@@ -1,25 +1,26 @@
 model User {
-  id           String  @id @default(uuid())
-  email        String  @unique
+  id           String       @id @default(uuid())
+  email        String       @unique
   fullName     String?
   password     String?
   bio          String?
-  phone        String? @unique
+  phone        String?      @unique
   // ---------- file---------------------
   tradeLicense String?
   garageLogo   String?
   profilePhoto String?
-  // --------information-------
+  // -------- garage information-------
   address      String?
   city         String?
   emirate      String?
-
+  garageName   String?
+  garageStatus GarageStatus @default(PENDING)
   // ------------------ Google Authentication ------------------
-  googleId     String?   @unique
+  googleId     String?      @unique
   emailOtp     Int?
   otpExpiry    DateTime?
-  isVerified   Boolean   @default(false)
-  ReviewAlerts Boolean   @default(false)
+  isVerified   Boolean      @default(false)
+  ReviewAlerts Boolean      @default(false)
 
   // ------------------ Password Reset OTP ---------------------
   resetOtp       Int?
@@ -76,4 +77,10 @@ enum ServiceCategory {
   BODY_AND_PAINT
   DIAGNOSTICS
   GENERAL_MAINTENANCE
+}
+
+enum GarageStatus {
+  APPROVE
+  PENDING
+  DECLINE
 }

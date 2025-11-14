@@ -105,7 +105,6 @@ export class UserController {
   async getAllUsers() {
     return this.userService.getAllUsers();
   }
-  // ------------------------ user apply for contibutor--================----------
 
   // ---------------------user report Contents----------------
   // @ApiOperation({ summary: 'Create Report with multiple screenshots' })
