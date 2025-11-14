@@ -8,6 +8,12 @@ import { AdminMessageModule } from './admin-message/admin-message.module';
 @Module({
   controllers: [],
   providers: [],
-  imports: [GarageManagementModule, AdminDashboardOverviewModule, UserManagementModule, AdminSettingModule, AdminMessageModule],
+  imports: [
+    GarageManagementModule,
+    AdminDashboardOverviewModule,
+    UserManagementModule,
+    AdminSettingModule,
+    AdminMessageModule,
+  ],
 })
 export class AdminModule {}

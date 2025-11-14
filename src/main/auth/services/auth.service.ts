@@ -47,7 +47,7 @@ export class AuthService {
       confirmPassword,
       fullName,
       phone,
-  
+
       serviceCategories,
     } = payload;
 
@@ -70,9 +70,9 @@ export class AuthService {
     const hashedPassword = await this.utils.hash(password);
 
     // Setup trial only for GARAGE_OWNER
-    let trialStart: Date | null = null;
-    let trialEnd: Date | null = null;
-    let isTrialActive = false;
+    const trialStart: Date | null = null;
+    const trialEnd: Date | null = null;
+    const isTrialActive = false;
 
     // serviceCategories must be provided for GARAGE_OWNER (DTO enforced).
     // Prisma expects enum array for `serviceCategories` field — assign set: serviceCategories or empty
@@ -124,7 +124,8 @@ export class AuthService {
     });
 
     return {
-      message: 'Registration successful. Please verify your email with the OTP sent.',
+      message:
+        'Registration successful. Please verify your email with the OTP sent.',
       verifyToken,
     };
   }

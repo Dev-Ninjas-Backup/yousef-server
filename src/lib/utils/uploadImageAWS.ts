@@ -34,7 +34,7 @@ const uploadFileToS3 = async (
 
   try {
     const result = await upload.done();
-    fs.unlinkSync(filePath); 
+    fs.unlinkSync(filePath);
     console.log(`🧹 Deleted local file: ${filePath}`);
 
     return {
@@ -42,7 +42,7 @@ const uploadFileToS3 = async (
       key: fileName,
     };
   } catch (err) {
-    fs.unlinkSync(filePath); 
+    fs.unlinkSync(filePath);
     console.error('❌ Failed to upload file to S3:', err);
     throw err;
   }

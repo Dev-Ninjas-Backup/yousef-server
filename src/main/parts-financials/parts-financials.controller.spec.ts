@@ -11,7 +11,9 @@ describe('PartsFinancialsController', () => {
       providers: [PartsFinancialsService],
     }).compile();
 
-    controller = module.get<PartsFinancialsController>(PartsFinancialsController);
+    controller = module.get<PartsFinancialsController>(
+      PartsFinancialsController,
+    );
   });
 
   it('should be defined', () => {

@@ -1,15 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { AdminDashboardOverviewService } from './admin-dashboard-overview.service';
 import { CreateAdminDashboardOverviewDto } from './dto/create-admin-dashboard-overview.dto';
 import { UpdateAdminDashboardOverviewDto } from './dto/update-admin-dashboard-overview.dto';
 
 @Controller('admin-dashboard-overview')
 export class AdminDashboardOverviewController {
-  constructor(private readonly adminDashboardOverviewService: AdminDashboardOverviewService) {}
+  constructor(
+    private readonly adminDashboardOverviewService: AdminDashboardOverviewService,
+  ) {}
 
   @Post()
-  create(@Body() createAdminDashboardOverviewDto: CreateAdminDashboardOverviewDto) {
-    return this.adminDashboardOverviewService.create(createAdminDashboardOverviewDto);
+  create(
+    @Body() createAdminDashboardOverviewDto: CreateAdminDashboardOverviewDto,
+  ) {
+    return this.adminDashboardOverviewService.create(
+      createAdminDashboardOverviewDto,
+    );
   }
 
   @Get()
@@ -23,8 +37,14 @@ export class AdminDashboardOverviewController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAdminDashboardOverviewDto: UpdateAdminDashboardOverviewDto) {
-    return this.adminDashboardOverviewService.update(+id, updateAdminDashboardOverviewDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateAdminDashboardOverviewDto: UpdateAdminDashboardOverviewDto,
+  ) {
+    return this.adminDashboardOverviewService.update(
+      +id,
+      updateAdminDashboardOverviewDto,
+    );
   }
 
   @Delete(':id')

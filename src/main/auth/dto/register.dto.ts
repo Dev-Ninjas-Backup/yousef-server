@@ -59,7 +59,6 @@ export class RegisterDto {
 
   // ──────────────────── USER ROLE ────────────────────
 
-
   // ──────────────────── SERVICE CATEGORIES (Only for GARAGE_OWNER) ────────────────────
   @ApiProperty({
     example: ['MECHANICAL_REPAIR', 'DIAGNOSTICS'],
@@ -69,7 +68,6 @@ export class RegisterDto {
     description:
       'Required only when role = GARAGE_OWNER. Can also accept comma separated string.',
   })
-
   @Transform(({ value }) => {
     if (!value) return [];
     if (typeof value === 'string') {

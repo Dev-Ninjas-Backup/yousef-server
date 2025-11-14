@@ -11,7 +11,9 @@ describe('GarageManagementController', () => {
       providers: [GarageManagementService],
     }).compile();
 
-    controller = module.get<GarageManagementController>(GarageManagementController);
+    controller = module.get<GarageManagementController>(
+      GarageManagementController,
+    );
   });
 
   it('should be defined', () => {

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { AdminMessageService } from './admin-message.service';
 import { CreateAdminMessageDto } from './dto/create-admin-message.dto';
 import { UpdateAdminMessageDto } from './dto/update-admin-message.dto';
@@ -23,7 +31,10 @@ export class AdminMessageController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAdminMessageDto: UpdateAdminMessageDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateAdminMessageDto: UpdateAdminMessageDto,
+  ) {
     return this.adminMessageService.update(+id, updateAdminMessageDto);
   }
 

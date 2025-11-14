@@ -16,7 +16,10 @@ export class AdminDashboardOverviewService {
     return `This action returns a #${id} adminDashboardOverview`;
   }
 
-  update(id: number, updateAdminDashboardOverviewDto: UpdateAdminDashboardOverviewDto) {
+  update(
+    id: number,
+    updateAdminDashboardOverviewDto: UpdateAdminDashboardOverviewDto,
+  ) {
     return `This action updates a #${id} adminDashboardOverview`;
   }
 

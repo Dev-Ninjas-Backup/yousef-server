@@ -9,7 +9,9 @@ describe('AdminDashboardOverviewService', () => {
       providers: [AdminDashboardOverviewService],
     }).compile();
 
-    service = module.get<AdminDashboardOverviewService>(AdminDashboardOverviewService);
+    service = module.get<AdminDashboardOverviewService>(
+      AdminDashboardOverviewService,
+    );
   });
 
   it('should be defined', () => {

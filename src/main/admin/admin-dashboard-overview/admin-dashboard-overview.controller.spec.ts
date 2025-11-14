@@ -11,7 +11,9 @@ describe('AdminDashboardOverviewController', () => {
       providers: [AdminDashboardOverviewService],
     }).compile();
 
-    controller = module.get<AdminDashboardOverviewController>(AdminDashboardOverviewController);
+    controller = module.get<AdminDashboardOverviewController>(
+      AdminDashboardOverviewController,
+    );
   });
 
   it('should be defined', () => {

@@ -1,11 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { GarageManagementService } from './garage-management.service';
 import { CreateGarageManagementDto } from './dto/create-garage-management.dto';
 import { UpdateGarageManagementDto } from './dto/update-garage-management.dto';
 
 @Controller('garage-management')
 export class GarageManagementController {
-  constructor(private readonly garageManagementService: GarageManagementService) {}
+  constructor(
+    private readonly garageManagementService: GarageManagementService,
+  ) {}
 
   @Post()
   create(@Body() createGarageManagementDto: CreateGarageManagementDto) {
@@ -23,7 +33,10 @@ export class GarageManagementController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGarageManagementDto: UpdateGarageManagementDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateGarageManagementDto: UpdateGarageManagementDto,
+  ) {
     return this.garageManagementService.update(+id, updateGarageManagementDto);
   }
 
