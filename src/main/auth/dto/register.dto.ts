@@ -1,18 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { 
-  IsEmail, 
-  IsEnum, 
-  IsNotEmpty, 
-  IsOptional, 
-  IsString, 
-  MinLength, 
-  IsBoolean 
+import { ServiceCategory, UserRole } from '@prisma/client';
+import { Transform } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+  ValidateIf,
 } from 'class-validator';
-import { UserRole, ServiceCategory } from '@prisma/client'; // import enums directly from Prisma types
 
 export class RegisterDto {
+  // ──────────────────── BASIC INFO ────────────────────
   @ApiProperty({
-    example: 'Md Nadim',
+    example: 'Md Joy',
     description: 'Full name of the user',
     required: false,
   })
@@ -30,15 +34,17 @@ export class RegisterDto {
 
   @ApiProperty({
     example: '01700000000',
-    description: 'Phone number of the user',
+    description: 'Active phone number',
   })
   @IsString()
   @IsNotEmpty()
   phone: string;
 
+  // ──────────────────── PASSWORD ────────────────────
   @ApiProperty({
     example: '12345678',
-    description: 'Password (min 6 characters)',
+    minLength: 6,
+    description: 'Minimum 6 characters',
   })
   @IsNotEmpty()
   @MinLength(6)
@@ -46,35 +52,57 @@ export class RegisterDto {
 
   @ApiProperty({
     example: '12345678',
-    description: 'Confirm password (checked in service)',
+    description: 'Must match password',
   })
   @IsNotEmpty()
   confirmPassword: string;
 
-  @ApiProperty({
-    example: 'GARAGE_OWNER',
-    enum: UserRole,
-    description: 'Role of the user (CAR_OWNER, GARAGE_OWNER, SUPER_ADMIN, MEMBER)',
-  })
-  @IsEnum(UserRole)
-  role: UserRole;
+  // ──────────────────── USER ROLE ────────────────────
 
+  // ──────────────────── SERVICE CATEGORIES (Only for GARAGE_OWNER) ────────────────────
   @ApiProperty({
-    example: 'MECHANICAL_REPAIR',
+    example: ['MECHANICAL_REPAIR', 'DIAGNOSTICS'],
     enum: ServiceCategory,
+    isArray: true,
     required: false,
-    description: 'Service category (optional, required for GARAGE_OWNER)',
+    description:
+      'Required only when role = GARAGE_OWNER. Can also accept comma separated string.',
   })
-  @IsOptional()
-  @IsEnum(ServiceCategory)
-  serviceCategory?: ServiceCategory;
+  @Transform(({ value }) => {
+    if (!value) return [];
+    if (typeof value === 'string') {
+      return value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+    return Array.isArray(value) ? value.map(String) : [];
+  })
+  @IsArray()
+  @ArrayNotEmpty({
+    message: 'Select at least one service category',
+  })
+  @IsEnum(ServiceCategory, {
+    each: true,
+    message:
+      'Allowed categories: MECHANICAL_REPAIR, AC_HEATING, ELECTRICAL_SYSTEMS, BODY_AND_PAINT, DIAGNOSTICS, GENERAL_MAINTENANCE',
+  })
+  serviceCategories?: ServiceCategory[];
+
+  // ──────────────────── FILE UPLOADS (Swagger Preview) ────────────────────
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: false,
+    description: 'Upload garage logo image',
+  })
+  garageLogo?: Express.Multer.File;
 
   @ApiProperty({
-    example: false,
-    description: 'Whether review alerts are enabled',
+    type: 'string',
+    format: 'binary',
     required: false,
+    description: 'Upload trade license document/image',
   })
-  @IsOptional()
-  @IsBoolean()
-  reviewAlerts?: boolean;
+  tradeLicense?: Express.Multer.File;
 }

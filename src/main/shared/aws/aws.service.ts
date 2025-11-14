@@ -2,9 +2,6 @@ import { Injectable } from '@nestjs/common';
 import * as aws from 'aws-sdk';
 import * as crypto from 'crypto';
 import { ENVEnum } from 'src/common/enum/env.enum';
-import { promisify } from 'util';
-
-const randomBytes = promisify(crypto.randomBytes);
 
 @Injectable()
 export class awsService {

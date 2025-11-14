@@ -10,7 +10,7 @@ export enum FileType {
   VIDEO = 'video',
   AUDIO = 'audio',
   PDF = 'pdf',
-  MEDIA = 'media', // <-- NEW: audio + video
+  MEDIA = 'media',
   ANY = 'any',
 }
 
@@ -40,7 +40,7 @@ export class MulterService {
     destinationFolder: string = './uploads',
     prefix: string,
     fileType: FileType = FileType.IMAGE,
-    fileSizeLimit = 500 * 1024 * 1024, // 500MB default
+    fileSizeLimit = 500 * 1024 * 1024,
     customMimeTypes?: string[],
   ): MulterOptions {
     const allowedMimeTypes =

@@ -1,17 +1,15 @@
-import { Injectable } from '@nestjs/common';
 import { S3 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as mime from 'mime-types';
+import * as path from 'path';
 import { promisify } from 'util';
-import { Additionaldto } from '../uploadadditional.dto';
-
 
 const unlinkAsync = promisify(fs.unlink);
 
 @Injectable()
-export class AdditionalS3Service  {
+export class AdditionalS3Service {
   private s3: S3;
 
   constructor() {
@@ -24,10 +22,7 @@ export class AdditionalS3Service  {
     });
   }
 
-  async uploadFileToS3(
-    localFilePath: string,
-    prefix: string,
-  ) {
+  async uploadFileToS3(localFilePath: string, prefix: string) {
     const fileContent = fs.readFileSync(localFilePath);
     const fileExt = path.extname(localFilePath);
     const fileName = `${prefix}-${path.basename(localFilePath)}`;
@@ -60,10 +55,6 @@ export class AdditionalS3Service  {
     }
   }
 
-  create(createTestawDto:Additionaldto ) {
-    return 'This action adds a new testaw';
-  }
-
   findAll() {
     return `This action returns all testaws`;
   }
@@ -71,5 +62,4 @@ export class AdditionalS3Service  {
   findOne(id: number) {
     return `This action returns a #${id} testaw`;
   }
-
 }

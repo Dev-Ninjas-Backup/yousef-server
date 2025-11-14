@@ -1,26 +1,27 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
-  Res,
 } from '@nestjs/common';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { UtilsService } from 'src/lib/utils/utils.service';
-import { MailService } from 'src/lib/mail/mail.service';
 import { AppError } from 'src/common/error/handle-error.app';
 import {
   successResponse,
   TResponse,
 } from 'src/common/utilsResponse/response.util';
+import { MailService } from 'src/lib/mail/mail.service';
+import { PrismaService } from 'src/lib/prisma/prisma.service';
+import { UtilsService } from 'src/lib/utils/utils.service';
 
-import { UserResponseDto } from 'src/common/dto/user-response.dto';
 import { JwtService } from '@nestjs/jwt';
-import { RegisterDto } from '../dto/register.dto';
-import { ForgotPasswordDto } from '../dto/uer.dto';
-import { LoginDto } from '../dto/login.dto';
-import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
-import { ResetPasswordAuthDto } from '../dto/reset-password';
+import { UserResponseDto } from 'src/common/dto/user-response.dto';
+import { OtpEmailTemplate } from 'src/common/email/otp.template';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
+import { ResetPasswordAuthDto } from '../dto/reset-password';
+import { ForgotPasswordDto } from '../dto/uer.dto';
+import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -34,24 +35,26 @@ export class AuthService {
   // ---------- ----------REGISTER (send email verification OTP) ----------
 
   @HandleError('Failed to Register profile', 'Register')
-  async register(payload: RegisterDto) {
+  @HandleError('Failed to Register profile', 'Register')
+  async register(
+    payload: RegisterDto,
+    garageLogo?: string,
+    tradeLicense?: string,
+  ) {
     const {
       email,
       password,
       confirmPassword,
       fullName,
       phone,
-      role,
-      serviceCategory,
-      reviewAlerts,
+
+      serviceCategories,
     } = payload;
 
-    // Step 1: Validate password match
     if (password !== confirmPassword) {
-      throw new AppError(400, 'Passwords do not match');
+      throw new BadRequestException('Passwords do not match');
     }
 
-    // Step 2: Check if user already exists by email or phone
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email }, { phone }],
@@ -59,33 +62,43 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new AppError(
-        400,
+      throw new BadRequestException(
         'User already exists with this email or phone number',
       );
     }
 
-    // Step 3: Hash password
     const hashedPassword = await this.utils.hash(password);
 
-    // Step 4: Create new user
+    // Setup trial only for GARAGE_OWNER
+    const trialStart: Date | null = null;
+    const trialEnd: Date | null = null;
+    const isTrialActive = false;
+
+    // serviceCategories must be provided for GARAGE_OWNER (DTO enforced).
+    // Prisma expects enum array for `serviceCategories` field — assign set: serviceCategories or empty
+    const categoriesToSet = Array.isArray(serviceCategories)
+      ? serviceCategories
+      : [];
+
     const newUser = await this.prisma.user.create({
       data: {
         fullName,
         email,
         phone,
         password: hashedPassword,
-        role,
-        serviceCategory, 
-
+        serviceCategories: { set: categoriesToSet },
         isVerified: false,
+        trialStartDate: trialStart,
+        trialEndDate: trialEnd,
+        isTrialActive,
+        freeProductsListing: 0,
+        garageLogo: garageLogo ?? null,
+        tradeLicense: tradeLicense ?? null,
       },
     });
 
-    // Step 5: Generate OTP and expiry
+    // Generate and store OTP
     const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
-
-    // Step 6: Store OTP + expiry
     await this.prisma.user.update({
       where: { id: newUser.id },
       data: {
@@ -94,19 +107,17 @@ export class AuthService {
       },
     });
 
-    // Step 7: Send verification email
+    // Send email
     await this.mail.sendEmail(
       email,
       'Verify Your Email',
-      `
-    <h3>Hi ${fullName || 'User'},</h3>
-    <p>Use the OTP below to verify your email:</p>
-    <h2>${otp}</h2>
-    <p>This OTP will expire in 10 minutes.</p>
-    `,
+      OtpEmailTemplate({
+        name: fullName,
+        otp,
+        purpose: 'Verify Your Email',
+      }),
     );
 
-    // Step 8: Generate JWT token for email verification
     const jwtPayload = { id: newUser.id, email };
     const verifyToken = await this.jwt.signAsync(jwtPayload, {
       expiresIn: '10m',
@@ -177,13 +188,11 @@ export class AuthService {
     // Send OTP email
     await this.mail.sendEmail(
       email,
-      'Verify Your Email',
-      `
-      <h3>Hi,</h3>
-      <p>Use the OTP below to verify your email:</p>
-      <h2>${otp}</h2>
-      <p>This OTP will expire in 10 minutes.</p>
-    `,
+      'Reset Password Verification',
+      OtpEmailTemplate({
+        otp,
+        purpose: 'Reset Your Password',
+      }),
     );
 
     // Generate JWT token for verification
@@ -201,7 +210,7 @@ export class AuthService {
     try {
       decoded = await this.jwt.verifyAsync(payload.resetToken);
     } catch (err) {
-      throw new ForbiddenException('Invalid or expired token!');
+      throw new ForbiddenException(err.message ?? 'Invalid or expired token!');
     }
 
     // Find user by ID from the token
@@ -256,7 +265,7 @@ export class AuthService {
     try {
       decoded = await this.jwt.verifyAsync(payload.resetToken);
     } catch (err) {
-      throw new ForbiddenException('Invalid or expired token!');
+      throw new ForbiddenException(err.message ?? 'Invalid or expired token!');
     }
 
     // Find user by ID from the token
@@ -299,7 +308,7 @@ export class AuthService {
     try {
       decoded = await this.jwt.verifyAsync(payload.resetToken);
     } catch (err) {
-      throw new ForbiddenException('Invalid or expired token!');
+      throw new ForbiddenException(err.message ?? 'Invalid or expired token!');
     }
 
     // Find user by ID

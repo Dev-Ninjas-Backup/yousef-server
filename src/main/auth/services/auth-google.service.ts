@@ -36,15 +36,15 @@ export class AuthGoogleService {
       throw new AppError(400, 'Google ID token is required');
     }
 
-    // Step 1: Verify Google token
+    //  Verify Google token
     const payload = await this.verifyGoogleIdToken(idToken);
 
-    // Step 2: Find user by email
+    //  Find user by email
     let user = await this.prisma.user.findUnique({
       where: { email: payload.email },
     });
 
-    // Step 3: If user not found, create one
+    //  If user not found, create one
     if (!user) {
       user = await this.prisma.user.create({
         data: {
@@ -52,13 +52,13 @@ export class AuthGoogleService {
           fullName: payload.name || '',
           googleId: payload.sub,
           isVerified: true,
-          role: UserRole.CAR_OWNER, // Default role for Google login users
+          role: UserRole.CAR_OWNER,
           isActive: true,
           isDeleted: false,
         },
       });
     } else if (!user.googleId) {
-      // Step 4: Link Google account if exists but not linked
+      //  Link Google account if exists but not linked
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {
@@ -68,14 +68,14 @@ export class AuthGoogleService {
       });
     }
 
-    // Step 5: Generate JWT token
+    //  Generate JWT token
     const token = this.utils.generateToken({
       sub: user.id,
       email: user.email,
       roles: user.role,
     });
 
-    // Step 6: Return sanitized user + token
+    //  Return sanitized user + token
     return successResponse(
       {
         user: this.utils.sanitizedResponse(UserResponseDto, user),

@@ -12,7 +12,6 @@ import { ROLES_KEY } from './jwt.decorator';
 import { RequestWithUser } from './jwt.interface';
 import { PrismaService } from '../../lib/prisma/prisma.service';
 
-
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {}
 

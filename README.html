@@ -1,0 +1,298 @@
+<p>Below is a <strong>clean, ready-to-copy <code>package.json</code> snippet</strong> that contains exactly the <code>&quot;scripts&quot;</code> section you posted, plus a minimal set of dependencies/devDependencies that make all those commands work out-of-the-box.</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;indianssydney-backend&quot;,
+  &quot;version&quot;: &quot;0.0.1&quot;,
+  &quot;description&quot;: &quot;&quot;,
+  &quot;author&quot;: &quot;&quot;,
+  &quot;private&quot;: true,
+  &quot;license&quot;: &quot;UNLICENSED&quot;,
+  &quot;scripts&quot;: {
+    &quot;build&quot;: &quot;nest build&quot;,
+    &quot;start&quot;: &quot;nest start&quot;,
+    &quot;start:dev&quot;: &quot;nest start --watch&quot;,
+    &quot;start:debug&quot;: &quot;nest start --debug --watch&quot;,
+    &quot;start:prod&quot;: &quot;node dist/main&quot;,
+    &quot;lint&quot;: &quot;eslint . --ext .ts&quot;,
+    &quot;lint:fix&quot;: &quot;eslint . --ext .ts --fix&quot;,
+    &quot;format&quot;: &quot;prettier --ignore-path .gitignore --check \&quot;**/*.+(js|ts|json)\&quot;&quot;,
+    &quot;format:fix&quot;: &quot;prettier --ignore-path .gitignore --write \&quot;**/*.+(js|ts|json)\&quot;&quot;,
+    &quot;ci:check&quot;: &quot;npm run format &amp;&amp; npm run lint &amp;&amp; npm run db:validate &amp;&amp; npm run build &amp;&amp; npm run start&quot;,
+    &quot;ci:fix&quot;: &quot;npm run format:fix &amp;&amp; npm run lint:fix&quot;,
+    &quot;prisma&quot;: &quot;npx prisma&quot;,
+    &quot;db:push&quot;: &quot;npx prisma db push&quot;,
+    &quot;db:generate&quot;: &quot;npx prisma generate&quot;,
+    &quot;db:reset&quot;: &quot;npx prisma migrate reset&quot;,
+    &quot;db:migrate&quot;: &quot;npx prisma migrate dev&quot;,
+    &quot;db:deploy&quot;: &quot;npx prisma migrate deploy&quot;,
+    &quot;db:studio&quot;: &quot;npx prisma studio&quot;,
+    &quot;db:validate&quot;: &quot;npx prisma validate&quot;,
+    &quot;db:format&quot;: &quot;npx prisma format&quot;,
+    &quot;postinstall&quot;: &quot;npx prisma generate&quot;,
+    &quot;prepare&quot;: &quot;husky&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;@aws-sdk/client-s3&quot;: &quot;^3.911.0&quot;,
+    &quot;@aws-sdk/lib-storage&quot;: &quot;^3.907.0&quot;,
+    &quot;@aws-sdk/s3-request-presigner&quot;: &quot;^3.911.0&quot;,
+    &quot;@nestjs/axios&quot;: &quot;^4.0.1&quot;,
+    &quot;@nestjs/cache-manager&quot;: &quot;^3.0.1&quot;,
+    &quot;@nestjs/common&quot;: &quot;^11.0.1&quot;,
+    &quot;@nestjs/config&quot;: &quot;^4.0.2&quot;,
+    &quot;@nestjs/core&quot;: &quot;^11.0.1&quot;,
+    &quot;@nestjs/jwt&quot;: &quot;^11.0.0&quot;,
+    &quot;@nestjs/passport&quot;: &quot;^11.0.5&quot;,
+    &quot;@nestjs/platform-express&quot;: &quot;^11.1.6&quot;,
+    &quot;@nestjs/platform-socket.io&quot;: &quot;^11.1.6&quot;,
+    &quot;@nestjs/schedule&quot;: &quot;^6.0.0&quot;,
+    &quot;@nestjs/serve-static&quot;: &quot;^5.0.3&quot;,
+    &quot;@nestjs/swagger&quot;: &quot;^11.2.0&quot;,
+    &quot;@nestjs/websockets&quot;: &quot;^11.1.6&quot;,
+    &quot;@prisma/client&quot;: &quot;^6.14.0&quot;,
+    &quot;agora-access-token&quot;: &quot;^2.0.4&quot;,
+    &quot;aws-sdk&quot;: &quot;^2.1692.0&quot;,
+    &quot;axios&quot;: &quot;^1.12.2&quot;,
+    &quot;bcrypt&quot;: &quot;^6.0.0&quot;,
+    &quot;cache-manager&quot;: &quot;^7.1.1&quot;,
+    &quot;cache-manager-redis-store&quot;: &quot;^3.0.1&quot;,
+    &quot;class-transformer&quot;: &quot;^0.5.1&quot;,
+    &quot;class-validator&quot;: &quot;^0.14.2&quot;,
+    &quot;cookie-parser&quot;: &quot;^1.4.7&quot;,
+    &quot;dotenv&quot;: &quot;^17.2.3&quot;,
+    &quot;firebase-admin&quot;: &quot;^13.5.0&quot;,
+    &quot;google-auth-library&quot;: &quot;^10.2.1&quot;,
+    &quot;mime-types&quot;: &quot;^3.0.1&quot;,
+    &quot;multer&quot;: &quot;^2.0.2&quot;,
+    &quot;nodemailer&quot;: &quot;^7.0.5&quot;,
+    &quot;passport&quot;: &quot;^0.7.0&quot;,
+    &quot;passport-jwt&quot;: &quot;^4.0.1&quot;,
+    &quot;reflect-metadata&quot;: &quot;^0.2.2&quot;,
+    &quot;rxjs&quot;: &quot;^7.8.1&quot;,
+    &quot;sharp&quot;: &quot;^0.34.4&quot;,
+    &quot;socket.io&quot;: &quot;^4.8.1&quot;,
+    &quot;stripe&quot;: &quot;^18.5.0&quot;,
+    &quot;uuid&quot;: &quot;^13.0.0&quot;
+  },
+  &quot;prisma&quot;: {
+    &quot;schema&quot;: &quot;./prisma&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;@eslint/eslintrc&quot;: &quot;^3.2.0&quot;,
+    &quot;@eslint/js&quot;: &quot;^9.18.0&quot;,
+    &quot;@nestjs/cli&quot;: &quot;^11.0.0&quot;,
+    &quot;@nestjs/schematics&quot;: &quot;^11.0.0&quot;,
+    &quot;@nestjs/testing&quot;: &quot;^11.0.1&quot;,
+    &quot;@types/aws-sdk&quot;: &quot;^0.0.42&quot;,
+    &quot;@types/axios&quot;: &quot;^0.9.36&quot;,
+    &quot;@types/bcrypt&quot;: &quot;^6.0.0&quot;,
+    &quot;@types/cookie-parser&quot;: &quot;^1.4.9&quot;,
+    &quot;@types/express&quot;: &quot;^5.0.0&quot;,
+    &quot;@types/jest&quot;: &quot;^30.0.0&quot;,
+    &quot;@types/multer&quot;: &quot;^2.0.0&quot;,
+    &quot;@types/node&quot;: &quot;^22.10.7&quot;,
+    &quot;@types/nodemailer&quot;: &quot;^7.0.1&quot;,
+    &quot;@types/passport-jwt&quot;: &quot;^4.0.1&quot;,
+    &quot;@types/stripe&quot;: &quot;^8.0.416&quot;,
+    &quot;@types/supertest&quot;: &quot;^6.0.2&quot;,
+    &quot;@types/uuid&quot;: &quot;^10.0.0&quot;,
+    &quot;chalk&quot;: &quot;^5.6.2&quot;,
+    &quot;eslint&quot;: &quot;^9.18.0&quot;,
+    &quot;eslint-config-prettier&quot;: &quot;^10.0.1&quot;,
+    &quot;eslint-plugin-prettier&quot;: &quot;^5.2.2&quot;,
+    &quot;globals&quot;: &quot;^16.0.0&quot;,
+    &quot;husky&quot;: &quot;^9.1.7&quot;,
+    &quot;jest&quot;: &quot;^30.0.0&quot;,
+    &quot;node-emoji&quot;: &quot;^2.2.0&quot;,
+    &quot;prettier&quot;: &quot;^3.4.2&quot;,
+    &quot;prisma&quot;: &quot;^6.14.0&quot;,
+    &quot;source-map-support&quot;: &quot;^0.5.21&quot;,
+    &quot;supertest&quot;: &quot;^7.0.0&quot;,
+    &quot;ts-jest&quot;: &quot;^29.2.5&quot;,
+    &quot;ts-loader&quot;: &quot;^9.5.2&quot;,
+    &quot;ts-node&quot;: &quot;^10.9.2&quot;,
+    &quot;tsconfig-paths&quot;: &quot;^4.2.0&quot;,
+    &quot;typescript&quot;: &quot;^5.7.3&quot;,
+    &quot;typescript-eslint&quot;: &quot;^8.20.0&quot;,
+    &quot;yocto-spinner&quot;: &quot;^1.0.0&quot;
+  },
+  &quot;jest&quot;: {
+    &quot;moduleFileExtensions&quot;: [&quot;js&quot;, &quot;json&quot;, &quot;ts&quot;],
+    &quot;rootDir&quot;: &quot;src&quot;,
+    &quot;testRegex&quot;: &quot;.*\\.spec\\.ts$&quot;,
+    &quot;transform&quot;: {
+      &quot;^.+\\.(t|j)s$&quot;: &quot;ts-jest&quot;
+    },
+    &quot;collectCoverageFrom&quot;: [&quot;**/*.(t|j)s&quot;],
+    &quot;coverageDirectory&quot;: &quot;../coverage&quot;,
+    &quot;testEnvironment&quot;: &quot;node&quot;
+  }
+}
+</code></pre>
+<h3>How to use it</h3>
+<ol>
+<li><strong>Create/replace</strong> <code>package.json</code> in the root of your project with the JSON above.</li>
+<li>Run:</li>
+</ol>
+<pre><code class="language-bash">npm install
+</code></pre>
+<ol start="3">
+<li>Follow the <strong>Getting Started</strong> steps from your README (<code>.env</code>, <code>prisma migrate dev</code>, <code>npm run start:dev</code>, etc.).</li>
+</ol>
+<hr>
+<h2>Updated README (Markdown)</h2>
+<pre><code class="language-markdown"># yousef-server Project
+
+A production-ready NestJS template with Prisma ORM, Docker support, JWT authentication, and modular structure.
+
+## Features
+
+- Prisma ORM integration
+- JWT authentication
+- Docker support
+- Modular architecture
+- Swagger API docs
+- Firebase integration (optional)
+- File upload handling
+- Environment configuration
+- Test setup
+- Socket.io
+
+## Project Structure
+</code></pre>
+<p>src/
+├── main/ # Core business modules
+│ ├── recommendation/ # Example module
+│ └── ...
+├── common/ # Shared utilities, guards
+├── lib/ # External integrations
+├── prisma/ # Database schema &amp; seeds
+├── uploads/ # File uploads
+└── main.ts # App bootstrap</p>
+<pre><code>
+## Prerequisites
+
+- Node.js **v18+**
+- PostgreSQL
+- Docker *(optional)*
+- Ngrok *(optional)*
+
+## Getting Started
+
+1. **Clone &amp; Install**
+
+```bash
+git clone https://github.com/Joy43/NestJS-template
+cd NestJS-template
+npm install
+</code></pre>
+<ol start="2">
+<li><strong>Configure Environment</strong><br>
+Create a <code>.env</code> file in the root:</li>
+</ol>
+<pre><code class="language-env">DATABASE_URL=&quot;postgresql://postgres:postgres@localhost:5432/nest_template&quot;
+JWT_SECRET=&quot;your_jwt_secret&quot;
+JWT_EXPIRATION=&quot;7d&quot;
+PORT=5000
+NODE_ENV=development
+</code></pre>
+<ol start="3">
+<li><strong>Database Setup</strong></li>
+</ol>
+<pre><code class="language-bash">npx prisma generate
+npx prisma migrate dev
+</code></pre>
+<ol start="4">
+<li><strong>Run Development Server</strong></li>
+</ol>
+<pre><code class="language-bash">npm run start:dev
+</code></pre>
+<h2>Development Scripts</h2>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>start:dev</code></td>
+<td>Hot-reload development server</td>
+</tr>
+<tr>
+<td><code>build</code></td>
+<td>Compile to <code>dist/</code> for production</td>
+</tr>
+<tr>
+<td><code>start:prod</code></td>
+<td>Run compiled production app</td>
+</tr>
+<tr>
+<td><code>lint</code> / <code>lint:fix</code></td>
+<td>ESLint check / auto-fix</td>
+</tr>
+<tr>
+<td><code>format</code> / <code>format:fix</code></td>
+<td>Prettier check / auto-format</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>Unit tests (<code>jest</code>)</td>
+</tr>
+<tr>
+<td><code>test:e2e</code></td>
+<td>End-to-end tests</td>
+</tr>
+<tr>
+<td><code>ci:check</code></td>
+<td>Full CI validation (format → lint → build)</td>
+</tr>
+<tr>
+<td><code>ci:fix</code></td>
+<td>Auto-fix format &amp; lint issues</td>
+</tr>
+</tbody>
+</table>
+<h3>Prisma Commands</h3>
+<pre><code class="language-bash">npx prisma generate        # Generate client
+npx prisma migrate dev     # Create &amp; apply migration (dev)
+npx prisma migrate deploy  # Apply migrations in production
+npx prisma studio          # GUI for DB
+npx prisma db push         # Sync schema without migrations
+</code></pre>
+<h3>Docker</h3>
+<pre><code class="language-bash">docker compose up --build   # Start PostgreSQL + app
+docker compose down         # Stop containers
+</code></pre>
+<h2>API Documentation</h2>
+<p>Swagger UI: <strong><code>/docs</code></strong></p>
+<h2>Authentication</h2>
+<pre><code class="language-http">Authorization: Bearer &lt;jwt-token&gt;
+</code></pre>
+<h2>Optional: Firebase</h2>
+<pre><code class="language-ts">// lib/firebase.ts
+import * as admin from 'firebase-admin';
+
+admin.initializeApp({
+  credential: admin.credential.cert(
+    JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!),
+  ),
+});
+
+export default admin;
+</code></pre>
+<h2>Generating Modules</h2>
+<pre><code class="language-bash">npx nest g resource main/&lt;module-name&gt;
+</code></pre>
+<h2>Resources</h2>
+<ul>
+<li><a href="https://docs.nestjs.com/">NestJS Docs</a></li>
+<li><a href="https://www.prisma.io/docs">Prisma Docs</a></li>
+<li><a href="https://docs.docker.com/">Docker Docs</a></li>
+</ul>
+<h2>License</h2>
+<p>MIT © 2025 Ss Joy</p>
+<pre><code>
+---
+
+**Copy the `package.json` snippet** into your project, run `npm install`, and you’ll have a fully functional NestJS + Prisma starter that matches the README you shared. Happy coding!
+</code></pre>

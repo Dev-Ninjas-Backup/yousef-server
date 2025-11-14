@@ -1,7 +1,4 @@
 import { Module } from '@nestjs/common';
-
-import { SubscribeModule } from './shared/subscribe/subscribe.module';
-
 import { AuthModule } from './auth/auth.module';
 
 import { PaymentModule } from './shared/payment/payment.module';
@@ -11,16 +8,25 @@ import { awsModule } from './shared/aws/aws.module';
 
 import { TestawsModule } from './testaws/testaws.module';
 import { UsersModule } from './users/users.module';
+import { GarageModule } from './garage/garage.module';
+import { ServiceTypeModule } from './service-type/service-type.module';
+import { ContactModule } from './shared/contact/contact.module';
+import { AdminModule } from './admin/admin.module';
+import { PartsFinancialsModule } from './parts-financials/parts-financials.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     AuthModule,
-    SubscribeModule,
+    ContactModule,
     PaymentModule,
     awsModule,
     TestawsModule,
     UsersModule,
+    AdminModule,
+    PartsFinancialsModule,
+    GarageModule,
+    ServiceTypeModule,
   ],
   controllers: [],
   providers: [],

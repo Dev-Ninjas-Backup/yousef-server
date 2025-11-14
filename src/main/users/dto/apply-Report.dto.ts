@@ -21,6 +21,5 @@ export class CreateReportDto {
     required: true,
   })
   @IsString()
-  contentId: string;  
-
+  contentId: string;
 }
