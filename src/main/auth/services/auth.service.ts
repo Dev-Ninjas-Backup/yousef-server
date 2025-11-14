@@ -21,6 +21,7 @@ import { LoginDto } from '../dto/login.dto';
 import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
 import { ResetPasswordAuthDto } from '../dto/reset-password';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import { OtpEmailTemplate } from 'src/common/email/otp.template';
 
 @Injectable()
 export class AuthService {
@@ -110,15 +111,15 @@ export class AuthService {
     });
 
     // Send verification email
+    // Send verification OTP using reusable template
     await this.mail.sendEmail(
       email,
       'Verify Your Email',
-      `
-    <h3>Hi ${fullName || 'User'},</h3>
-    <p>Use the OTP below to verify your email:</p>
-    <h2>${otp}</h2>
-    <p>This OTP will expire in 10 minutes.</p>
-    `,
+      OtpEmailTemplate({
+        name: fullName,
+        otp,
+        purpose: 'Verify Your Email',
+      }),
     );
 
     // Generate JWT token for email verification
@@ -192,13 +193,11 @@ export class AuthService {
     // Send OTP email
     await this.mail.sendEmail(
       email,
-      'Verify Your Email',
-      `
-      <h3>Hi,</h3>
-      <p>Use the OTP below to verify your email:</p>
-      <h2>${otp}</h2>
-      <p>This OTP will expire in 10 minutes.</p>
-    `,
+      'Reset Password Verification',
+      OtpEmailTemplate({
+        otp,
+        purpose: 'Reset Your Password',
+      }),
     );
 
     // Generate JWT token for verification

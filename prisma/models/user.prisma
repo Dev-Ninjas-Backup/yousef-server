@@ -26,12 +26,14 @@ model User {
   resetOtpExpiry DateTime?
 
   // ------------------ Account Status -------------------------
-  isActive              Boolean   @default(true)
-  isDeleted             Boolean   @default(false)
-  deletedAt             DateTime?
-  isMembership          Boolean   @default(false)
-  isEmailNotification   Boolean   @default(false)
-  customerInquiryAlerts Boolean   @default(false)
+  isActive                Boolean   @default(true)
+  isDeleted               Boolean   @default(false)
+  deletedAt               DateTime?
+  isMembership            Boolean   @default(false)
+  isEmailNotification     Boolean   @default(false)
+  isCustomerInquiryAlerts Boolean   @default(false)
+  isSmsNotification       Boolean   @default(false)
+  isEmailPromotional      Boolean   @default(false)
 
   // Trial tracking
   trialStartDate        DateTime?
