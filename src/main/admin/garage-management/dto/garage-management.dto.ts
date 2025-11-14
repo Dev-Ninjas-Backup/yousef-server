@@ -37,6 +37,8 @@ export class UpdateGarageStatusDto {
     description: 'Select the new garage status',
     example: GarageStatus.APPROVE,
   })
-  @IsEnum(GarageStatus, { message: 'garageStatus must be APPROVE, PENDING, or DECLINE' })
+  @IsEnum(GarageStatus, {
+    message: 'garageStatus must be APPROVE, PENDING, or DECLINE',
+  })
   garageStatus: GarageStatus;
 }

@@ -52,7 +52,7 @@ export class ContactService {
 
     return successResponse(contact, 'Contact message created successfully');
   }
-  
+
   @HandleError('Failed to fetch contacts', 'Contact')
   async findAll(query: PaginationDto): Promise<TResponse<any>> {
     const page = query.page || 1;

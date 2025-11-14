@@ -105,12 +105,12 @@ export class UserController {
   async getAllUsers() {
     return this.userService.getAllUsers();
   }
-  
+
   // ---------------------user report Contents----------------
   // @ApiOperation({ summary: 'Create Report with multiple screenshots' })
   // @ApiBearerAuth()
   // @ValidateAuth()
-  // @Post('create-report')         
+  // @Post('create-report')
   // @ApiConsumes('multipart/form-data')
   // @UseInterceptors(
   //   FilesInterceptor(

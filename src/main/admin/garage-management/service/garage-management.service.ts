@@ -45,7 +45,7 @@ export class GarageManagementService {
       where: { id },
       data: { ...dto },
     });
-  }    
+  }
 
   // -------Only update garage updateStatus-------------
 
