@@ -1,20 +1,28 @@
-import { IsString, IsOptional, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class CreateGarageDto {
   @ApiProperty({ description: 'Unique name of the garage', example: 'Elite Auto Repair' })
   @IsString()
   name: string;
 
-  @ApiProperty({ description: 'URL of the garage cover photo', example: 'https://example.com/cover.jpg', required: false })
-  @IsString()
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'Cover photo file upload',
+    required: false,
+  })
   @IsOptional()
-  coverPhoto?: string;
+  coverPhoto?: Express.Multer.File;
 
-  @ApiProperty({ description: 'URL of the garage profile image', example: 'https://example.com/profile.jpg', required: false })
-  @IsString()
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'Profile image file upload',
+    required: false,
+  })
   @IsOptional()
-  profileImage?: string;
+  profileImage?: Express.Multer.File;
 
   @ApiProperty({ description: 'Contact phone number', example: '+971-50-123-4567', required: false })
   @IsString()

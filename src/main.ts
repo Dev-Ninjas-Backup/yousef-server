@@ -1,11 +1,11 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ENVEnum } from './common/enum/env.enum';
-import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
-import { AllExceptionsFilter } from './common/filter/http-exception.filter';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
+import { AppModule } from './app.module';
+import { ENVEnum } from './common/enum/env.enum';
+import { AllExceptionsFilter } from './common/filter/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -54,7 +54,11 @@ async function bootstrap() {
   // --------swagger api----
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true
+    }
+  });
   // ---------------webhook raw body parser----------------
   // Stripe requires the raw body to construct the event.
   app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));

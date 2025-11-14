@@ -1,21 +1,26 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
   ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
+import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import { CreateGarageDto } from '../dto/create-garage.dto';
 import { UpdateGarageDto } from '../dto/update-garage.dto';
 import { GarageService } from '../service/garage.service';
@@ -28,11 +33,31 @@ export class GarageController {
   @Post()
   @ApiOperation({ summary: 'Create a new garage' })
   @ApiBody({ type: CreateGarageDto })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'coverPhoto', maxCount: 1 },
+        { name: 'profileImage', maxCount: 1 },
+      ],
+      new MulterService().createMulterOptions('./Uploads', 'content', FileType.IMAGE),
+    ),
+  )
   @ApiResponse({ status: 201, description: 'The garage has been successfully created.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
-  create(@Body() createGarageDto: CreateGarageDto) {
-    console.log('POST /garages hit', createGarageDto);
-    return this.garageService.create(createGarageDto);
+  async create(
+    @Body() createGarageDto: CreateGarageDto,
+    @UploadedFiles()
+    files: {
+      coverPhoto?: Express.Multer.File[];
+      profileImage?: Express.Multer.File[];
+    } = {},
+  ) {
+    console.log('POST /garages hit', { createGarageDto, files });
+    return this.garageService.create(createGarageDto, {
+      coverPhoto: files.coverPhoto?.[0],
+      profileImage: files.profileImage?.[0],
+    });
   }
 
   @Get()
@@ -55,10 +80,31 @@ export class GarageController {
   @ApiOperation({ summary: 'Update a garage by ID' })
   @ApiParam({ name: 'id', description: 'UUID of the garage', example: '123e4567-e89b-12d3-a456-426614174000' })
   @ApiBody({ type: UpdateGarageDto })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'coverPhoto', maxCount: 1 },
+        { name: 'profileImage', maxCount: 1 },
+      ],
+      new MulterService().createMulterOptions('./Uploads', 'content', FileType.IMAGE),
+    ),
+  )
   @ApiResponse({ status: 200, description: 'The garage has been updated.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
-  update(@Param('id') id: string, @Body() updateGarageDto: UpdateGarageDto) {
-    return this.garageService.update(id, updateGarageDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateGarageDto: UpdateGarageDto,
+    @UploadedFiles()
+    files: {
+      coverPhoto?: Express.Multer.File[];
+      profileImage?: Express.Multer.File[];
+    } = {},
+  ) {
+    return this.garageService.update(id, updateGarageDto, {
+      coverPhoto: files.coverPhoto?.[0],
+      profileImage: files.profileImage?.[0],
+    });
   }
 
   @Delete(':id')
