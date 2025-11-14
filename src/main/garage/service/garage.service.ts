@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
 import { CreateGarageDto } from '../dto/create-garage.dto';
@@ -9,7 +10,7 @@ export class GarageService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) {}
+  ) { }
 
   // CREATE
   async create(
@@ -96,9 +97,16 @@ export class GarageService {
     const garage = await this.prisma.garage.findUnique({ where: { id } });
     if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
 
-    if (userId !== garage.userId) {
-      throw new Error('Forbidden!');
+    // if (userId !== garage.userId) {
+    //   throw new Error('Forbidden!');
+    // }
+
+    const isUser = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (userId !== garage.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
+      throw new Error("You are not authorized this route!");
     }
+
 
     let coverPhotoUrl: string | undefined;
     let profileImageUrl: string | undefined;
@@ -224,8 +232,14 @@ export class GarageService {
     if (!isExist) throw new NotFoundException(`Garage with ID ${id} not found`);
     console.log('Matched', userId, isExist.userId);
 
-    if (userId !== isExist.userId) {
-      throw new Error('Forbidden!');
+    // if (userId !== isExist.userId) {
+    //   throw new Error('Forbidden!');
+    // }
+
+    const isUser = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (userId !== isExist.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
+      throw new Error("You are not authorized this route!");
     }
 
     const garage = await this.prisma.garage.findUnique({ where: { id } });

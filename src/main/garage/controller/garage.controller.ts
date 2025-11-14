@@ -34,7 +34,7 @@ import { GarageService } from '../service/garage.service';
 @ApiTags('Garages')
 @Controller('garages')
 export class GarageController {
-  constructor(private readonly garageService: GarageService) {}
+  constructor(private readonly garageService: GarageService) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
