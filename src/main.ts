@@ -17,7 +17,12 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
 
+  // ------------enable cors---------------
   app.enableCors({
     origin: (origin, callback) => {
       const allowedOrigins = [
@@ -51,14 +56,7 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
-  // --------swagger api----
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-  });
   // ---------------webhook raw body parser----------------
   // Stripe requires the raw body to construct the event.
   app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));

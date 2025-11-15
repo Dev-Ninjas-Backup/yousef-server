@@ -1,22 +1,20 @@
-// src/auth/dto/register.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+import { ServiceCategory } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
+  IsArray,
   IsEmail,
   IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
-  IsArray,
-  ArrayNotEmpty,
-  ValidateIf,
 } from 'class-validator';
-import { UserRole, ServiceCategory } from '@prisma/client';
 
 export class RegisterDto {
+  // ──────────────────── BASIC INFO ────────────────────
   @ApiProperty({
-    example: 'Md joy',
-    description: 'Full name of the user',
+    example: 'Md Joy',
     required: false,
   })
   @IsOptional()
@@ -25,7 +23,6 @@ export class RegisterDto {
 
   @ApiProperty({
     example: '68urgent@powerscrews.com',
-    description: 'Valid email address',
   })
   @IsEmail()
   @IsNotEmpty()
@@ -33,15 +30,15 @@ export class RegisterDto {
 
   @ApiProperty({
     example: '01700000000',
-    description: 'Phone number of the user',
   })
   @IsString()
   @IsNotEmpty()
   phone: string;
 
+  // ──────────────────── PASSWORD ────────────────────
   @ApiProperty({
     example: '12345678',
-    description: 'Password (min 6 characters)',
+    minLength: 6,
   })
   @IsNotEmpty()
   @MinLength(6)
@@ -49,34 +46,81 @@ export class RegisterDto {
 
   @ApiProperty({
     example: '12345678',
-    description: 'Confirm password (checked in service)',
   })
   @IsNotEmpty()
   confirmPassword: string;
 
+  // ──────────────────── OPTIONAL GARAGE FIELDS ────────────────────
   @ApiProperty({
-    example: 'GARAGE_OWNER',
-    enum: UserRole,
-    description: 'Role of the user',
-  })
-  @IsEnum(UserRole)
-  role: UserRole;
-
-  // ---------- MULTIPLE CATEGORIES ----------
-  @ApiProperty({
-    type: [String],
-    enum: ServiceCategory,
-    example: ['MECHANICAL_REPAIR', 'BODY_AND_PAINT'],
-    description:
-      'Service categories the garage offers. **Required when role = GARAGE_OWNER**',
+    example: 'Joy Auto Care',
     required: false,
   })
   @IsOptional()
+  @IsString()
+  garageName?: string;
+
+  @ApiProperty({
+    example: 'Dubai Marina',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiProperty({
+    example: 'Dubai',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @ApiProperty({
+    example: 'Sharjah',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  emirate?: string;
+
+  // ──────────────────── OPTIONAL SERVICE CATEGORIES ────────────────────
+  @ApiProperty({
+    example: ['MECHANICAL_REPAIR', 'DIAGNOSTICS'],
+    enum: ServiceCategory,
+    isArray: true,
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return [];
+    if (typeof value === 'string') {
+      return value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+    return Array.isArray(value) ? value.map(String) : [];
+  })
   @IsArray()
   @IsEnum(ServiceCategory, { each: true })
-  @ValidateIf((o) => o.role === UserRole.GARAGE_OWNER)
-  @ArrayNotEmpty({
-    message: 'At least one service category is required for GARAGE_OWNER',
-  })
   serviceCategories?: ServiceCategory[];
+
+  // ──────────────────── OPTIONAL FILE UPLOADS ────────────────────
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: false,
+    description: 'Garage logo image',
+  })
+  @IsOptional()
+  garageLogo?: Express.Multer.File;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: false,
+    description: 'Trade license file',
+  })
+  @IsOptional()
+  tradeLicense?: Express.Multer.File;
 }

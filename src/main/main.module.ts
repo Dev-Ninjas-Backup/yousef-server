@@ -11,6 +11,8 @@ import { UsersModule } from './users/users.module';
 import { GarageModule } from './garage/garage.module';
 import { ServiceTypeModule } from './service-type/service-type.module';
 import { ContactModule } from './shared/contact/contact.module';
+import { AdminModule } from './admin/admin.module';
+import { PartsFinancialsModule } from './parts-financials/parts-financials.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { ContactModule } from './shared/contact/contact.module';
     awsModule,
     TestawsModule,
     UsersModule,
+    AdminModule,
+    PartsFinancialsModule,
     GarageModule,
     ServiceTypeModule,
   ],
