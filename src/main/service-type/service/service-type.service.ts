@@ -14,7 +14,7 @@ export class ServiceTypeService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) { }
+  ) {}
 
   // CREATE SERVICE
   async create(
@@ -35,7 +35,9 @@ export class ServiceTypeService {
     let iconUrl: string | undefined;
     if (files.icon) {
       try {
-        const { url } = await this.s3FileService.processUploadedFile(files.icon);
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.icon,
+        );
         iconUrl = url;
       } catch (error) {
         throw new Error(`Failed to upload icon to S3: ${error.message}`);
