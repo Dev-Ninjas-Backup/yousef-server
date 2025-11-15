@@ -11,8 +11,16 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ValidateAuth, ValidateGarageOwner } from 'src/common/jwt/jwt.decorator';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  ValidateAuth,
+  ValidateGarageOwner,
+} from 'src/common/jwt/jwt.decorator';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import { CreateServiceTypeDto } from '../dto/create-service.dto';
 import { UpdateServiceTypeDto } from '../dto/update-service.dto';
@@ -21,7 +29,7 @@ import { ServiceTypeService } from '../service/service-type.service';
 @ApiTags('Service Type')
 @Controller('services')
 export class ServiceTypeController {
-  constructor(private readonly serviceTypeService: ServiceTypeService) { }
+  constructor(private readonly serviceTypeService: ServiceTypeService) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -32,8 +40,12 @@ export class ServiceTypeController {
   @UseInterceptors(
     FileFieldsInterceptor(
       [{ name: 'icon', maxCount: 1 }],
-      new MulterService().createMulterOptions('./Uploads', 'services', FileType.IMAGE)
-    )
+      new MulterService().createMulterOptions(
+        './Uploads',
+        'services',
+        FileType.IMAGE,
+      ),
+    ),
   )
   async create(
     @Body() dto: CreateServiceTypeDto,
@@ -65,8 +77,12 @@ export class ServiceTypeController {
   @UseInterceptors(
     FileFieldsInterceptor(
       [{ name: 'icon', maxCount: 1 }],
-      new MulterService().createMulterOptions('./Uploads', 'services', FileType.IMAGE)
-    )
+      new MulterService().createMulterOptions(
+        './Uploads',
+        'services',
+        FileType.IMAGE,
+      ),
+    ),
   )
   async update(
     @Param('id') id: string,
@@ -75,7 +91,12 @@ export class ServiceTypeController {
     @Request() req,
   ) {
     const iconFile = files.icon?.[0];
-    return this.serviceTypeService.update(id, dto, { icon: iconFile }, req.user);
+    return this.serviceTypeService.update(
+      id,
+      dto,
+      { icon: iconFile },
+      req.user,
+    );
   }
 
   @ValidateAuth()

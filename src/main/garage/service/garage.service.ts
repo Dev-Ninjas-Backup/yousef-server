@@ -167,11 +167,17 @@ export class GarageService {
 
   // GET ALL
   async findAll() {
-    return this.prisma.garage.findMany({
+    const garages = await this.prisma.garage.findMany({
       include: {
         services: {
-          include: {
-            service: true, // Include all service details
+          select: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              },
+            },
           },
         },
         user: {
@@ -190,6 +196,12 @@ export class GarageService {
         },
       },
     });
+
+    // Transform the response to simplify the services array
+    return garages.map((garage) => ({
+      ...garage,
+      services: garage.services.map((gs) => gs.service),
+    }));
   }
 
   // GET ONE
@@ -198,8 +210,14 @@ export class GarageService {
       where: { id },
       include: {
         services: {
-          include: {
-            service: true, // Include all service details
+          select: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              },
+            },
           },
         },
         user: {
@@ -215,16 +233,18 @@ export class GarageService {
             createdAt: true,
             updatedAt: true,
           },
-          // omit: {
-          //   password: true
-          // }
         },
       },
     });
-    if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
-    return garage;
-  }
 
+    if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
+
+    // Transform the response to simplify the services array
+    return {
+      ...garage,
+      services: garage.services.map((gs) => gs.service),
+    };
+  }
   // DELETE
   async remove(userId: string, id: string) {
     const isExist = await this.prisma.garage.findUnique({ where: { id } });

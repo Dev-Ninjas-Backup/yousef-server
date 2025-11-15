@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
@@ -7,7 +11,10 @@ import { UpdateServiceTypeDto } from '../dto/update-service.dto';
 
 @Injectable()
 export class ServiceTypeService {
-  constructor(private prisma: PrismaService, private s3FileService: S3FileService) { }
+  constructor(
+    private prisma: PrismaService,
+    private s3FileService: S3FileService,
+  ) { }
 
   // CREATE SERVICE
   async create(
@@ -15,9 +22,14 @@ export class ServiceTypeService {
     files: { icon?: Express.Multer.File } = {},
     user: any,
   ) {
-    console.log(user);
-    if (user.roles !== UserRole.SUPER_ADMIN && user.roles !== UserRole.GARAGE_OWNER) {
-      throw new ForbiddenException('Only admins and garage owners can create services');
+    // Authorization check
+    if (
+      user.roles !== UserRole.SUPER_ADMIN &&
+      user.roles !== UserRole.GARAGE_OWNER
+    ) {
+      throw new ForbiddenException(
+        'Only admins and garage owners can create services',
+      );
     }
 
     let iconUrl: string | undefined;
@@ -30,11 +42,37 @@ export class ServiceTypeService {
       }
     }
 
-    return this.prisma.service.create({
-      data: {
-        icon: iconUrl || '',
-        name: dto.name,
-      },
+    // Start a transaction to ensure atomicity
+    return this.prisma.$transaction(async (prisma) => {
+      // Create the service
+      const service = await prisma.service.create({
+        data: {
+          icon: iconUrl || '',
+          name: dto.name,
+        },
+      });
+
+      // If the user is a GARAGE_OWNER, link the service to their garage
+      if (user.roles === UserRole.GARAGE_OWNER) {
+        // Find the garage owned by the user
+        const garage = await prisma.garage.findFirst({
+          where: { userId: user.id },
+        });
+
+        if (!garage) {
+          throw new NotFoundException('No garage found for this user');
+        }
+
+        // Link the service to the garage via GarageService
+        await prisma.garageService.create({
+          data: {
+            garageId: garage.id,
+            serviceId: service.id,
+          },
+        });
+      }
+
+      return service;
     });
   }
 
@@ -81,8 +119,13 @@ export class ServiceTypeService {
     const service = await this.prisma.service.findUnique({ where: { id } });
     if (!service) throw new NotFoundException('Service not found');
 
-    if (user.roles !== UserRole.SUPER_ADMIN && user.roles !== UserRole.GARAGE_OWNER) {
-      throw new ForbiddenException('Only admins and garage owners can update services');
+    if (
+      user.roles !== UserRole.SUPER_ADMIN &&
+      user.roles !== UserRole.GARAGE_OWNER
+    ) {
+      throw new ForbiddenException(
+        'Only admins and garage owners can update services',
+      );
     }
 
     // Check if GARAGE_OWNER has access to this service via a garage they own
@@ -91,14 +134,18 @@ export class ServiceTypeService {
         where: { serviceId: id, garage: { userId: user.id } },
       });
       if (!hasAccess) {
-        throw new ForbiddenException('Garage owner can only update services linked to their garages');
+        throw new ForbiddenException(
+          'Garage owner can only update services linked to their garages',
+        );
       }
     }
 
     let iconUrl: string | undefined = service.icon; // Retain existing icon if no new file
     if (files.icon) {
       try {
-        const { url } = await this.s3FileService.processUploadedFile(files.icon);
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.icon,
+        );
         iconUrl = url;
       } catch (error) {
         throw new Error(`Failed to upload icon to S3: ${error.message}`);

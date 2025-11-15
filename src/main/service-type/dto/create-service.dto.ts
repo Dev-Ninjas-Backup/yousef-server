@@ -5,7 +5,7 @@ export class CreateServiceTypeDto {
   @ApiProperty({
     type: 'string',
     format: 'binary',
-    description: 'Service icon file upload'
+    description: 'Service icon file upload',
   })
   icon: Express.Multer.File;
 
