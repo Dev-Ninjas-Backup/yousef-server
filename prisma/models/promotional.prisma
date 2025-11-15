@@ -1,0 +1,26 @@
+// Promotion model
+model Promotion {
+    id          String            @id @default(uuid())
+    sellerId    String
+    productId   String?
+    adTitle     String
+    description String
+    adType      String
+    discount    Decimal?
+    location    String
+    validFrom   DateTime
+    validUntil  DateTime
+    imageUrl    String?
+    status      PromotionAdStatus @default(PENDING)
+    cost        Decimal
+    createdAt   DateTime          @default(now())
+    updatedAt   DateTime          @updatedAt
+    seller      Seller            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+    product     Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
+
+enum PromotionAdStatus {
+    PENDING
+    APPROVED
+    REJECT
+}

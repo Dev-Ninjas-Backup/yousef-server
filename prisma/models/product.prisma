@@ -9,34 +9,37 @@ model Seller {
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
     products    Product[]
+
+    promotions Promotion[]
 }
 
 // Product model
 model Product {
-    id          String   @id @default(uuid())
+    id          String      @id @default(uuid())
     sellerId    String
     partName    String
     brand       String?
     category    String
     condition   String
     price       Decimal
-    quantity    Int      @default(1)
+    quantity    Int         @default(1)
     description String?
-    status      String   @default("Pending Approval") // FIX: System-set default status as not in UI form.
-    views       Int      @default(0)
-    inquiries   Int      @default(0)
-    isPromoted  Boolean  @default(false)
+    status      String      @default("Pending Approval") // FIX: System-set default status as not in UI form.
+    views       Int         @default(0)
+    inquiries   Int         @default(0)
+    isPromoted  Boolean     @default(false)
     promoCost   Decimal? // FIX: Changed from Float? to Decimal? for currency consistency.
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    seller      Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
     photos      Photo[]
+    promotions  Promotion[]
 }
 
 model Photo {
-    id        String   @id @default(uuid())
-    productId String
-    url       String // URL of the file in S3/storage
-    createdAt DateTime @default(now())
-    product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+    id          String     @id @default(uuid())
+    productId   String
+    url         String // URL of the file in S3/storage
+    createdAt   DateTime   @default(now())
+    product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
