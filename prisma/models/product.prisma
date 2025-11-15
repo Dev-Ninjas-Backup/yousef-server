@@ -4,7 +4,7 @@ model Seller {
     name        String
     email       String    @unique
     phoneNumber String?
-    sellerType  String
+    sellerType  String // IMPORTANT: Captures "Individual Seller" or "Verified Supplier" from UI.
     isVerified  Boolean   @default(false)
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
@@ -22,11 +22,11 @@ model Product {
     price       Decimal
     quantity    Int      @default(1)
     description String?
-    status      String
+    status      String   @default("Pending Approval") // FIX: System-set default status as not in UI form.
     views       Int      @default(0)
     inquiries   Int      @default(0)
     isPromoted  Boolean  @default(false)
-    promoCost   Float?
+    promoCost   Decimal? // FIX: Changed from Float? to Decimal? for currency consistency.
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
     seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
@@ -36,7 +36,7 @@ model Product {
 model Photo {
     id        String   @id @default(uuid())
     productId String
-    url       String
+    url       String // URL of the file in S3/storage
     createdAt DateTime @default(now())
     product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
