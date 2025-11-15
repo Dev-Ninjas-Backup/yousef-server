@@ -56,6 +56,7 @@ model User {
   // ------------------ Relations ------------------------------
   UserNotification   UserNotification[]
   notificationToggle NotificationToggle?
+  garages            Garage[] // One user can have many garages
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
