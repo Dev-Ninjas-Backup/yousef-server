@@ -9,8 +9,6 @@ model Seller {
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
     products    Product[]
-
-    promotions Promotion[]
 }
 
 // Product model

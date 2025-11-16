@@ -57,6 +57,7 @@ model User {
   UserNotification   UserNotification[]
   notificationToggle NotificationToggle?
   garages            Garage[] // One user can have many garages
+  promotions         Promotion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

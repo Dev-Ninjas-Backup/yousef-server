@@ -1,7 +1,7 @@
 // Promotion model
 model Promotion {
     id          String            @id @default(uuid())
-    sellerId    String
+    userId      String
     productId   String?
     adTitle     String
     description String
@@ -10,12 +10,11 @@ model Promotion {
     location    String
     validFrom   DateTime
     validUntil  DateTime
-    imageUrl    String?
+    imageUrl    String[]          @default([])
     status      PromotionAdStatus @default(PENDING)
-    cost        Decimal
     createdAt   DateTime          @default(now())
     updatedAt   DateTime          @updatedAt
-    seller      Seller            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+    user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
     product     Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
 }
 
