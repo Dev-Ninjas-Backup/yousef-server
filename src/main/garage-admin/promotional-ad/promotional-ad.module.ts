@@ -7,6 +7,6 @@ import { LibModule } from '../../../lib/lib.module';
   imports: [LibModule],
   controllers: [PromotionalAdController],
   providers: [PromotionalAdService],
-  exports: [PromotionalAdService]
+  exports: [PromotionalAdService],
 })
 export class PromotionalAdModule {}

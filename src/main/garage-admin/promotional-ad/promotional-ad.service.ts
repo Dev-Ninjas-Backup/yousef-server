@@ -8,10 +8,13 @@ import { UpdatePromotionalAdDto } from './dto/update-promotional-ad.dto';
 export class PromotionalAdService {
   constructor(
     private prisma: PrismaService,
-    private s3FileService: S3FileService
-  ) { }
+    private s3FileService: S3FileService,
+  ) {}
 
-  async create(createDto: CreatePromotionalAdDto, files?: Express.Multer.File[]) {
+  async create(
+    createDto: CreatePromotionalAdDto,
+    files?: Express.Multer.File[],
+  ) {
     const imageUrls: string[] = [];
 
     // Handle file uploads
@@ -31,9 +34,11 @@ export class PromotionalAdService {
       data: {
         ...createDto,
         imageUrl: imageUrls,
-        discount: createDto.discount ? parseFloat(createDto.discount) : undefined,
+        discount: createDto.discount
+          ? parseFloat(createDto.discount)
+          : undefined,
         validFrom: new Date(createDto.validFrom),
-        validUntil: new Date(createDto.validUntil)
+        validUntil: new Date(createDto.validUntil),
       },
       include: {
         user: {
@@ -46,11 +51,11 @@ export class PromotionalAdService {
             profilePhoto: true,
             address: true,
             city: true,
-            garageName: true
-          }
+            garageName: true,
+          },
         },
-        product: true
-      }
+        product: true,
+      },
     });
   }
 
@@ -68,12 +73,12 @@ export class PromotionalAdService {
             profilePhoto: true,
             address: true,
             city: true,
-            garageName: true
-          }
+            garageName: true,
+          },
         },
-        product: true
+        product: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -91,11 +96,11 @@ export class PromotionalAdService {
             profilePhoto: true,
             address: true,
             city: true,
-            garageName: true
-          }
+            garageName: true,
+          },
         },
-        product: true
-      }
+        product: true,
+      },
     });
 
     if (!promotion) {
@@ -105,19 +110,28 @@ export class PromotionalAdService {
     return promotion;
   }
 
-  async update(id: string, updateDto: UpdatePromotionalAdDto, files?: Express.Multer.File[]) {
+  async update(
+    id: string,
+    updateDto: UpdatePromotionalAdDto,
+    files?: Express.Multer.File[],
+  ) {
     const existingPromotion = await this.findOne(id);
 
     const updateData: any = {};
 
     // Only update fields that are provided
     if (updateDto.adTitle !== undefined) updateData.adTitle = updateDto.adTitle;
-    if (updateDto.description !== undefined) updateData.description = updateDto.description;
+    if (updateDto.description !== undefined)
+      updateData.description = updateDto.description;
     if (updateDto.adType !== undefined) updateData.adType = updateDto.adType;
-    if (updateDto.location !== undefined) updateData.location = updateDto.location;
-    if (updateDto.discount !== undefined) updateData.discount = parseFloat(updateDto.discount);
-    if (updateDto.validFrom !== undefined) updateData.validFrom = new Date(updateDto.validFrom);
-    if (updateDto.validUntil !== undefined) updateData.validUntil = new Date(updateDto.validUntil);
+    if (updateDto.location !== undefined)
+      updateData.location = updateDto.location;
+    if (updateDto.discount !== undefined)
+      updateData.discount = parseFloat(updateDto.discount);
+    if (updateDto.validFrom !== undefined)
+      updateData.validFrom = new Date(updateDto.validFrom);
+    if (updateDto.validUntil !== undefined)
+      updateData.validUntil = new Date(updateDto.validUntil);
 
     // Handle images only if provided
     if (files?.length || updateDto.imageUrl?.length) {
@@ -151,11 +165,11 @@ export class PromotionalAdService {
             profilePhoto: true,
             address: true,
             city: true,
-            garageName: true
-          }
+            garageName: true,
+          },
         },
-        product: true
-      }
+        product: true,
+      },
     });
   }
 
@@ -163,5 +177,4 @@ export class PromotionalAdService {
     await this.findOne(id);
     return this.prisma.promotion.delete({ where: { id } });
   }
-
 }

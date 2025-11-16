@@ -11,3 +11,9 @@
 - [ ] Implement the **Product** module to upload garage product parts
 - [ ] Try to Implement the **Ad & Promotion** module
 - [ ] If time permits, work on any other remaining part of the project
+
+## 17/11/2025
+
+- [ ] Firstable solve **Figma** issue with **Figma** designer
+- [ ] Finalize the **Inquiries** and **Messages** feature with garage admin dashboard
+- [ ] Implementing **Product** module with **Buy** and **Sell** feature 
