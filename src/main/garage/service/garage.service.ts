@@ -5,12 +5,12 @@ import { UpdateGarageDto } from '../dto/update-garage.dto';
 
 @Injectable()
 export class GarageService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   // CREATE
   async create(createGarageDto: CreateGarageDto) {
     const brandArray = createGarageDto.brandExpertise
-      ? createGarageDto.brandExpertise.split(',').map(b => b.trim())
+      ? createGarageDto.brandExpertise.split(',').map((b) => b.trim())
       : [];
 
     return this.prisma.garage.create({
@@ -61,10 +61,14 @@ export class GarageService {
     const data: any = { ...updateGarageDto };
 
     if (updateGarageDto.brandExpertise) {
-      data.brandExpertise = updateGarageDto.brandExpertise.split(',').map(b => b.trim());
+      data.brandExpertise = updateGarageDto.brandExpertise
+        .split(',')
+        .map((b) => b.trim());
     }
 
-    Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+    Object.keys(data).forEach(
+      (key) => data[key] === undefined && delete data[key],
+    );
 
     return this.prisma.garage.update({ where: { id }, data });
   }
