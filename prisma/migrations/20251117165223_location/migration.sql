@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "public"."users" ADD COLUMN     "garageLat" DOUBLE PRECISION,
+ADD COLUMN     "garageLng" DOUBLE PRECISION,
+ADD COLUMN     "userLat" DOUBLE PRECISION,
+ADD COLUMN     "userLng" DOUBLE PRECISION;

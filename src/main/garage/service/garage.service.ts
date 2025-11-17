@@ -188,7 +188,6 @@ export class GarageService {
             bio: true,
             phone: true,
             profilePhoto: true,
-            address: true,
             city: true,
             createdAt: true,
             updatedAt: true,
@@ -228,7 +227,7 @@ export class GarageService {
             bio: true,
             phone: true,
             profilePhoto: true,
-            address: true,
+
             city: true,
             createdAt: true,
             updatedAt: true,

@@ -1,26 +1,32 @@
 model User {
-  id           String       @id @default(uuid())
-  email        String       @unique
-  fullName     String?
-  password     String?
-  bio          String?
-  phone        String?      @unique
+  id       String  @id @default(uuid())
+  email    String  @unique
+  fullName String?
+  password String?
+  bio      String?
+  phone    String? @unique
+
+  // ----------User Live Location ----------
+  userLat Float?
+  userLng Float?
+
   // ---------- file---------------------
   tradeLicense String?
   garageLogo   String?
   profilePhoto String?
   // -------- garage information-------
-  address      String?
+
   city         String?
   emirate      String?
   garageName   String?
   garageStatus GarageStatus @default(PENDING)
+
   // ------------------ Google Authentication ------------------
-  googleId     String?      @unique
+  googleId     String?   @unique
   emailOtp     Int?
   otpExpiry    DateTime?
-  isVerified   Boolean      @default(false)
-  ReviewAlerts Boolean      @default(false)
+  isVerified   Boolean   @default(false)
+  ReviewAlerts Boolean   @default(false)
 
   // ------------------ Password Reset OTP ---------------------
   resetOtp       Int?
@@ -56,12 +62,11 @@ model User {
   // ------------------ Relations ------------------------------
   UserNotification     UserNotification[]
   notificationToggle   NotificationToggle?
-  garages              Garage[] // One user can have many garages
+  garages              Garage[]
   promotions           Promotion[]
   garagePromotionQuota GaragePromotionQuota?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 
   @@map("users")
 }
