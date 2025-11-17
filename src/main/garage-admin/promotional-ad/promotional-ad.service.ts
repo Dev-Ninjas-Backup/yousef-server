@@ -152,7 +152,7 @@ export class PromotionalAdService {
             bio: true,
             phone: true,
             profilePhoto: true,
-            address: true,
+
             city: true,
             garageName: true,
           },
@@ -175,7 +175,7 @@ export class PromotionalAdService {
             bio: true,
             phone: true,
             profilePhoto: true,
-            address: true,
+
             city: true,
             garageName: true,
           },
@@ -244,7 +244,7 @@ export class PromotionalAdService {
             bio: true,
             phone: true,
             profilePhoto: true,
-            address: true,
+
             city: true,
             garageName: true,
           },

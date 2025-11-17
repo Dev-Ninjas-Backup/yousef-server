@@ -7,18 +7,20 @@ model Garage {
     name         String  @unique
     coverPhoto   String?
     profileImage String?
-    phone        String?
+    garagePhone   String?
     email        String?
     street       String?
     city         String?
     emirate      String?
+    // ---------- Garage Location (auto from address) ----------
+    garageLat    Float?
+    garageLng    Float?
 
     description    String?
     certifications String[]
-
-    weekdaysHours String?
-    weekendsHours String?
-
+    weekdaysHours  String?
+    weekendsHours  String?
+    address        String?
     brandExpertise String[]
 
     // Relations
