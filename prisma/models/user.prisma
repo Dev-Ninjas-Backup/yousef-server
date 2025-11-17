@@ -54,9 +54,11 @@ model User {
   subscriptionEndsAt DateTime?
 
   // ------------------ Relations ------------------------------
-  UserNotification   UserNotification[]
-  notificationToggle NotificationToggle?
-  garages            Garage[] // One user can have many garages
+  UserNotification     UserNotification[]
+  notificationToggle   NotificationToggle?
+  garages              Garage[] // One user can have many garages
+  promotions           Promotion[]
+  garagePromotionQuota GaragePromotionQuota?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
