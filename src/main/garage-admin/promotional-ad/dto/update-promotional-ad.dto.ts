@@ -7,4 +7,4 @@ export class UpdatePromotionalAdDto extends PartialType(
     'productId',
     'paymentIntentId',
   ] as const),
-) { }
+) {}

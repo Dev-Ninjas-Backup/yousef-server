@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../lib/prisma/prisma.service';
 import { S3FileService } from '../../../lib/s3file/s3file.service';
 import { CreatePromotionalAdDto } from './dto/create-promotional-ad.dto';
@@ -9,7 +13,7 @@ export class PromotionalAdService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) { }
+  ) {}
 
   // async create(
   //   createDto: CreatePromotionalAdDto,
@@ -59,7 +63,6 @@ export class PromotionalAdService {
   //   });
   // }
 
-
   async create(
     createDto: CreatePromotionalAdDto & { userId: string },
     files?: Express.Multer.File[],
@@ -79,7 +82,6 @@ export class PromotionalAdService {
     const isFreeAvailable = quota.freeListingsUsed < quota.freeListingsTotal;
     const isPaid = !!paymentIntentId || !isFreeAvailable;
 
-
     if (isPaid && !paymentIntentId) {
       throw new BadRequestException(
         'You have used all free listings. Payment is required (20 AED).',
@@ -94,7 +96,6 @@ export class PromotionalAdService {
     //   }
     // }
 
-
     const imageUrls: string[] = [];
     if (files?.length) {
       for (const file of files) {
@@ -105,7 +106,6 @@ export class PromotionalAdService {
     if (createDto.imageUrl?.length) {
       imageUrls.push(...createDto.imageUrl);
     }
-
 
     const promotion = await this.prisma.promotion.create({
       data: {
@@ -123,12 +123,12 @@ export class PromotionalAdService {
       include: {
         user: {
           select: {
-            garageName: true
-          }
-        }, product: true
+            garageName: true,
+          },
+        },
+        product: true,
       },
     });
-
 
     if (isFreeAvailable) {
       await this.prisma.garagePromotionQuota.update({

@@ -34,7 +34,8 @@ export class CreatePromotionalAdDto {
   adTitle: string;
 
   @ApiProperty({
-    example: 'Get 20% off on brake pad replacement at SpeedPro Garage! Expert mechanics, genuine parts, same-day service.',
+    example:
+      'Get 20% off on brake pad replacement at SpeedPro Garage! Expert mechanics, genuine parts, same-day service.',
     description: 'Detailed description of the offer',
   })
   @IsString()
@@ -51,7 +52,8 @@ export class CreatePromotionalAdDto {
 
   @ApiPropertyOptional({
     example: '20',
-    description: 'Discount value (percentage or amount). Send as string to avoid floating point issues.',
+    description:
+      'Discount value (percentage or amount). Send as string to avoid floating point issues.',
   })
   @IsOptional()
   @IsString()
@@ -88,7 +90,10 @@ export class CreatePromotionalAdDto {
     if (!value) return [];
     if (Array.isArray(value)) return value;
     if (typeof value === 'string')
-      return value.split(',').map((url: string) => url.trim()).filter(Boolean);
+      return value
+        .split(',')
+        .map((url: string) => url.trim())
+        .filter(Boolean);
     return [];
   })
   @IsArray()
