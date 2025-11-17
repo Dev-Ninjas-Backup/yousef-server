@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
-import { successResponse, TResponse } from 'src/common/utilsResponse/response.util';
+import {
+  successResponse,
+  TResponse,
+} from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { CreatePartsCategoryDto } from './dto/create-parts-category.dto';
 import { QueryPartsCategoryDto } from './dto/query-parts-category.dto';
@@ -9,125 +12,135 @@ import { UpdatePartsCategoryDto } from './dto/update-parts-category.dto';
 
 @Injectable()
 export class PartsCategoryService {
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    @HandleError('Failed to create parts category', 'Parts Category')
-    async create(createPartsCategoryDto: CreatePartsCategoryDto): Promise<TResponse<any>> {
-        const existingCategory = await this.prisma.partsCategory.findFirst({
-            where: {
-                name: {
-                    equals: createPartsCategoryDto.name.trim(),
-                    mode: 'insensitive'
-                }
-            }
-        });
+  @HandleError('Failed to create parts category', 'Parts Category')
+  async create(
+    createPartsCategoryDto: CreatePartsCategoryDto,
+  ): Promise<TResponse<any>> {
+    const existingCategory = await this.prisma.partsCategory.findFirst({
+      where: {
+        name: {
+          equals: createPartsCategoryDto.name.trim(),
+          mode: 'insensitive',
+        },
+      },
+    });
 
-        if (existingCategory) {
-            throw new AppError(409, 'Parts category with this name already exists');
-        }
-
-        const category = await this.prisma.partsCategory.create({
-            data: {
-                name: createPartsCategoryDto.name.trim()
-            }
-        });
-        return successResponse(category, 'Parts category created successfully');
+    if (existingCategory) {
+      throw new AppError(409, 'Parts category with this name already exists');
     }
 
-    @HandleError('Failed to fetch parts categories', 'Parts Category')
-    async findAll(query?: QueryPartsCategoryDto): Promise<TResponse<any>> {
-        const page = parseInt(query?.page || '1');
-        const limit = parseInt(query?.limit || '10');
-        const skip = (page - 1) * limit;
+    const category = await this.prisma.partsCategory.create({
+      data: {
+        name: createPartsCategoryDto.name.trim(),
+      },
+    });
+    return successResponse(category, 'Parts category created successfully');
+  }
 
-        const where = query?.search ? {
-            name: {
-                contains: query.search,
-                mode: 'insensitive' as const
-            }
-        } : {};
+  @HandleError('Failed to fetch parts categories', 'Parts Category')
+  async findAll(query?: QueryPartsCategoryDto): Promise<TResponse<any>> {
+    const page = parseInt(query?.page || '1');
+    const limit = parseInt(query?.limit || '10');
+    const skip = (page - 1) * limit;
 
-        const [categories, total] = await Promise.all([
-            this.prisma.partsCategory.findMany({
-                where,
-                orderBy: { name: 'asc' },
-                skip,
-                take: limit
-            }),
-            this.prisma.partsCategory.count({ where })
-        ]);
+    const where = query?.search
+      ? {
+          name: {
+            contains: query.search,
+            mode: 'insensitive' as const,
+          },
+        }
+      : {};
 
-        const result = {
-            data: categories,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
-        };
+    const [categories, total] = await Promise.all([
+      this.prisma.partsCategory.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.partsCategory.count({ where }),
+    ]);
 
-        return successResponse(result, 'Parts categories retrieved successfully');
+    const result = {
+      data: categories,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+
+    return successResponse(result, 'Parts categories retrieved successfully');
+  }
+
+  @HandleError('Failed to fetch parts category', 'Parts Category')
+  async findOne(id: string): Promise<TResponse<any>> {
+    const category = await this.prisma.partsCategory.findUnique({
+      where: { id },
+    });
+    if (!category) {
+      throw new AppError(404, 'Parts category not found');
+    }
+    return successResponse(category, 'Parts category retrieved successfully');
+  }
+
+  @HandleError('Failed to update parts category', 'Parts Category')
+  async update(
+    id: string,
+    updatePartsCategoryDto: UpdatePartsCategoryDto,
+  ): Promise<TResponse<any>> {
+    const existingCategory = await this.prisma.partsCategory.findUnique({
+      where: { id },
+    });
+    if (!existingCategory) {
+      throw new AppError(404, 'Parts category not found');
     }
 
-    @HandleError('Failed to fetch parts category', 'Parts Category')
-    async findOne(id: string): Promise<TResponse<any>> {
-        const category = await this.prisma.partsCategory.findUnique({
-            where: { id },
-        });
-        if (!category) {
-            throw new AppError(404, 'Parts category not found');
-        }
-        return successResponse(category, 'Parts category retrieved successfully');
+    if (updatePartsCategoryDto.name) {
+      const duplicateCategory = await this.prisma.partsCategory.findFirst({
+        where: {
+          name: {
+            equals: updatePartsCategoryDto.name.trim(),
+            mode: 'insensitive',
+          },
+          NOT: { id },
+        },
+      });
+
+      if (duplicateCategory) {
+        throw new AppError(409, 'Parts category with this name already exists');
+      }
     }
 
-    @HandleError('Failed to update parts category', 'Parts Category')
-    async update(id: string, updatePartsCategoryDto: UpdatePartsCategoryDto): Promise<TResponse<any>> {
-        const existingCategory = await this.prisma.partsCategory.findUnique({
-            where: { id },
-        });
-        if (!existingCategory) {
-            throw new AppError(404, 'Parts category not found');
-        }
+    const updatedCategory = await this.prisma.partsCategory.update({
+      where: { id },
+      data: {
+        ...updatePartsCategoryDto,
+        name: updatePartsCategoryDto.name?.trim() || existingCategory.name,
+      },
+    });
+    return successResponse(
+      updatedCategory,
+      'Parts category updated successfully',
+    );
+  }
 
-        if (updatePartsCategoryDto.name) {
-            const duplicateCategory = await this.prisma.partsCategory.findFirst({
-                where: {
-                    name: {
-                        equals: updatePartsCategoryDto.name.trim(),
-                        mode: 'insensitive'
-                    },
-                    NOT: { id }
-                }
-            });
-
-            if (duplicateCategory) {
-                throw new AppError(409, 'Parts category with this name already exists');
-            }
-        }
-
-        const updatedCategory = await this.prisma.partsCategory.update({
-            where: { id },
-            data: {
-                ...updatePartsCategoryDto,
-                name: updatePartsCategoryDto.name?.trim() || existingCategory.name
-            },
-        });
-        return successResponse(updatedCategory, 'Parts category updated successfully');
+  @HandleError('Failed to delete parts category', 'Parts Category')
+  async remove(id: string): Promise<TResponse<any>> {
+    const existingCategory = await this.prisma.partsCategory.findUnique({
+      where: { id },
+    });
+    if (!existingCategory) {
+      throw new AppError(404, 'Parts category not found');
     }
 
-    @HandleError('Failed to delete parts category', 'Parts Category')
-    async remove(id: string): Promise<TResponse<any>> {
-        const existingCategory = await this.prisma.partsCategory.findUnique({
-            where: { id },
-        });
-        if (!existingCategory) {
-            throw new AppError(404, 'Parts category not found');
-        }
-
-        await this.prisma.partsCategory.delete({
-            where: { id },
-        });
-        return successResponse(null, 'Parts category deleted successfully');
-    }
+    await this.prisma.partsCategory.delete({
+      where: { id },
+    });
+    return successResponse(null, 'Parts category deleted successfully');
+  }
 }

@@ -4,7 +4,7 @@ import { IsOptional, IsString, IsNumberString } from 'class-validator';
 export class QueryPartsCategoryDto {
   @ApiPropertyOptional({
     description: 'Search by category name',
-    example: 'Engine'
+    example: 'Engine',
   })
   @IsOptional()
   @IsString()
@@ -12,7 +12,7 @@ export class QueryPartsCategoryDto {
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',
-    example: '1'
+    example: '1',
   })
   @IsOptional()
   @IsNumberString()
@@ -20,7 +20,7 @@ export class QueryPartsCategoryDto {
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
-    example: '10'
+    example: '10',
   })
   @IsOptional()
   @IsNumberString()
