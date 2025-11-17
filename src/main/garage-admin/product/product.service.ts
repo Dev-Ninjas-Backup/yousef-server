@@ -9,14 +9,14 @@ export class ProductService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) {}
+  ) { }
 
   async create(
     userId: string,
     createProductDto: CreateProductDto,
     files: Express.Multer.File[] = [],
   ) {
-    // FIX: Using flattened fields instead of a nested SellerDto object
+
     const {
       sellerEmail,
       sellerName,
@@ -27,9 +27,8 @@ export class ProductService {
       ...productData
     } = createProductDto;
 
-    // CRITICAL FIX: Input Validation Check for Email
+
     if (!sellerEmail) {
-      // Throw a BadRequest (which the controller will catch and turn into a 400)
       throw new Error('validation: Seller email is required.');
     }
 
@@ -69,7 +68,7 @@ export class ProductService {
       const product = await tx.product.create({
         data: {
           sellerId: sellerInstance.id,
-          status: 'Pending Approval', // FIX: Set system status
+          status: 'Pending Approval',
           ...productData,
         },
       });
@@ -126,7 +125,7 @@ export class ProductService {
     const product = await this.prisma.product.findUnique({
       where: { id },
 
-      include: { seller: true, photos: true }, // Include photos for deletion logic
+      include: { seller: true, photos: true },
     });
 
     if (!product) {
@@ -198,8 +197,6 @@ export class ProductService {
       });
 
       if (photoUrls.length > 0) {
-        // CRITICAL FIX: Delete S3 files before DB records (assuming full replacement is intended)
-
         const photosToDelete = product.photos;
 
         await Promise.all(
@@ -235,7 +232,7 @@ export class ProductService {
     const product = await this.prisma.product.findUnique({
       where: { id },
 
-      include: { photos: true }, // Include photos for S3 cleanup
+      include: { photos: true },
     });
 
     if (!product) {
@@ -243,7 +240,6 @@ export class ProductService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      // CRITICAL FIX: Delete S3 files before DB records
 
       const photosToDelete = product.photos;
 

@@ -3,7 +3,7 @@ import {
   Body,
   Controller,
   Delete,
-  Get, // <-- ADDED: Get import
+  Get,
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
@@ -29,10 +29,10 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductService } from './product.service';
 
-@ApiTags('products')
+@ApiTags('Products')
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -60,10 +60,9 @@ export class ProductController {
   ) {
     try {
       console.log('Create Product', createProductDto);
-      // PASSING userId to service for seller identity/creation validation
       return await this.productService.create(userId, createProductDto, files);
     } catch (error) {
-      // Improved error handling
+
       if (
         error instanceof NotFoundException ||
         error.message.includes('validation')
@@ -101,7 +100,7 @@ export class ProductController {
   @UseInterceptors(
     FilesInterceptor(
       'photos',
-      5, // FIX: Changed max files from 10 to 5 to match UI limit
+      5,
       new MulterService().createMulterOptions(
         './Uploads',
         'products',
