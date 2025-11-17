@@ -60,12 +60,13 @@ model User {
   subscriptionEndsAt DateTime?
 
   // ------------------ Relations ------------------------------
-  UserNotification   UserNotification[]
-  notificationToggle NotificationToggle?
-  garages            Garage[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  UserNotification     UserNotification[]
+  notificationToggle   NotificationToggle?
+  garages              Garage[]
+  promotions           Promotion[]
+  garagePromotionQuota GaragePromotionQuota?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 
   @@map("users")
 }
