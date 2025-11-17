@@ -227,7 +227,7 @@ export class GarageService {
             bio: true,
             phone: true,
             profilePhoto: true,
-     
+
             city: true,
             createdAt: true,
             updatedAt: true,

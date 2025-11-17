@@ -12,7 +12,7 @@ import { CreatePartsFinancialDto } from '../dto/create-parts-financial.dto';
 import { UpdatePartsFinancialDto } from '../dto/update-parts-financial.dto';
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags("")
+@ApiTags('')
 @Controller('parts-financials')
 export class PartsFinancialsController {
   constructor(
