@@ -7,10 +7,12 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { PartsFinancialsService } from './parts-financials.service';
-import { CreatePartsFinancialDto } from './dto/create-parts-financial.dto';
-import { UpdatePartsFinancialDto } from './dto/update-parts-financial.dto';
+import { PartsFinancialsService } from '../service/parts-financials.service';
+import { CreatePartsFinancialDto } from '../dto/create-parts-financial.dto';
+import { UpdatePartsFinancialDto } from '../dto/update-parts-financial.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags("")
 @Controller('parts-financials')
 export class PartsFinancialsController {
   constructor(

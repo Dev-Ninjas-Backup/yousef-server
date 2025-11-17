@@ -67,7 +67,7 @@ export class GarageManagementService {
       select: {
         id: true,
         garageName: true,
-        address: true,
+  
         city: true,
         emirate: true,
         garageLogo: true,
@@ -98,7 +98,7 @@ export class GarageManagementService {
         isDeleted: true,
         deletedAt: new Date(),
         garageName: null,
-        address: null,
+       
         city: null,
         emirate: null,
         garageLogo: null,

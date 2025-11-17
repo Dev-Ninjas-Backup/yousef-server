@@ -7,21 +7,25 @@ model Garage {
     name         String  @unique
     coverPhoto   String?
     profileImage String?
-    phone        String?
-    email        String? @unique
+    garagePhone   String?
+    email        String?
     street       String?
     city         String?
     emirate      String?
+    // ---------- Garage Location (auto from address) ----------
+    garageLat    Float?
+    garageLng    Float?
 
     description    String?
-    certifications String?
-
-    weekdaysHours String?
-    weekendsHours String?
-
+    certifications String[]
+    weekdaysHours  String?
+    weekendsHours  String?
+    address        String?
     brandExpertise String[]
 
     // Relations
+    userId   String
+    user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
     services GarageService[]
 
     createdAt DateTime @default(now())

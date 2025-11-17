@@ -34,7 +34,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = 'An error occurred';
       }
     } else if (exception instanceof Error) {
-      // native JS errors
+      //----------------- native JS errors----------------------
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = exception.message || 'Internal server error';
       errorData = {
@@ -46,7 +46,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = 'Internal server error';
     }
 
-    // Return standardized error payload
+    //--------------------- Return standardized error payload------------------------
     const errorPayload = errorResponse(errorData, message as any);
     console.error('===============================');
     console.error('Request URL:', request.url);
