@@ -1,6 +1,16 @@
-// Promotion model
+model GaragePromotionQuota {
+    id                String   @id @default(uuid())
+    garageId          String   @unique
+    freeListingsTotal Int      @default(2)
+    freeListingsUsed  Int      @default(0)
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime @updatedAt
+
+    garage User @relation(fields: [garageId], references: [id], onDelete: Cascade)
+}
+
 model Promotion {
-    id          String            @id @default(uuid())
+    id          String   @id @default(uuid())
     userId      String
     productId   String?
     adTitle     String
@@ -10,16 +20,23 @@ model Promotion {
     location    String
     validFrom   DateTime
     validUntil  DateTime
-    imageUrl    String[]          @default([])
-    status      PromotionAdStatus @default(PENDING)
-    createdAt   DateTime          @default(now())
-    updatedAt   DateTime          @updatedAt
-    user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-    product     Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+    imageUrl    String[] @default([])
+
+    isFree    Boolean @default(true)
+    isPaid    Boolean @default(false)
+    paymentId String?
+
+    status    PromotionAdStatus @default(PENDING)
+    createdAt DateTime          @default(now())
+    updatedAt DateTime          @updatedAt
+
+    user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 }
 
 enum PromotionAdStatus {
     PENDING
     APPROVED
-    REJECT
+    REJECTED
+    EXPIRED
 }

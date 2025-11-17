@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../lib/prisma/prisma.service';
 import { S3FileService } from '../../../lib/s3file/s3file.service';
 import { CreatePromotionalAdDto } from './dto/create-promotional-ad.dto';
@@ -9,54 +9,135 @@ export class PromotionalAdService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) {}
+  ) { }
+
+  // async create(
+  //   createDto: CreatePromotionalAdDto,
+  //   files?: Express.Multer.File[],
+  // ) {
+  //   const imageUrls: string[] = [];
+
+  //   // Handle file uploads
+  //   if (files?.length) {
+  //     for (const file of files) {
+  //       const result = await this.s3FileService.processUploadedFile(file);
+  //       imageUrls.push(result.url);
+  //     }
+  //   }
+
+  //   // Handle direct URLs
+  //   if (createDto.imageUrl?.length) {
+  //     imageUrls.push(...createDto.imageUrl);
+  //   }
+
+  //   return this.prisma.promotion.create({
+  //     data: {
+  //       ...createDto,
+  //       imageUrl: imageUrls,
+  //       discount: createDto.discount
+  //         ? parseFloat(createDto.discount)
+  //         : undefined,
+  //       validFrom: new Date(createDto.validFrom),
+  //       validUntil: new Date(createDto.validUntil),
+  //     },
+  //     include: {
+  //       user: {
+  //         select: {
+  //           id: true,
+  //           email: true,
+  //           fullName: true,
+  //           bio: true,
+  //           phone: true,
+  //           profilePhoto: true,
+  //           address: true,
+  //           city: true,
+  //           garageName: true,
+  //         },
+  //       },
+  //       product: true,
+  //     },
+  //   });
+  // }
+
 
   async create(
-    createDto: CreatePromotionalAdDto,
+    createDto: CreatePromotionalAdDto & { userId: string },
     files?: Express.Multer.File[],
   ) {
-    const imageUrls: string[] = [];
+    const { userId, paymentIntentId, ...rest } = createDto;
 
-    // Handle file uploads
+    let quota = await this.prisma.garagePromotionQuota.findUnique({
+      where: { garageId: userId },
+    });
+
+    if (!quota) {
+      quota = await this.prisma.garagePromotionQuota.create({
+        data: { garageId: userId },
+      });
+    }
+
+    const isFreeAvailable = quota.freeListingsUsed < quota.freeListingsTotal;
+    const isPaid = !!paymentIntentId || !isFreeAvailable;
+
+
+    if (isPaid && !paymentIntentId) {
+      throw new BadRequestException(
+        'You have used all free listings. Payment is required (20 AED).',
+      );
+    }
+
+    // verify payment
+    // if (paymentIntentId) {
+    //   const paymentVerified = await this.verifyPayment(paymentIntentId);
+    //   if (!paymentVerified || paymentVerified.amount !== 20_00) { // 20 AED = 2000 fils
+    //     throw new BadRequestException('Invalid payment');
+    //   }
+    // }
+
+
+    const imageUrls: string[] = [];
     if (files?.length) {
       for (const file of files) {
         const result = await this.s3FileService.processUploadedFile(file);
         imageUrls.push(result.url);
       }
     }
-
-    // Handle direct URLs
     if (createDto.imageUrl?.length) {
       imageUrls.push(...createDto.imageUrl);
     }
 
-    return this.prisma.promotion.create({
+
+    const promotion = await this.prisma.promotion.create({
       data: {
-        ...createDto,
+        ...rest,
+        userId,
         imageUrl: imageUrls,
-        discount: createDto.discount
-          ? parseFloat(createDto.discount)
-          : undefined,
-        validFrom: new Date(createDto.validFrom),
-        validUntil: new Date(createDto.validUntil),
+        isFree: isFreeAvailable,
+        isPaid: isPaid,
+        paymentId: paymentIntentId || null,
+        discount: rest.discount ? parseFloat(rest.discount as any) : null,
+        validFrom: new Date(rest.validFrom),
+        validUntil: new Date(rest.validUntil),
+        status: 'PENDING',
       },
       include: {
         user: {
           select: {
-            id: true,
-            email: true,
-            fullName: true,
-            bio: true,
-            phone: true,
-            profilePhoto: true,
-            address: true,
-            city: true,
-            garageName: true,
-          },
-        },
-        product: true,
+            garageName: true
+          }
+        }, product: true
       },
     });
+
+
+    if (isFreeAvailable) {
+      await this.prisma.garagePromotionQuota.update({
+        where: { garageId: userId },
+        data: { freeListingsUsed: { increment: 1 } },
+      });
+    }
+
+    return promotion;
   }
 
   async findAll(userId?: string) {
