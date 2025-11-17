@@ -32,7 +32,7 @@ import { ProductService } from './product.service';
 @ApiTags('Products')
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -62,7 +62,6 @@ export class ProductController {
       console.log('Create Product', createProductDto);
       return await this.productService.create(userId, createProductDto, files);
     } catch (error) {
-
       if (
         error instanceof NotFoundException ||
         error.message.includes('validation')

@@ -9,14 +9,13 @@ export class ProductService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) { }
+  ) {}
 
   async create(
     userId: string,
     createProductDto: CreateProductDto,
     files: Express.Multer.File[] = [],
   ) {
-
     const {
       sellerEmail,
       sellerName,
@@ -26,7 +25,6 @@ export class ProductService {
       photos,
       ...productData
     } = createProductDto;
-
 
     if (!sellerEmail) {
       throw new Error('validation: Seller email is required.');
@@ -240,7 +238,6 @@ export class ProductService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-
       const photosToDelete = product.photos;
 
       await Promise.all(

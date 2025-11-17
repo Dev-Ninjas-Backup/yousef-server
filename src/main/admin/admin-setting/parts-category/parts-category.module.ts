@@ -4,6 +4,6 @@ import { PartsCategoryService } from './parts-category.service';
 
 @Module({
   controllers: [PartsCategoryController],
-  providers: [PartsCategoryService]
+  providers: [PartsCategoryService],
 })
 export class PartsCategoryModule {}
