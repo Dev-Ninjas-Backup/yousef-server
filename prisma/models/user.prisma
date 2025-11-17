@@ -5,6 +5,8 @@ model User {
   password     String?
   bio          String?
   phone        String?      @unique
+
+  
   // ---------- file---------------------
   tradeLicense String?
   garageLogo   String?
