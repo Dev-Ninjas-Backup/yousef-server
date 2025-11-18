@@ -5,19 +5,20 @@ import {
   Param,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes } from '@nestjs/swagger';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
-import { Additionaldto } from '../uploadadditional.dto';
+import { Additionaldto, AdditionalMultipleDto } from '../dto/uploadadditional.dto';
 import { AdditionalS3Service } from './additional.service';
 
 @Controller('aws-additional')
 export class AdditionalS3Controller {
-  constructor(private readonly AdditionalS3Service: AdditionalS3Service) {}
+  constructor(private readonly AdditionalS3Service: AdditionalS3Service) { }
 
   @Post('upload-s3-additional')
   @ApiConsumes('multipart/form-data')
@@ -47,6 +48,38 @@ export class AdditionalS3Controller {
       message: ' File uploaded successfully to S3',
       s3Url: s3Result.url,
       key: s3Result.key,
+    };
+  }
+
+  @Post('upload-s3-additional-multiple')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FilesInterceptor(
+      'files',
+      10,
+      new MulterService().createMulterOptions(
+        './uploads',
+        'content',
+        FileType.ANY,
+      ),
+    ),
+  )
+  async createMultiple(
+    @Body() createTestawDto: AdditionalMultipleDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    if (!files || files.length === 0) {
+      return { message: 'No files uploaded' };
+    }
+
+    const s3Results = await Promise.all(
+      files.map((file) => uploadFileToS3(file?.path)),
+    );
+
+    return {
+      message: 'Files uploaded successfully to S3',
+      s3Urls: s3Results.map((result) => result.url),
+      keys: s3Results.map((result) => result.key),
     };
   }
 
