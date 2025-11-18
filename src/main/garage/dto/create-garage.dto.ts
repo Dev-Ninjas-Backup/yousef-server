@@ -65,6 +65,15 @@ export class CreateGarageDto {
   emirate?: string;
 
   @ApiProperty({
+    description: 'Full address',
+    example: '123 Sheikh Zayed Road, Dubai, UAE',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @ApiProperty({
     description: 'Description',
     example: 'Specialized in luxury car repairs',
     required: false,

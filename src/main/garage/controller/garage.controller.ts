@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -18,6 +19,7 @@ import {
   ApiConsumes,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -28,6 +30,7 @@ import {
 } from 'src/common/jwt/jwt.decorator';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import { CreateGarageDto } from '../dto/create-garage.dto';
+import { QueryGarageDto } from '../dto/query-garage.dto';
 import { UpdateGarageDto } from '../dto/update-garage.dto';
 import { GarageService } from '../service/garage.service';
 
@@ -61,6 +64,7 @@ export class GarageController {
     description: 'The garage has been successfully created.',
   })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
+  @ApiResponse({ status: 409, description: 'Garage name already exists.' })
   async create(
     @GetUser('userId') userId: string,
     @Body() createGarageDto: CreateGarageDto,
@@ -79,13 +83,31 @@ export class GarageController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Retrieve all garages' })
+  @ApiOperation({ summary: 'Retrieve all garages with search and pagination' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by name, city, emirate, or address',
+  })
+  @ApiQuery({ name: 'city', required: false, description: 'Filter by city' })
+  @ApiQuery({
+    name: 'emirate',
+    required: false,
+    description: 'Filter by emirate',
+  })
+  @ApiQuery({
+    name: 'serviceName',
+    required: false,
+    description: 'Filter by service type name',
+  })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({
     status: 200,
     description: 'List of all garages with related data.',
   })
-  findAll() {
-    return this.garageService.findAll();
+  findAll(@Query() query: QueryGarageDto) {
+    return this.garageService.findAll(query);
   }
 
   @Get(':id')
@@ -128,6 +150,11 @@ export class GarageController {
   )
   @ApiResponse({ status: 200, description: 'The garage has been updated.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Not authorized to update this garage.',
+  })
+  @ApiResponse({ status: 409, description: 'Garage name already exists.' })
   async update(
     @GetUser('userId') userId: string,
     @Param('id') id: string,
@@ -155,11 +182,13 @@ export class GarageController {
     description: 'UUID of the garage',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  @ApiResponse({ status: 204, description: 'The garage has been deleted.' })
+  @ApiResponse({ status: 200, description: 'The garage has been deleted.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiResponse({
+    status: 403,
+    description: 'Not authorized to delete this garage.',
+  })
   remove(@GetUser('userId') userId: string, @Param('id') id: string) {
-    console.log('userId', userId);
     return this.garageService.remove(userId, id);
   }
 }
