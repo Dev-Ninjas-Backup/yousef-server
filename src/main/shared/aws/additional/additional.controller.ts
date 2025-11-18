@@ -13,12 +13,15 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes } from '@nestjs/swagger';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
-import { Additionaldto, AdditionalMultipleDto } from '../dto/uploadadditional.dto';
+import {
+  Additionaldto,
+  AdditionalMultipleDto,
+} from '../dto/uploadadditional.dto';
 import { AdditionalS3Service } from './additional.service';
 
 @Controller('aws-additional')
 export class AdditionalS3Controller {
-  constructor(private readonly AdditionalS3Service: AdditionalS3Service) { }
+  constructor(private readonly AdditionalS3Service: AdditionalS3Service) {}
 
   @Post('upload-s3-additional')
   @ApiConsumes('multipart/form-data')

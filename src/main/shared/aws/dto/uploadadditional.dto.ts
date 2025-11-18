@@ -8,11 +8,7 @@ export class Additionaldto {
     format: 'binary',
   })
   file: any;
-
-
-
 }
-
 
 export class AdditionalMultipleDto {
   @ApiProperty({
@@ -23,5 +19,3 @@ export class AdditionalMultipleDto {
   })
   files: any[];
 }
-
-
