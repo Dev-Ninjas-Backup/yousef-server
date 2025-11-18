@@ -3,33 +3,33 @@
 // ======================
 
 model Garage {
-    id           String  @id @default(uuid())
-    name         String  @unique
-    coverPhoto   String?
-    profileImage String?
-    garagePhone   String?
-    email        String?
-    street       String?
-    city         String?
-    emirate      String?
-    // ---------- Garage Location (auto from address) ----------
-    garageLat    Float?
-    garageLng    Float?
+  id           String  @id @default(uuid())
+  name         String  @unique
+  coverPhoto   String?
+  profileImage String?
+  garagePhone  String?
+  email        String?
+  street       String?
+  city         String?
+  emirate      String?
+  // ---------- Garage Location (auto from address) ----------
+  address      String?
+  garageLat    Float?
+  garageLng    Float?
 
-    description    String?
-    certifications String[]
-    weekdaysHours  String?
-    weekendsHours  String?
-    address        String?
-    brandExpertise String[]
+  description    String?
+  certifications String[]
+  weekdaysHours  String?
+  weekendsHours  String?
+  brandExpertise String[]
 
-    // Relations
-    userId   String
-    user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-    services GarageService[]
+  // Relations
+  userId   String
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services GarageService[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ======================
@@ -37,11 +37,11 @@ model Garage {
 // ======================
 
 model Service {
-    id   String @id @default(uuid())
-    icon String
-    name String @unique
+  id   String @id @default(uuid())
+  icon String
+  name String @unique
 
-    garages GarageService[]
+  garages GarageService[]
 }
 
 // ======================
@@ -49,13 +49,13 @@ model Service {
 // ======================
 
 model GarageService {
-    garageId  String
-    serviceId String
+  garageId  String
+  serviceId String
 
-    garage  Garage  @relation(fields: [garageId], references: [id], onDelete: Cascade)
-    service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  garage  Garage  @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-    @@id([garageId, serviceId])
+  @@id([garageId, serviceId])
 }
 
 // =====================
@@ -63,6 +63,6 @@ model GarageService {
 // =====================
 
 enum DayType {
-    WEEKDAYS
-    WEEKENDS
+  WEEKDAYS
+  WEEKENDS
 }

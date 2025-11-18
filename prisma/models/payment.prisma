@@ -1,6 +1,6 @@
 model Payment {
-  id            String   @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   sessionId     String   @unique
   transactionId String?
   amount        Int?
@@ -10,34 +10,37 @@ model Payment {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-// -----------relation----------------------
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  // -----------relation----------------------
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-planId        String
-plan          Paymentplan   @relation(fields: [planId], references: [id])
+  planId String
+  plan   Paymentplan @relation(fields: [planId], references: [id])
+
   @@map("payments")
 }
 
 model Paymentplan {
-  id            String   @id @default(uuid())
-  name          String?   @unique
-  Price         Int  
-  billingCycle  BillingCycle  
-  shortBio      String?
-  features      String[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-// --relation----------------------
-  payments      Payment[]
+  id           String       @id @default(uuid())
+  name         String?      @unique
+  Price        Int
+  billingCycle BillingCycle
+  shortBio     String?
+  features     String[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  // --relation----------------------
+  payments     Payment[]
+
   @@map("payment_plans")
 }
-       
+
 enum PaymentStatus {
   PENDING
   COMPLETED
   CANCELLED
 }
+
 enum BillingCycle {
   MONTHLY
   YEARLY

@@ -8,10 +8,9 @@ import {
   OnModuleInit,
   Param,
   Post,
-  UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -20,12 +19,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { GetUser, ValidateAuth } from 'src/common/jwt/jwt.decorator';
+import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import { SendPrivateMessageDto } from '../dto/privateChatGateway.dto';
 import { sendPrivateMessageSwaggerSchema } from '../dto/sendPrivateMessageSwaggerSchema';
 import { PrivateChatGateway } from '../privateChatGateway/privateChatGateway';
 import { PrivateChatService } from '../service/private-message.service';
 
-@ApiTags('Private Chat --> One to One Chat')
+@ApiTags('Garage  owner Private Chat => One to One Chat')
 @Controller('private-chat')
 @ValidateAuth()
 @ApiBearerAuth()
@@ -47,7 +47,7 @@ export class PrivateChatController implements OnModuleInit {
   async getAllPrivateMessage(@GetUser('userId') userId: string) {
     return await this.privateService.getAllChatsWithLastMessage(userId);
   }
-
+  // ----------------- get conversation message----------------
   @Get(':conversationId')
   @ApiOperation({ summary: 'Get messages for a specific private conversation' })
   async getConversationMessages(
@@ -59,6 +59,7 @@ export class PrivateChatController implements OnModuleInit {
       userId,
     );
   }
+  // -----------send message for
 
   @Post('send-message/:recipientId')
   @ApiOperation({ summary: 'Sending Private message' })
@@ -69,11 +70,22 @@ export class PrivateChatController implements OnModuleInit {
       properties: sendPrivateMessageSwaggerSchema.properties,
     },
   })
-  @UseInterceptors(FileInterceptor('file'))
+  // @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FilesInterceptor(
+      'file',
+      5,
+      new MulterService().createMulterOptions(
+        './uploads',
+        'content',
+        FileType.ANY,
+      ),
+    ),
+  )
   async sendTeamMessage(
     @Param('recipientId') recipientId: string,
     @Body() dto: SendPrivateMessageDto,
-    @UploadedFile() file: Express.Multer.File,
     @GetUser('userId') senderId: string,
   ) {
     if (recipientId === senderId) {
@@ -89,7 +101,6 @@ export class PrivateChatController implements OnModuleInit {
       conversation.id,
       senderId,
       dto,
-      file,
     );
 
     // Emit to both sender and recipient
