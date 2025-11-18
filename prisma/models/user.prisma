@@ -65,8 +65,13 @@ model User {
   garages              Garage[]
   promotions           Promotion[]
   garagePromotionQuota GaragePromotionQuota?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  // ------message relation---
+  privateConversation1 PrivateConversation[]  @relation("User1Conversations")
+  privateConversation2 PrivateConversation[]  @relation("User2Conversations")
+  privateMessage       PrivateMessage[]
+  privateMessageStatus PrivateMessageStatus[]
 
   @@map("users")
 }
