@@ -301,4 +301,25 @@ export class AdminDashboardOverviewService {
       },
     };
   }
+
+  // --------------------- partsCategory show parts category name & percentage---
+
+  async getPartsCategory() {
+    // 1. Fetch all categories
+    const categories = await this.prisma.partsCategory.findMany();
+
+    // 2. Total number of categories
+    const totalCategories = categories.length;
+
+    // 3. Map name and calculate percentage
+    const result = categories.map((category) => {
+      const percentage = totalCategories ? (1 / totalCategories) * 100 : 0;
+      return {
+        name: category.name,
+        percentage: Number(percentage.toFixed(2)),
+      };
+    });
+
+    return result;
+  }
 }

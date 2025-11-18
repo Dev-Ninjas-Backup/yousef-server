@@ -31,4 +31,22 @@ export class AdminDashboardOverviewController {
   getRecentActivity(): Promise<RecentActivityItem[]> {
     return this.adminDashboardOverviewService.getRecentActivity();
   }
+
+  // ---------------partsCategory show parts category name & percentage ---
+  @ValidateAuth()
+  @ValidateSuperAdmin()
+  @ApiBearerAuth()
+  @Get('parts-category')
+  getPartsCategory(): Promise<any> {
+    return this.adminDashboardOverviewService.getPartsCategory();
+  }
+
+  // ----------revenue  next working process-----------------
+  @ValidateAuth()
+  @ValidateSuperAdmin()
+  @ApiBearerAuth()
+  @Get('revenue')
+  getRevenue(): Promise<any> {
+    return this.adminDashboardOverviewService.getPartsCategory();
+  }
 }

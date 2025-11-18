@@ -1,0 +1,5 @@
+model PaymentSetting {
+    id                 String @id @default(uuid())
+    platformCommission Int
+    MinimumPayout      Int
+}
