@@ -10,12 +10,12 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { SendPrivateMessageDto } from './../dto/privateChatGateway.dto';
 
 import * as jwt from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import { ENVEnum } from 'src/common/enum/env.enum';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { SendPrivateMessageDto } from '../dto/privateChatGateway.dto';
 import { PrivateChatService } from '../service/private-message.service';
 
 enum PrivateChatEvents {
@@ -157,17 +157,15 @@ export class PrivateChatGateway
 
   /** Send a message (create conversation if new) */
   @SubscribeMessage(PrivateChatEvents.SEND_MESSAGE)
+  @SubscribeMessage(PrivateChatEvents.SEND_MESSAGE)
   async handleMessage(
-    @MessageBody()
-    payload: {
-      recipientId: string;
-      dto: SendPrivateMessageDto;
-      file?: Express.Multer.File;
-      userId: string;
-    },
+    @MessageBody() payload: SendPrivateMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
-    const { recipientId, dto, file, userId } = payload;
+    const { recipientId } = payload;
+
+    const userId = this.getUserIdFromSocket(client);
+    if (!userId) return; // already handled
 
     // Validate sender matches token
     if (client.data.userId !== userId) {
@@ -178,7 +176,7 @@ export class PrivateChatGateway
       return;
     }
 
-    // Prevent sending to self
+    // Prevent sending message to yourself
     if (userId === recipientId) {
       client.emit(PrivateChatEvents.ERROR, {
         message: 'Cannot send message to yourself',
@@ -206,15 +204,13 @@ export class PrivateChatGateway
     const message = await this.privateChatService.sendPrivateMessage(
       conversation.id,
       userId,
-      dto,
-      file,
+      payload,
     );
 
     // Emit new message to both users
     this.server.to(userId).emit(PrivateChatEvents.NEW_MESSAGE, message);
     this.server.to(recipientId).emit(PrivateChatEvents.NEW_MESSAGE, message);
 
-    // If this was a new conversation, refresh both users' chat lists
     if (isNewConversation) {
       const senderConversations =
         await this.privateChatService.getUserConversations(userId);
@@ -233,5 +229,18 @@ export class PrivateChatGateway
   /** Helper for external services to emit new messages */
   emitNewMessage(userId: string, message: any) {
     this.server.to(userId).emit(PrivateChatEvents.NEW_MESSAGE, message);
+  }
+
+  private getUserIdFromSocket(client: Socket): string | null {
+    const userId = client.data?.userId;
+    if (!userId) {
+      client.emit(PrivateChatEvents.ERROR, {
+        message: 'User not authenticated',
+      });
+      this.logger.warn('User ID not found in socket client');
+      client.disconnect(true);
+      return null;
+    }
+    return userId;
   }
 }

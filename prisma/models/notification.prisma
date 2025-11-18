@@ -4,16 +4,16 @@ model Notification {
   type    NotificationType
   title   String
   message String
-  meta Json
+  meta    Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  users UserNotification[] 
+  users UserNotification[]
 }
 
 enum NotificationType {
- contentStatus
+  contentStatus
   LiveEvent
   Shift
   UserRolechange
@@ -33,5 +33,5 @@ model UserNotification {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  @@unique([userId, notificationId]) 
+  @@unique([userId, notificationId])
 }
