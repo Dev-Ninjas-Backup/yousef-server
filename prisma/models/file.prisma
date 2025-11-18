@@ -9,6 +9,6 @@ model FileInstance {
   size             Int
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-
+privateMessages PrivateMessage[]
   @@map("file_instance")
 }

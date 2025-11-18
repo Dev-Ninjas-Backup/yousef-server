@@ -14,6 +14,7 @@ import { ContactModule } from './shared/contact/contact.module';
 import { AdminModule } from './admin/admin.module';
 import { PartsFinancialsModule } from './parts-financials/parts-financials.module';
 import { GarageAdminModule } from './garage-admin/garage-admin.module';
+import { PrivateMessageModule } from './shared/private-message/private-message.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { GarageAdminModule } from './garage-admin/garage-admin.module';
     GarageModule,
     ServiceTypeModule,
     GarageAdminModule,
+    PrivateMessageModule,
   ],
   controllers: [],
   providers: [],
