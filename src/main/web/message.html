@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Private Chat Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Private Chat Test</h1>
+
+    <div>
+      <label>Sender JWT: </label>
+      <input
+        type="text"
+        id="senderToken"
+        size="80"
+        value="PUT_SENDER_JWT_HERE"
+      />
+      <label>Recipient ID: </label>
+      <input
+        type="text"
+        id="recipientId"
+        size="40"
+        value="PUT_RECIPIENT_USER_ID_HERE"
+      />
+      <button id="connectBtn">Connect</button>
+    </div>
+
+    <div>
+      <label>Message: </label>
+      <input type="text" id="messageInput" size="50" />
+      <button id="sendBtn">Send</button>
+    </div>
+
+    <div>
+      <h3>Messages:</h3>
+      <ul id="messages"></ul>
+    </div>
+
+    <script>
+      let socket;
+      const messagesEl = document.getElementById('messages');
+
+      document.getElementById('connectBtn').onclick = () => {
+        const token = document.getElementById('senderToken').value.trim();
+        if (!token) return alert('Enter JWT token');
+
+        // Connect to Socket.IO server with auth token
+        socket = io('http://localhost:5050/pv/message', {
+          auth: { token },
+        });
+
+        socket.on('connect', () => {
+          console.log('Connected with socket id:', socket.id);
+          addMessage('Connected to server');
+        });
+
+        socket.on('private:error', (err) => {
+          console.error('Error:', err);
+          addMessage('Error: ' + (err.message || JSON.stringify(err)));
+        });
+
+        socket.on('private:success', (userId) => {
+          console.log('Authentication success. User ID:', userId);
+          addMessage('Auth success: ' + userId);
+        });
+
+        socket.on('private:new_message', (msg) => {
+          console.log('New message:', msg);
+          addMessage(`From ${msg.sender.fullName}: ${msg.content}`);
+        });
+
+        socket.on('disconnect', () => {
+          console.log('Disconnected');
+          addMessage('Disconnected from server');
+        });
+      };
+
+      document.getElementById('sendBtn').onclick = () => {
+        if (!socket) return alert('Connect first');
+
+        const recipientId = document.getElementById('recipientId').value.trim();
+        const content = document.getElementById('messageInput').value.trim();
+        if (!recipientId || !content)
+          return alert('Recipient ID and message required');
+
+        // Send private message
+        socket.emit('private:send_message', {
+          recipientId,
+          dto: { content },
+          userId: null, // leave null, gateway will check token
+        });
+
+        document.getElementById('messageInput').value = '';
+      };
+
+      function addMessage(msg) {
+        const li = document.createElement('li');
+        li.textContent = msg;
+        messagesEl.appendChild(li);
+      }
+    </script>
+  </body>
+</html>

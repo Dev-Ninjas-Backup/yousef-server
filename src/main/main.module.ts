@@ -13,6 +13,8 @@ import { ServiceTypeModule } from './service-type/service-type.module';
 import { ContactModule } from './shared/contact/contact.module';
 import { AdminModule } from './admin/admin.module';
 import { PartsFinancialsModule } from './parts-financials/parts-financials.module';
+import { GarageAdminModule } from './garage-admin/garage-admin.module';
+import { PrivateMessageModule } from './shared/private-message/private-message.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { PartsFinancialsModule } from './parts-financials/parts-financials.modul
     PartsFinancialsModule,
     GarageModule,
     ServiceTypeModule,
+    GarageAdminModule,
+    PrivateMessageModule,
   ],
   controllers: [],
   providers: [],

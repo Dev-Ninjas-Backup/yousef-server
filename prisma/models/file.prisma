@@ -1,5 +1,6 @@
 model FileInstance {
-  id               String   @id @default(uuid())
+  id String @id @default(uuid())
+
   filename         String
   originalFilename String
   path             String
@@ -7,8 +8,10 @@ model FileInstance {
   fileType         String
   mimeType         String
   size             Int
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // privateMessages PrivateMessage[]
 
   @@map("file_instance")
 }

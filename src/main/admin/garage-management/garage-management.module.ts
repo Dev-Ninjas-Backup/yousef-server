@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { GarageManagementService } from './garage-management.service';
-import { GarageManagementController } from './garage-management.controller';
+import { GarageManagementController } from './controller/garage-management.controller';
+import { GarageManagementService } from './service/garage-management.service';
 
 @Module({
   controllers: [GarageManagementController],

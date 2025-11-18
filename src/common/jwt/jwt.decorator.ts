@@ -43,6 +43,10 @@ export function ValidateCarOwner() {
   return ValidateAuth(UserEnum.CAR_OWNER, UserEnum.SUPER_ADMIN);
 }
 
+export function ValidateGarageOwner() {
+  return ValidateAuth(UserEnum.GARAGE_OWNER, UserEnum.SUPER_ADMIN);
+}
+
 export function ValidateAdmin() {
   return ValidateAuth(UserEnum.SUPER_ADMIN);
 }
@@ -50,9 +54,6 @@ export function ValidateMember() {
   return ValidateAuth(UserEnum.MEMBER, UserEnum.SUPER_ADMIN);
 }
 
-export function ValidateGarageOwner() {
-  return ValidateAuth(UserEnum.GARAGE_OWNER, UserEnum.SUPER_ADMIN);
-}
 export function ValidateUser() {
   return ValidateAuth(
     UserEnum.CAR_OWNER,

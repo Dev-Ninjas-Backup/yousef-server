@@ -1,18 +1,25 @@
 model User {
-  id           String  @id @default(uuid())
-  email        String  @unique
-  fullName     String?
-  password     String?
-  bio          String?
-  phone        String? @unique
+  id       String  @id @default(uuid())
+  email    String  @unique
+  fullName String?
+  password String?
+  bio      String?
+  phone    String? @unique
+
+  // ----------User Live Location ----------
+  userLat Float?
+  userLng Float?
+
   // ---------- file---------------------
   tradeLicense String?
   garageLogo   String?
   profilePhoto String?
-  // --------information-------
-  address      String?
+  // -------- garage information-------
+
   city         String?
   emirate      String?
+  garageName   String?
+  garageStatus GarageStatus @default(PENDING)
 
   // ------------------ Google Authentication ------------------
   googleId     String?   @unique
@@ -53,11 +60,18 @@ model User {
   subscriptionEndsAt DateTime?
 
   // ------------------ Relations ------------------------------
-  UserNotification   UserNotification[]
-  notificationToggle NotificationToggle?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  UserNotification     UserNotification[]
+  notificationToggle   NotificationToggle?
+  garages              Garage[]
+  promotions           Promotion[]
+  garagePromotionQuota GaragePromotionQuota?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  // ------message relation---
+  privateConversation1 PrivateConversation[]  @relation("User1Conversations")
+  privateConversation2 PrivateConversation[]  @relation("User2Conversations")
+  privateMessage       PrivateMessage[]
+  privateMessageStatus PrivateMessageStatus[]
 
   @@map("users")
 }
@@ -76,4 +90,10 @@ enum ServiceCategory {
   BODY_AND_PAINT
   DIAGNOSTICS
   GENERAL_MAINTENANCE
+}
+
+enum GarageStatus {
+  APPROVE
+  PENDING
+  DECLINE
 }

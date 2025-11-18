@@ -33,12 +33,17 @@ model Language {
 }
 
 model Ads {
-  id         String      @id @default(uuid())
-  title      String
-  link       String?
-  adsimage   String
-  subtitle   String?
+  id          String      @id @default(uuid())
+  title       String
+  link        String?
+  adsimage    String
+  subtitle    String?
   adsposition AdsPostion?
+}
+
+model PartsCategory {
+  id   String @id @default(uuid())
+  name String @unique
 }
 
 enum AdsPostion {

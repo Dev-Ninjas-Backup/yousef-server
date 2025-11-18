@@ -1,0 +1,43 @@
+// Seller model
+model Seller {
+  id          String    @id @default(uuid())
+  name        String
+  email       String    @unique
+  phoneNumber String?
+  sellerType  String
+  isVerified  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+// Product model
+model Product {
+  id          String      @id @default(uuid())
+  sellerId    String
+  partName    String
+  brand       String?
+  category    String
+  condition   String
+  price       Decimal
+  quantity    Int         @default(1)
+  description String?
+  status      String      @default("Pending Approval")
+  views       Int         @default(0)
+  inquiries   Int         @default(0)
+  isPromoted  Boolean     @default(false)
+  promoCost   Decimal?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  seller      Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  photos      Photo[]
+  promotions  Promotion[]
+}
+
+model Photo {
+  id        String   @id @default(uuid())
+  productId String
+  url       String
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
