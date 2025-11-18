@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
-import { successResponse, TResponse } from 'src/common/utilsResponse/response.util';
+import {
+  successResponse,
+  TResponse,
+} from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
 import { CreateGarageDto } from '../dto/create-garage.dto';
@@ -69,11 +72,11 @@ export class GarageService {
       where: {
         name: {
           equals: createGarageDto.name.trim(),
-          mode: 'insensitive'
-        }
-      }
+          mode: 'insensitive',
+        },
+      },
     });
-    
+
     if (existingGarage) {
       throw new AppError(409, 'Garage with this name already exists');
     }
@@ -101,7 +104,7 @@ export class GarageService {
     const garage = await this.prisma.garage.create({
       data: garageData,
     });
-    
+
     return successResponse(garage, 'Garage created successfully');
   }
 
@@ -130,12 +133,12 @@ export class GarageService {
         where: {
           name: {
             equals: updateGarageDto.name.trim(),
-            mode: 'insensitive'
+            mode: 'insensitive',
           },
-          NOT: { id }
-        }
+          NOT: { id },
+        },
       });
-      
+
       if (duplicateGarage) {
         throw new AppError(409, 'Garage with this name already exists');
       }
@@ -184,7 +187,7 @@ export class GarageService {
     const updateData: any = {
       ...updateGarageDto,
       name: updateGarageDto.name?.trim(),
-      garagePhone: updateGarageDto.phone
+      garagePhone: updateGarageDto.phone,
     };
     if (coverPhotoUrl) updateData.coverPhoto = coverPhotoUrl;
     if (profileImageUrl) updateData.profileImage = profileImageUrl;
@@ -201,7 +204,7 @@ export class GarageService {
       where: { id },
       data: updateData,
     });
-    
+
     return successResponse(updatedGarage, 'Garage updated successfully');
   }
 
@@ -210,39 +213,39 @@ export class GarageService {
     const page = parseInt(query?.page || '1');
     const limit = parseInt(query?.limit || '10');
     const skip = (page - 1) * limit;
-    
+
     const where: any = {};
-    
+
     if (query?.search) {
       where.OR = [
         { name: { contains: query.search, mode: 'insensitive' } },
         { city: { contains: query.search, mode: 'insensitive' } },
         { emirate: { contains: query.search, mode: 'insensitive' } },
-        { address: { contains: query.search, mode: 'insensitive' } }
+        { address: { contains: query.search, mode: 'insensitive' } },
       ];
     }
-    
+
     if (query?.city) {
       where.city = { contains: query.city, mode: 'insensitive' };
     }
-    
+
     if (query?.emirate) {
       where.emirate = { contains: query.emirate, mode: 'insensitive' };
     }
-    
+
     if (query?.serviceName) {
       where.services = {
         some: {
           service: {
             name: {
               contains: query.serviceName,
-              mode: 'insensitive'
-            }
-          }
-        }
+              mode: 'insensitive',
+            },
+          },
+        },
       };
     }
-    
+
     const [garages, total] = await Promise.all([
       this.prisma.garage.findMany({
         where,
@@ -274,9 +277,9 @@ export class GarageService {
         },
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.garage.count({ where })
+      this.prisma.garage.count({ where }),
     ]);
 
     // Transform the response to simplify the services array
@@ -284,17 +287,17 @@ export class GarageService {
       ...garage,
       services: garage.services.map((gs) => gs.service),
     }));
-    
+
     const result = {
       data: transformedGarages,
       pagination: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     };
-    
+
     return successResponse(result, 'Garages retrieved successfully');
   }
 
@@ -337,7 +340,7 @@ export class GarageService {
       ...garage,
       services: garage.services.map((gs) => gs.service),
     };
-    
+
     return successResponse(transformedGarage, 'Garage retrieved successfully');
   }
   @HandleError('Failed to delete garage', 'Garage')

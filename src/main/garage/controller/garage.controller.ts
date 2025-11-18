@@ -84,10 +84,22 @@ export class GarageController {
 
   @Get()
   @ApiOperation({ summary: 'Retrieve all garages with search and pagination' })
-  @ApiQuery({ name: 'search', required: false, description: 'Search by name, city, emirate, or address' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by name, city, emirate, or address',
+  })
   @ApiQuery({ name: 'city', required: false, description: 'Filter by city' })
-  @ApiQuery({ name: 'emirate', required: false, description: 'Filter by emirate' })
-  @ApiQuery({ name: 'serviceName', required: false, description: 'Filter by service type name' })
+  @ApiQuery({
+    name: 'emirate',
+    required: false,
+    description: 'Filter by emirate',
+  })
+  @ApiQuery({
+    name: 'serviceName',
+    required: false,
+    description: 'Filter by service type name',
+  })
   @ApiQuery({ name: 'page', required: false, description: 'Page number' })
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({
@@ -138,7 +150,10 @@ export class GarageController {
   )
   @ApiResponse({ status: 200, description: 'The garage has been updated.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
-  @ApiResponse({ status: 403, description: 'Not authorized to update this garage.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Not authorized to update this garage.',
+  })
   @ApiResponse({ status: 409, description: 'Garage name already exists.' })
   async update(
     @GetUser('userId') userId: string,
@@ -169,7 +184,10 @@ export class GarageController {
   })
   @ApiResponse({ status: 200, description: 'The garage has been deleted.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
-  @ApiResponse({ status: 403, description: 'Not authorized to delete this garage.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Not authorized to delete this garage.',
+  })
   remove(@GetUser('userId') userId: string, @Param('id') id: string) {
     return this.garageService.remove(userId, id);
   }

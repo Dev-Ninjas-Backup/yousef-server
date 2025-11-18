@@ -4,7 +4,7 @@ import { IsOptional, IsString, IsNumberString } from 'class-validator';
 export class QueryGarageDto {
   @ApiPropertyOptional({
     description: 'Search by garage name, city, or emirate',
-    example: 'Dubai'
+    example: 'Dubai',
   })
   @IsOptional()
   @IsString()
@@ -12,7 +12,7 @@ export class QueryGarageDto {
 
   @ApiPropertyOptional({
     description: 'Filter by city',
-    example: 'Dubai'
+    example: 'Dubai',
   })
   @IsOptional()
   @IsString()
@@ -20,7 +20,7 @@ export class QueryGarageDto {
 
   @ApiPropertyOptional({
     description: 'Filter by emirate',
-    example: 'Dubai'
+    example: 'Dubai',
   })
   @IsOptional()
   @IsString()
@@ -28,7 +28,7 @@ export class QueryGarageDto {
 
   @ApiPropertyOptional({
     description: 'Filter by service type name',
-    example: 'Oil Change'
+    example: 'Oil Change',
   })
   @IsOptional()
   @IsString()
@@ -36,7 +36,7 @@ export class QueryGarageDto {
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',
-    example: '1'
+    example: '1',
   })
   @IsOptional()
   @IsNumberString()
@@ -44,7 +44,7 @@ export class QueryGarageDto {
 
   @ApiPropertyOptional({
     description: 'Number of items per page',
-    example: '10'
+    example: '10',
   })
   @IsOptional()
   @IsNumberString()
