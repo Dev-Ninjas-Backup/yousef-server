@@ -4,6 +4,7 @@ import { AdminDashboardOverviewModule } from './admin-dashboard-overview/admin-d
 import { UserManagementModule } from './user-management/user-management.module';
 import { AdminSettingModule } from './admin-setting/admin-setting.module';
 import { AdminMessageModule } from './admin-message/admin-message.module';
+import { SparepartsFinancialsModule } from './spareparts-financials/spareparts-financials.module';
 
 @Module({
   controllers: [],
@@ -14,6 +15,7 @@ import { AdminMessageModule } from './admin-message/admin-message.module';
     UserManagementModule,
     AdminSettingModule,
     AdminMessageModule,
+    SparepartsFinancialsModule,
   ],
 })
 export class AdminModule {}

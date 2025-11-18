@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { AdminSettingService } from './admin-setting.service';
-import { AdminSettingController } from './admin-setting.controller';
+import { AdminSettingController } from './controller/admin-setting.controller';
 import { PartsCategoryModule } from './parts-category/parts-category.module';
+import { AdminSettingService } from './service/admin-setting.service';
 
 @Module({
   controllers: [AdminSettingController],
