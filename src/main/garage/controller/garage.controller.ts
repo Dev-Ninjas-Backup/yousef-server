@@ -8,7 +8,7 @@ import {
   Post,
   Query,
   UploadedFiles,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
@@ -35,7 +35,7 @@ import { GarageService } from '../service/garage.service';
 @ApiTags('Garages')
 @Controller('garages')
 export class GarageController {
-  constructor(private readonly garageService: GarageService) { }
+  constructor(private readonly garageService: GarageService) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
