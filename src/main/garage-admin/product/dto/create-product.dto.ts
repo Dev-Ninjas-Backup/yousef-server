@@ -1,54 +1,27 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsNumber,
-  IsObject,
   IsOptional,
   IsString,
   Min,
-  ValidateNested,
 } from 'class-validator';
 
-class SellerDto {
-  @ApiProperty({ description: 'Name of the seller', example: 'John Doe' })
-  @IsString()
-  @IsNotEmpty() // Added validation for required fields based on UI
-  name: string;
+enum SellerType {
+  INDIVIDUAL = 'INDIVIDUAL',
+  VERIFIED_SUPPLIER = 'VERIFIED_SUPPLIER',
+}
 
-  @ApiProperty({
-    description: 'Email of the seller',
-    example: 'john@example.com',
-  })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-
-  @ApiPropertyOptional({
-    description: 'Phone number of the seller',
-    example: '+971 XXX XXX XXX',
-  })
-  @IsOptional()
-  @IsString()
-  phoneNumber?: string;
-
-  // FIX: Added sellerType field to capture the radio button selection from the UI
-  @ApiProperty({
-    description: 'Seller type (e.g., Individual Seller, Verified Supplier)',
-    example: 'Individual Seller',
-  })
-  @IsString()
-  @IsNotEmpty()
-  sellerType: string;
-
-  @ApiPropertyOptional({ description: 'Is seller verified', example: true })
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  @IsBoolean()
-  isVerified?: boolean;
+enum ProductStatus {
+  DRAFT = 'DRAFT',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
 }
 
 export class CreateProductDto {
@@ -57,7 +30,7 @@ export class CreateProductDto {
     example: 'Brake Pads Front Set',
   })
   @IsString()
-  @IsNotEmpty() // Assuming partName is required
+  @IsNotEmpty()
   partName: string;
 
   @ApiPropertyOptional({
@@ -98,10 +71,8 @@ export class CreateProductDto {
   @IsString()
   description?: string;
 
-  // REMOVED: status field as it is system-set ('Pending Approval' in service)
-
   @ApiPropertyOptional({
-    description: 'Is product promoted (UI checkbox)',
+    description: 'Is product promoted',
     example: true,
   })
   @IsOptional()
@@ -110,14 +81,14 @@ export class CreateProductDto {
   isPromoted?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Promotion cost in AED (-20 AED fee from UI)',
+    description: 'Promotion cost in AED',
     example: 20.0,
   })
   @IsOptional()
   @Transform(({ value }) => (value ? parseFloat(value) : undefined))
   @IsNumber()
   @Min(0)
-  promoCost?: number; // Matches Decimal in Prisma
+  promoCost?: number;
 
   @ApiProperty({ description: 'Seller name', example: 'John Doe' })
   @IsString()
@@ -131,18 +102,21 @@ export class CreateProductDto {
 
   @ApiPropertyOptional({
     description: 'Seller phone number',
-    example: '+971 XXX XXX XXX',
+    example: '+971501234567',
   })
   @IsOptional()
   @IsString()
   sellerPhoneNumber?: string;
 
-  @ApiProperty({ description: 'Seller type', example: 'Individual Seller' })
-  @IsString()
-  @IsNotEmpty()
-  sellerType: string;
+  @ApiProperty({
+    description: 'Seller type',
+    enum: SellerType,
+    example: SellerType.INDIVIDUAL,
+  })
+  @IsEnum(SellerType)
+  sellerType: SellerType;
 
-  @ApiPropertyOptional({ description: 'Is seller verified', example: true })
+  @ApiPropertyOptional({ description: 'Is seller verified', example: false })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
@@ -151,7 +125,7 @@ export class CreateProductDto {
   @ApiPropertyOptional({
     type: 'array',
     items: { type: 'string', format: 'binary' },
-    description: 'Product photos (max 5 files - UI limit)', // FIX: UI limit is 5
+    description: 'Product photos (max 5 files)',
   })
   @IsOptional()
   photos?: Express.Multer.File[];
