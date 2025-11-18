@@ -8,4 +8,4 @@ import { PrivateChatService } from './service/private-message.service';
   controllers: [PrivateChatController],
   providers: [PrivateChatService, FileService, PrivateChatGateway],
 })
-export class PrivateMessageModule { }
+export class PrivateMessageModule {}
