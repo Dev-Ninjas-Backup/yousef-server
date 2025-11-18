@@ -2,16 +2,79 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { successResponse } from 'src/common/utilsResponse/response.util';
-import { FileService } from 'src/lib/file/file.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { SendPrivateMessageDto } from '../dto/privateChatGateway.dto';
 
 @Injectable()
 export class PrivateChatService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly fileService: FileService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Send a private message and update lastMessage in conversation
+   */
+  @HandleError('Failed to send private message', 'PRIVATE_CHAT')
+  async sendPrivateMessage(
+    conversationId: string,
+    senderId: string,
+    dto: SendPrivateMessageDto,
+  ) {
+    const message = await this.prisma.privateMessage.create({
+      data: {
+        content: dto.content,
+        conversationId,
+        senderId,
+        ...(dto.files &&
+          dto.files.length > 0 && {
+            files: dto.files,
+          }),
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            profilePhoto: true,
+            fullName: true,
+          },
+        },
+      },
+    });
+
+    // Update last message reference in conversation
+    await this.prisma.privateConversation.update({
+      where: { id: conversationId },
+      data: {
+        lastMessageId: message.id,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Fetch conversation to set delivery status
+    const conversation = await this.prisma.privateConversation.findUnique({
+      where: { id: conversationId },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException(`Conversation ${conversationId} not found`);
+    }
+
+    await this.prisma.privateMessageStatus.createMany({
+      data: [
+        {
+          messageId: message.id,
+          userId: conversation.user1Id,
+          status: 'DELIVERED',
+        },
+        {
+          messageId: message.id,
+          userId: conversation.user2Id,
+          status: 'DELIVERED',
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    return message;
+  }
 
   /**
    *-------------------- Load all chats ----------------------
@@ -33,7 +96,6 @@ export class PrivateChatService {
                 fullName: true,
               },
             },
-            file: true,
           },
         },
         user1: {
@@ -121,79 +183,6 @@ export class PrivateChatService {
   }
 
   /**
-   * Send a private message and update lastMessage in conversation
-   */
-  @HandleError('Failed to send private message', 'PRIVATE_CHAT')
-  async sendPrivateMessage(
-    conversationId: string,
-    senderId: string,
-    dto: SendPrivateMessageDto,
-    file?: Express.Multer.File,
-  ) {
-    let fileRecord;
-
-    if (file) {
-      fileRecord = await this.fileService.processUploadedFile(file);
-    }
-
-    const message = await this.prisma.privateMessage.create({
-      data: {
-        content: dto.content,
-        conversationId,
-        senderId,
-        fileId: fileRecord?.id,
-        isRead: false,
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            profilePhoto: true,
-            fullName: true,
-          },
-        },
-        file: true,
-      },
-    });
-
-    // Update last message reference in conversation
-    await this.prisma.privateConversation.update({
-      where: { id: conversationId },
-      data: {
-        lastMessageId: message.id,
-        updatedAt: new Date(),
-      },
-    });
-
-    // Fetch conversation to set delivery status
-    const conversation = await this.prisma.privateConversation.findUnique({
-      where: { id: conversationId },
-    });
-
-    if (!conversation) {
-      throw new NotFoundException(`Conversation ${conversationId} not found`);
-    }
-
-    await this.prisma.privateMessageStatus.createMany({
-      data: [
-        {
-          messageId: message.id,
-          userId: conversation.user1Id,
-          status: 'DELIVERED',
-        },
-        {
-          messageId: message.id,
-          userId: conversation.user2Id,
-          status: 'DELIVERED',
-        },
-      ],
-      skipDuplicates: true,
-    });
-
-    return message;
-  }
-
-  /**
    * Get all conversations for a user
    */
   @HandleError("Error getting user's conversations", 'PRIVATE_CHAT')
@@ -212,7 +201,7 @@ export class PrivateChatService {
                 fullName: true,
               },
             },
-            file: true,
+            // file: true,
           },
         },
         user1: {
@@ -255,7 +244,7 @@ export class PrivateChatService {
       where: { conversationId },
       include: {
         sender: true,
-        file: true,
+        // file: true,
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -299,7 +288,7 @@ export class PrivateChatService {
                 fullName: true,
               },
             },
-            file: true,
+            // file: true,
           },
         },
       },
