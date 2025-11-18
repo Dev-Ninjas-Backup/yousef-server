@@ -75,6 +75,15 @@ export class UpdateGarageDto {
   emirate?: string;
 
   @ApiProperty({
+    description: 'Full address (optional for update)',
+    example: '123 Sheikh Zayed Road, Dubai, UAE',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @ApiProperty({
     description: 'Description (optional for update)',
     example: 'Specialized in luxury car repairs',
     required: false,

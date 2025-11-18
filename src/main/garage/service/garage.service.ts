@@ -1,8 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { AppError } from 'src/common/error/handle-error.app';
+import { HandleError } from 'src/common/error/handle-error.decorator';
+import {
+  successResponse,
+  TResponse,
+} from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
 import { CreateGarageDto } from '../dto/create-garage.dto';
+import { QueryGarageDto } from '../dto/query-garage.dto';
 import { UpdateGarageDto } from '../dto/update-garage.dto';
 
 @Injectable()
@@ -12,7 +19,7 @@ export class GarageService {
     private s3FileService: S3FileService,
   ) {}
 
-  // CREATE
+  @HandleError('Failed to create garage', 'Garage')
   async create(
     userId: string,
     createGarageDto: CreateGarageDto,
@@ -20,7 +27,7 @@ export class GarageService {
       coverPhoto?: Express.Multer.File;
       profileImage?: Express.Multer.File;
     } = {},
-  ) {
+  ): Promise<TResponse<any>> {
     let coverPhotoUrl: string | undefined;
     let profileImageUrl: string | undefined;
 
@@ -60,16 +67,31 @@ export class GarageService {
       ? createGarageDto.certifications.split(',').map((b) => b.trim())
       : [];
 
+    // Check if garage name already exists
+    const existingGarage = await this.prisma.garage.findFirst({
+      where: {
+        name: {
+          equals: createGarageDto.name.trim(),
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (existingGarage) {
+      throw new AppError(409, 'Garage with this name already exists');
+    }
+
     // Create garage data object for Prisma
     const garageData = {
-      name: createGarageDto.name,
+      name: createGarageDto.name.trim(),
       coverPhoto: coverPhotoUrl,
       profileImage: profileImageUrl,
-      phone: createGarageDto.phone,
+      garagePhone: createGarageDto.phone,
       email: createGarageDto.email,
       street: createGarageDto.street,
       city: createGarageDto.city,
       emirate: createGarageDto.emirate,
+      address: createGarageDto.address,
       description: createGarageDto.description,
       certifications: certificationsArray,
       weekdaysHours: createGarageDto.weekdaysHours,
@@ -79,12 +101,14 @@ export class GarageService {
     };
 
     // Save to database
-    return this.prisma.garage.create({
+    const garage = await this.prisma.garage.create({
       data: garageData,
     });
+
+    return successResponse(garage, 'Garage created successfully');
   }
 
-  // UPDATE
+  @HandleError('Failed to update garage', 'Garage')
   async update(
     userId: string,
     id: string,
@@ -93,18 +117,31 @@ export class GarageService {
       coverPhoto?: Express.Multer.File;
       profileImage?: Express.Multer.File;
     } = {},
-  ) {
+  ): Promise<TResponse<any>> {
     const garage = await this.prisma.garage.findUnique({ where: { id } });
-    if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
-
-    // if (userId !== garage.userId) {
-    //   throw new Error('Forbidden!');
-    // }
+    if (!garage) throw new AppError(404, 'Garage not found');
 
     const isUser = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (userId !== garage.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
-      throw new Error('You are not authorized this route!');
+      throw new AppError(403, 'You are not authorized to update this garage');
+    }
+
+    // Check if garage name already exists (excluding current garage)
+    if (updateGarageDto.name) {
+      const duplicateGarage = await this.prisma.garage.findFirst({
+        where: {
+          name: {
+            equals: updateGarageDto.name.trim(),
+            mode: 'insensitive',
+          },
+          NOT: { id },
+        },
+      });
+
+      if (duplicateGarage) {
+        throw new AppError(409, 'Garage with this name already exists');
+      }
     }
 
     let coverPhotoUrl: string | undefined;
@@ -147,7 +184,11 @@ export class GarageService {
       : [];
 
     // Create update data object for Prisma
-    const updateData: any = { ...updateGarageDto };
+    const updateData: any = {
+      ...updateGarageDto,
+      name: updateGarageDto.name?.trim(),
+      garagePhone: updateGarageDto.phone,
+    };
     if (coverPhotoUrl) updateData.coverPhoto = coverPhotoUrl;
     if (profileImageUrl) updateData.profileImage = profileImageUrl;
     if (brandArray) updateData.brandExpertise = brandArray;
@@ -159,52 +200,109 @@ export class GarageService {
     );
 
     // Update database
-    return this.prisma.garage.update({
+    const updatedGarage = await this.prisma.garage.update({
       where: { id },
       data: updateData,
     });
+
+    return successResponse(updatedGarage, 'Garage updated successfully');
   }
 
-  // GET ALL
-  async findAll() {
-    const garages = await this.prisma.garage.findMany({
-      include: {
-        services: {
-          select: {
-            service: {
-              select: {
-                id: true,
-                name: true,
-                icon: true,
-              },
+  @HandleError('Failed to fetch garages', 'Garage')
+  async findAll(query?: QueryGarageDto): Promise<TResponse<any>> {
+    const page = parseInt(query?.page || '1');
+    const limit = parseInt(query?.limit || '10');
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (query?.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { city: { contains: query.search, mode: 'insensitive' } },
+        { emirate: { contains: query.search, mode: 'insensitive' } },
+        { address: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (query?.city) {
+      where.city = { contains: query.city, mode: 'insensitive' };
+    }
+
+    if (query?.emirate) {
+      where.emirate = { contains: query.emirate, mode: 'insensitive' };
+    }
+
+    if (query?.serviceName) {
+      where.services = {
+        some: {
+          service: {
+            name: {
+              contains: query.serviceName,
+              mode: 'insensitive',
             },
           },
         },
-        user: {
-          select: {
-            id: true,
-            email: true,
-            fullName: true,
-            bio: true,
-            phone: true,
-            profilePhoto: true,
-            city: true,
-            createdAt: true,
-            updatedAt: true,
+      };
+    }
+
+    const [garages, total] = await Promise.all([
+      this.prisma.garage.findMany({
+        where,
+        include: {
+          services: {
+            select: {
+              service: {
+                select: {
+                  id: true,
+                  name: true,
+                  icon: true,
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+              bio: true,
+              phone: true,
+              profilePhoto: true,
+              city: true,
+              createdAt: true,
+              updatedAt: true,
+            },
           },
         },
-      },
-    });
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.garage.count({ where }),
+    ]);
 
     // Transform the response to simplify the services array
-    return garages.map((garage) => ({
+    const transformedGarages = garages.map((garage) => ({
       ...garage,
       services: garage.services.map((gs) => gs.service),
     }));
+
+    const result = {
+      data: transformedGarages,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+
+    return successResponse(result, 'Garages retrieved successfully');
   }
 
-  // GET ONE
-  async findOne(id: string) {
+  @HandleError('Failed to fetch garage', 'Garage')
+  async findOne(id: string): Promise<TResponse<any>> {
     const garage = await this.prisma.garage.findUnique({
       where: { id },
       include: {
@@ -227,7 +325,6 @@ export class GarageService {
             bio: true,
             phone: true,
             profilePhoto: true,
-
             city: true,
             createdAt: true,
             updatedAt: true,
@@ -236,32 +333,28 @@ export class GarageService {
       },
     });
 
-    if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
+    if (!garage) throw new AppError(404, 'Garage not found');
 
     // Transform the response to simplify the services array
-    return {
+    const transformedGarage = {
       ...garage,
       services: garage.services.map((gs) => gs.service),
     };
-  }
-  // DELETE
-  async remove(userId: string, id: string) {
-    const isExist = await this.prisma.garage.findUnique({ where: { id } });
-    if (!isExist) throw new NotFoundException(`Garage with ID ${id} not found`);
-    console.log('Matched', userId, isExist.userId);
 
-    // if (userId !== isExist.userId) {
-    //   throw new Error('Forbidden!');
-    // }
+    return successResponse(transformedGarage, 'Garage retrieved successfully');
+  }
+  @HandleError('Failed to delete garage', 'Garage')
+  async remove(userId: string, id: string): Promise<TResponse<any>> {
+    const garage = await this.prisma.garage.findUnique({ where: { id } });
+    if (!garage) throw new AppError(404, 'Garage not found');
 
     const isUser = await this.prisma.user.findUnique({ where: { id: userId } });
 
-    if (userId !== isExist.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
-      throw new Error('You are not authorized this route!');
+    if (userId !== garage.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
+      throw new AppError(403, 'You are not authorized to delete this garage');
     }
 
-    const garage = await this.prisma.garage.findUnique({ where: { id } });
-    if (!garage) throw new NotFoundException(`Garage with ID ${id} not found`);
-    return this.prisma.garage.delete({ where: { id } });
+    await this.prisma.garage.delete({ where: { id } });
+    return successResponse(null, 'Garage deleted successfully');
   }
 }

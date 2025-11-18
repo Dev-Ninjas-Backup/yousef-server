@@ -41,6 +41,11 @@ model Ads {
   adsposition AdsPostion?
 }
 
+model PartsCategory {
+  id   String @id @default(uuid())
+  name String @unique
+}
+
 enum AdsPostion {
   FRONTPAGE
   CATEGORYPAGE

@@ -17,3 +17,11 @@
 - [x] Implemented **Promotional Ad** feature with complete CRUD operations
 - [x] Implemented **Product** module with complete CRUD operations
 - [x] Identify some problem in **figma** with **Promotional ad** module status issue
+
+
+## 17/11/2025
+
+- [x] Fixed the **Figma** issues with the Figma designer.
+- [x] Reviewed the entire Figma design, finalized all available tasks, and planned everything properly with Joy bhai for step-by-step completion.
+- [x] Implemented the **Parts Categories** module with full **CRUD** operations.
+- [x] Implemented **Pagination**, **Searching**, and **Filtering** for both **Parts Categories** and **Garage** modules.
