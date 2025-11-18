@@ -3,14 +3,12 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
   UploadedFiles,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
@@ -37,7 +35,7 @@ import { GarageService } from '../service/garage.service';
 @ApiTags('Garages')
 @Controller('garages')
 export class GarageController {
-  constructor(private readonly garageService: GarageService) {}
+  constructor(private readonly garageService: GarageService) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -75,7 +73,7 @@ export class GarageController {
     } = {},
   ) {
     // console.log('POST /garages hit', { createGarageDto, files });
-    // console.log('userId', userId);
+    console.log('userId', userId);
     return this.garageService.create(userId, createGarageDto, {
       coverPhoto: files.coverPhoto?.[0],
       profileImage: files.profileImage?.[0],
