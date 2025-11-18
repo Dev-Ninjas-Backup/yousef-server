@@ -15,5 +15,13 @@
 ## 17/11/2025
 
 - [ ] Firstable solve **Figma** issue with **Figma** designer
+- [ ] Implementing **Parts Categories** module
+- [ ] Implementing  **Pagination**, **Searching** and **Filtering**
 - [ ] Finalize the **Inquiries** and **Messages** feature with garage admin dashboard
-- [ ] Implementing **Product** module with **Buy** and **Sell** feature 
+
+
+## 18/11/2025
+
+- [ ] Implement the **Product** module with **Buy** and **Sell** features
+- [ ] I don’t have enough time today to work on the other sections, so tomorrow I will implement the **Inquiries** and **Messages** features in the garage admin dashboard
+- [ ] Remaining parts of the project
