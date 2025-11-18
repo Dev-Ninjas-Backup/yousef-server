@@ -9,7 +9,7 @@ export class ProductService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) { }
+  ) {}
 
   async create(
     userId: string,
@@ -168,7 +168,7 @@ export class ProductService {
 
     // Update product with new photos array
     const updateData: any = {
-      ...productData
+      ...productData,
     };
     if (photoUrls.length > 0) {
       updateData.photos = photoUrls;
@@ -187,7 +187,7 @@ export class ProductService {
     const product = await this.prisma.product.findUnique({
       where: { id },
     });
-    console.log("Product", product);
+    console.log('Product', product);
 
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
