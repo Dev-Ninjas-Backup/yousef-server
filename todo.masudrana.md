@@ -25,3 +25,9 @@
 - [ ] Implement the **Product** module with **Buy** and **Sell** features
 - [ ] I don’t have enough time today to work on the other sections, so tomorrow I will implement the **Inquiries** and **Messages** features in the garage admin dashboard
 - [ ] Remaining parts of the project
+
+
+## 19/11/2025
+
+- [ ] First, implement the payment system for this project, then add payment-related functionality to the required modules.
+- [ ] Implement dynamic platform settings for the admin to ensure that other route APIs work dynamically based on the configuration.

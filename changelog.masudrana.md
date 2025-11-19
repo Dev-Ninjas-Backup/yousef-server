@@ -25,3 +25,10 @@
 - [x] Reviewed the entire Figma design, finalized all available tasks, and planned everything properly with Joy bhai for step-by-step completion.
 - [x] Implemented the **Parts Categories** module with full **CRUD** operations.
 - [x] Implemented **Pagination**, **Searching**, and **Filtering** for both **Parts Categories** and **Garage** modules.
+
+
+## 18/11/2025
+
+- [x] Implemented the **Review** module with the ability to rate a garage, get all reviews, view only my reviews, delete reviews, and generate **Review Statistics** for each garage.
+- [x] Implemented the **Product** module with **Buy** and **Sell** features.
+- [x] Explored WebSocket for some time.
