@@ -12,7 +12,7 @@ import { UpdatePartsCategoryDto } from './dto/update-parts-category.dto';
 
 @Injectable()
 export class PartsCategoryService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   @HandleError('Failed to create parts category', 'Parts Category')
   async create(
@@ -47,11 +47,11 @@ export class PartsCategoryService {
 
     const where = query?.search
       ? {
-        name: {
-          contains: query.search,
-          mode: 'insensitive' as const,
-        },
-      }
+          name: {
+            contains: query.search,
+            mode: 'insensitive' as const,
+          },
+        }
       : {};
 
     const [categories, total] = await Promise.all([
@@ -167,8 +167,12 @@ export class PartsCategoryService {
     const statistics = categoryStats.map((stat) => ({
       category: stat.category,
       productCount: stat._count.category,
-      percentage: totalProducts > 0 ?
-        parseFloat(((stat._count.category / totalProducts) * 100).toFixed(2)) : 0,
+      percentage:
+        totalProducts > 0
+          ? parseFloat(
+              ((stat._count.category / totalProducts) * 100).toFixed(2),
+            )
+          : 0,
     }));
 
     const result = {
@@ -176,6 +180,9 @@ export class PartsCategoryService {
       categoryStatistics: statistics,
     };
 
-    return successResponse(result, 'Parts category statistics retrieved successfully');
+    return successResponse(
+      result,
+      'Parts category statistics retrieved successfully',
+    );
   }
 }
