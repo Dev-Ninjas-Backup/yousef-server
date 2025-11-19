@@ -85,7 +85,7 @@ export class AdminDashboardOverviewService {
           },
         },
         where: {
-          status: 'Pending Approval',
+          status: 'PENDING',
         },
         orderBy: {
           createdAt: 'desc',
@@ -207,7 +207,7 @@ export class AdminDashboardOverviewService {
       }),
       // Products - Pending (Using the string from the schema)
       this.prisma.product.count({
-        where: { status: 'Pending Approval' },
+        where: { status: 'APPROVED' },
       }),
       // Users - Total
       this.prisma.user.count(),
