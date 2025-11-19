@@ -9,7 +9,7 @@ export class ProductService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) {}
+  ) { }
 
   async create(
     userId: string,
@@ -30,19 +30,6 @@ export class ProductService {
       throw new Error('validation: Seller email is required.');
     }
 
-    // Upload photos to S3
-    const photoUrls: string[] = [];
-    if (files && files.length > 0) {
-      for (const file of files) {
-        try {
-          const { url } = await this.s3FileService.processUploadedFile(file);
-          photoUrls.push(url);
-        } catch (error) {
-          throw new Error(`Failed to upload photo: ${error.message}`);
-        }
-      }
-    }
-
     // Find or create seller based on email
     let sellerInstance = await this.prisma.seller.findUnique({
       where: { email: sellerEmail },
@@ -61,12 +48,43 @@ export class ProductService {
       });
     }
 
+    // Check free product limit using seller's freeProductsUsed field
+    const currentFreeProductsUsed = sellerInstance.freeProductsUsed || 0;
+    
+    console.log(`Seller ${sellerInstance.email} has used ${currentFreeProductsUsed} free products`);
+
+    if (currentFreeProductsUsed >= 2) {
+      throw new Error('You have already used your 2 free product listings. To continue selling, please upgrade to a paid plan.');
+    }
+
+    // Increment free products used count
+    await this.prisma.seller.update({
+      where: { id: sellerInstance.id },
+      data: {
+        freeProductsUsed: currentFreeProductsUsed + 1
+      }
+    });
+
+    // Upload photos to S3
+    const photoUrls: string[] = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        try {
+          const { url } = await this.s3FileService.processUploadedFile(file);
+          photoUrls.push(url);
+        } catch (error) {
+          throw new Error(`Failed to upload photo: ${error.message}`);
+        }
+      }
+    }
+
     // Create product with photos array
     const product = await this.prisma.product.create({
       data: {
         sellerId: sellerInstance.id,
         status: 'PENDING',
         photos: photoUrls,
+        views: 0,
         ...productData,
       },
       include: {
@@ -95,7 +113,18 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
-    return product;
+
+    // Increment view count
+    await this.prisma.product.update({
+      where: { id },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
+
+    return { ...product, views: product.views + 1 };
   }
 
   async update(
@@ -199,5 +228,37 @@ export class ProductService {
         seller: true,
       },
     });
+  }
+
+  async getSellerProductLimit(sellerId: string) {
+    const seller = await this.prisma.seller.findUnique({
+      where: { id: sellerId },
+    });
+
+    if (!seller) {
+      throw new Error('Seller not found');
+    }
+
+    const freeProductsUsed = seller.freeProductsUsed || 0;
+
+    const freeProductsRemaining = Math.max(0, 2 - freeProductsUsed);
+    const canAddFreeProduct = freeProductsUsed < 2;
+
+    return {
+      sellerId,
+      sellerName: seller.name,
+      freeProductsUsed,
+      freeProductsRemaining,
+      canAddFreeProduct,
+    };
+  }
+
+  async resetSellerFreeLimit(sellerId: string) {
+    // Delete all products for this seller to reset their free limit
+    await this.prisma.product.deleteMany({
+      where: { sellerId },
+    });
+    
+    return { message: 'Seller free limit reset successfully' };
   }
 }

@@ -64,6 +64,8 @@ export class ProductController {
     } catch (error) {
       if (
         error instanceof NotFoundException ||
+        error.message.includes('validation') ||
+        error.message.includes('already used your 2 free product listings') ||
         error.message.includes('validation')
       ) {
         throw new BadRequestException(error.message);
@@ -147,5 +149,22 @@ export class ProductController {
       }
       throw new InternalServerErrorException('Failed to delete product');
     }
+  }
+
+  @Get('seller/:sellerId/limit')
+  @ApiOperation({ summary: 'Check seller free product limit status' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Returns seller product limit information including used and remaining free listings.' 
+  })
+  async getSellerLimit(@Param('sellerId') sellerId: string) {
+    return this.productService.getSellerProductLimit(sellerId);
+  }
+
+  @Delete('seller/:sellerId/reset-limit')
+  @ApiOperation({ summary: 'Reset seller free product limit (delete all products)' })
+  @ApiResponse({ status: 200, description: 'Seller limit reset successfully.' })
+  async resetSellerLimit(@Param('sellerId') sellerId: string) {
+    return this.productService.resetSellerFreeLimit(sellerId);
   }
 }
