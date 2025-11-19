@@ -27,6 +27,7 @@ model Garage {
   userId   String
   user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   services GarageService[]
+  reviews  Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
