@@ -16,10 +16,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  ValidateAdmin,
-  ValidateAuth
-} from 'src/common/jwt/jwt.decorator';
+import { ValidateAdmin, ValidateAuth } from 'src/common/jwt/jwt.decorator';
 import { CreatePartsCategoryDto } from './dto/create-parts-category.dto';
 import { QueryPartsCategoryDto } from './dto/query-parts-category.dto';
 import { UpdatePartsCategoryDto } from './dto/update-parts-category.dto';
@@ -28,7 +25,7 @@ import { PartsCategoryService } from './parts-category.service';
 @ApiTags('Parts Category')
 @Controller('parts-category')
 export class PartsCategoryController {
-  constructor(private readonly partsService: PartsCategoryService) { }
+  constructor(private readonly partsService: PartsCategoryService) {}
 
   @ApiBearerAuth()
   @ValidateAuth()

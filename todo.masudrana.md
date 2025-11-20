@@ -31,3 +31,9 @@
 
 - [ ] First, implement the payment system for this project, then add payment-related functionality to the required modules.
 - [ ] Implement dynamic platform settings for the admin to ensure that other route APIs work dynamically based on the configuration.
+
+
+## 20/11/2025
+
+- [ ] First, implement the payment system for this project, then add payment-related functionality to the required modules.
+- [ ] Implement dynamic platform settings for the admin to ensure that other route APIs work dynamically based on the configuration.

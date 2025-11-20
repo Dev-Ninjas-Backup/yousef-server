@@ -1,5 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ValidateAuth, ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
 import {
   AdminDashboardOverviewService,
@@ -12,7 +17,7 @@ import {
 export class AdminDashboardOverviewController {
   constructor(
     private readonly adminDashboardOverviewService: AdminDashboardOverviewService,
-  ) { }
+  ) {}
 
   // ----------------Dashboard-overview-----------
   @ValidateAuth()
