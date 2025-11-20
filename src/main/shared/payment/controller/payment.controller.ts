@@ -58,7 +58,9 @@ export class PaymentController {
     const canCreate = await this.paymentService.canCreateFreeProduct(userId);
     return {
       canCreateFree: canCreate,
-      message: canCreate ? 'You can create free product' : 'Payment required for more products'
+      message: canCreate
+        ? 'You can create free product'
+        : 'Payment required for more products',
     };
   }
 
@@ -125,9 +127,11 @@ export class PaymentController {
   @ValidateAuth()
   @Get('/subscription-status')
   async getSubscriptionStatus(@GetUser('userId') userId: string) {
-    const canCreateFree = await this.paymentService.canCreateFreeProduct(userId);
-    const hasActiveSubscription = await this.paymentService.hasActiveMonthlySubscription(userId);
-    
+    const canCreateFree =
+      await this.paymentService.canCreateFreeProduct(userId);
+    const hasActiveSubscription =
+      await this.paymentService.hasActiveMonthlySubscription(userId);
+
     return {
       canCreateFree,
       hasActiveMonthlySubscription: hasActiveSubscription,
@@ -135,14 +139,14 @@ export class PaymentController {
         monthly: {
           price: 100,
           currency: 'USD',
-          description: 'Unlimited products for 30 days'
+          description: 'Unlimited products for 30 days',
         },
         payPer: {
           price: 20,
           currency: 'USD',
-          description: 'Single product creation'
-        }
-      }
+          description: 'Single product creation',
+        },
+      },
     };
   }
 
@@ -155,14 +159,17 @@ export class PaymentController {
     console.log('🔔 Webhook received at /payment/webhook');
     console.log('Signature present:', !!signature);
     console.log('Raw body present:', !!req.rawBody);
-    
+
     if (!req.rawBody) {
       console.log('❌ No raw body found');
       throw new BadRequestException('Raw body is required for webhook');
     }
-    
+
     try {
-      const result = await this.paymentService.handleWebhook(signature, req.rawBody);
+      const result = await this.paymentService.handleWebhook(
+        signature,
+        req.rawBody,
+      );
       console.log('✅ Webhook processed successfully');
       return result;
     } catch (error) {
@@ -170,8 +177,4 @@ export class PaymentController {
       throw error;
     }
   }
-
-
-
-
 }

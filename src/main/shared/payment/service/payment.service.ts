@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
@@ -84,11 +88,12 @@ export class PaymentService {
   async getProductPayments(productId: string, userId: string) {
     // Verify product belongs to user
     const product = await this.prisma.product.findFirst({
-      where: { id: productId, sellerId: userId }
+      where: { id: productId, sellerId: userId },
     });
-    
-    if (!product) throw new NotFoundException('Product not found or access denied');
-    
+
+    if (!product)
+      throw new NotFoundException('Product not found or access denied');
+
     return this.prisma.payment.findMany({
       where: {
         userId,
@@ -135,11 +140,11 @@ export class PaymentService {
   async canCreateFreeProduct(userId: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { freeProductsUsed: true }
+      select: { freeProductsUsed: true },
     });
-    
+
     if (!user) throw new NotFoundException('User not found');
-    
+
     return user.freeProductsUsed < 2; // Free limit is 2
   }
 
@@ -148,15 +153,16 @@ export class PaymentService {
   async createProductPaymentSession(
     userId: string,
     productId: string,
-    description?: string
+    description?: string,
   ): Promise<{ url: string }> {
     // 1. Get product details
     const product = await this.prisma.product.findUnique({
-      where: { id: productId }
+      where: { id: productId },
     });
 
     if (!product) throw new NotFoundException('Product not found');
-    if (product.sellerId !== userId) throw new BadRequestException('You can only pay for your own products');
+    if (product.sellerId !== userId)
+      throw new BadRequestException('You can only pay for your own products');
 
     // 2. Calculate payment amount (promotion fee)
     const promotionFee = 20; // 20 AED as mentioned in your code
@@ -171,7 +177,8 @@ export class PaymentService {
             currency: 'usd',
             product_data: {
               name: `Promote: ${product.partName}`,
-              description: description || `Promotion fee for ${product.partName}`,
+              description:
+                description || `Promotion fee for ${product.partName}`,
             },
             unit_amount: promotionFee * 100, // Convert to cents
           },
@@ -197,7 +204,7 @@ export class PaymentService {
     userId: string,
     productName: string,
     amount: number,
-    description?: string
+    description?: string,
   ): Promise<{ url: string }> {
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
@@ -237,33 +244,43 @@ export class PaymentService {
       event = this.stripe.webhooks.constructEvent(
         body,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET!
+        process.env.STRIPE_WEBHOOK_SECRET!,
       );
     } catch (err) {
-      throw new BadRequestException(`Webhook signature verification failed: ${err.message}`);
+      throw new BadRequestException(
+        `Webhook signature verification failed: ${err.message}`,
+      );
     }
 
     switch (event.type) {
       case 'checkout.session.completed':
-        await this.handleCheckoutSuccess(event.data.object as Stripe.Checkout.Session);
+        await this.handleCheckoutSuccess(
+          event.data.object as Stripe.Checkout.Session,
+        );
         break;
       case 'payment_intent.succeeded':
-        await this.handlePaymentSuccess(event.data.object as Stripe.PaymentIntent);
+        await this.handlePaymentSuccess(
+          event.data.object as Stripe.PaymentIntent,
+        );
         break;
       case 'payment_intent.payment_failed':
-        await this.handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
+        await this.handlePaymentFailed(
+          event.data.object as Stripe.PaymentIntent,
+        );
         break;
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
   }
 
-  private async handleCheckoutSuccess(session: Stripe.Checkout.Session): Promise<void> {
+  private async handleCheckoutSuccess(
+    session: Stripe.Checkout.Session,
+  ): Promise<void> {
     console.log('🔥 Webhook received - handleCheckoutSuccess');
     console.log('Session metadata:', session.metadata);
-    
+
     const { userId, type, productId, productName, amount } = session.metadata!;
-    
+
     if (type === 'monthly_subscription') {
       console.log('💰 Processing monthly subscription for user:', userId);
       // Create payment record
@@ -277,22 +294,26 @@ export class PaymentService {
           paymentMethod: 'card',
           userId,
           // planId: null for custom payments
-        }
+        },
       });
-      
+
       // Update user's subscription status
       const subscriptionEndDate = new Date();
       subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // Add 1 month
-      
+
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
-        data: { 
+        data: {
           hasPaid: true,
           isMembership: true,
-          subscriptionEndsAt: subscriptionEndDate
-        }
+          subscriptionEndsAt: subscriptionEndDate,
+        },
       });
-      console.log('✅ User subscription activated:', updatedUser.isMembership, updatedUser.subscriptionEndsAt);
+      console.log(
+        '✅ User subscription activated:',
+        updatedUser.isMembership,
+        updatedUser.subscriptionEndsAt,
+      );
     } else if (type === 'pay_per_product') {
       console.log('💳 Processing pay-per product for user:', userId);
       // Create payment record for pay-per product
@@ -306,21 +327,24 @@ export class PaymentService {
           paymentMethod: 'card',
           userId,
           // planId: null for custom payments
-        }
+        },
       });
-      
+
       // Give user 1 product creation credit
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
-        data: { 
+        data: {
           hasPaid: true,
           // Add 1 to available product credits (we'll track this)
           freeProductsListing: {
-            increment: 1
-          }
-        }
+            increment: 1,
+          },
+        },
       });
-      console.log('✅ User updated with credit:', updatedUser.freeProductsListing);
+      console.log(
+        '✅ User updated with credit:',
+        updatedUser.freeProductsListing,
+      );
     } else if (type === 'product_promotion' && productId) {
       // Create payment record
       await this.prisma.payment.create({
@@ -333,22 +357,22 @@ export class PaymentService {
           paymentMethod: 'card',
           userId,
           planId: `product-promotion-${productId}`,
-        }
+        },
       });
-      
+
       // Update product status to APPROVED and set promoted
       await this.prisma.product.update({
         where: { id: productId },
-        data: { 
+        data: {
           status: 'APPROVED',
-          isPromoted: true
-        }
+          isPromoted: true,
+        },
       });
-      
+
       // Update user's payment status
       await this.prisma.user.update({
         where: { id: userId },
-        data: { hasPaid: true }
+        data: { hasPaid: true },
       });
     } else if (type === 'product_purchase') {
       // Generic product purchase (backward compatibility)
@@ -361,20 +385,24 @@ export class PaymentService {
           status: 'COMPLETED',
           paymentMethod: 'card',
           userId,
-          planId: productName ? `product-${productName.toLowerCase().replace(/\s+/g, '-')}` : 'general-payment',
-        }
+          planId: productName
+            ? `product-${productName.toLowerCase().replace(/\s+/g, '-')}`
+            : 'general-payment',
+        },
       });
-      
+
       await this.prisma.user.update({
         where: { id: userId },
-        data: { hasPaid: true }
+        data: { hasPaid: true },
       });
     }
   }
 
-  private async handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promise<void> {
+  private async handlePaymentSuccess(
+    paymentIntent: Stripe.PaymentIntent,
+  ): Promise<void> {
     const { userId, type } = paymentIntent.metadata;
-    
+
     if (type === 'product_creation') {
       // Create payment record
       await this.prisma.payment.create({
@@ -386,19 +414,21 @@ export class PaymentService {
           status: 'COMPLETED',
           paymentMethod: 'card',
           userId,
-          planId: 'product-creation'
-        }
+          planId: 'product-creation',
+        },
       });
-      
+
       // Update user's payment status
       await this.prisma.user.update({
         where: { id: userId },
-        data: { hasPaid: true }
+        data: { hasPaid: true },
       });
     }
   }
 
-  private async handlePaymentFailed(paymentIntent: Stripe.PaymentIntent): Promise<void> {
+  private async handlePaymentFailed(
+    paymentIntent: Stripe.PaymentIntent,
+  ): Promise<void> {
     console.log('Payment failed:', paymentIntent.id);
     // Handle payment failure logic here
   }
@@ -410,9 +440,9 @@ export class PaymentService {
       where: { id: userId },
       data: {
         freeProductsUsed: {
-          increment: 1
-        }
-      }
+          increment: 1,
+        },
+      },
     });
   }
 
@@ -421,26 +451,28 @@ export class PaymentService {
   async hasActiveMonthlySubscription(userId: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { 
+      select: {
         subscriptionEndsAt: true,
-        isMembership: true 
-      }
+        isMembership: true,
+      },
     });
-    
+
     if (!user) throw new NotFoundException('User not found');
-    
+
     // Check if user has membership and subscription hasn't expired
-    return Boolean(user.isMembership) && 
-           Boolean(user.subscriptionEndsAt) && 
-           user.subscriptionEndsAt !== null &&
-           new Date(user.subscriptionEndsAt) > new Date();
+    return (
+      Boolean(user.isMembership) &&
+      Boolean(user.subscriptionEndsAt) &&
+      user.subscriptionEndsAt !== null &&
+      new Date(user.subscriptionEndsAt) > new Date()
+    );
   }
 
   // Create checkout session for monthly plan ($100)
   @HandleError('Failed to create monthly plan session')
   async createMonthlyPlanSession(userId: string): Promise<{ url: string }> {
     console.log('💰 Creating monthly plan session for user:', userId);
-    
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -473,7 +505,7 @@ export class PaymentService {
   @HandleError('Failed to create pay-per session')
   async createPayPerProductSession(userId: string): Promise<{ url: string }> {
     console.log('💳 Creating pay-per session for user:', userId);
-    
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -507,11 +539,11 @@ export class PaymentService {
   async hasProductCreationCredits(userId: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { freeProductsListing: true }
+      select: { freeProductsListing: true },
     });
-    
+
     if (!user) throw new NotFoundException('User not found');
-    
+
     return (user.freeProductsListing || 0) > 0;
   }
 
@@ -522,11 +554,9 @@ export class PaymentService {
       where: { id: userId },
       data: {
         freeProductsListing: {
-          decrement: 1
-        }
-      }
+          decrement: 1,
+        },
+      },
     });
   }
-
-
 }

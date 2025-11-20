@@ -90,8 +90,6 @@ export class ProductController {
     return this.productService.findAll();
   }
 
-
-
   @Get(':id')
   @ApiOperation({ summary: 'Get a product by ID' })
   @ApiResponse({ status: 200, description: 'Product details.' })
@@ -182,9 +180,11 @@ export class ProductController {
   @ApiOperation({ summary: 'Check user payment status and available options' })
   @ApiResponse({ status: 200, description: 'Payment status and options' })
   async getPaymentStatus(@GetUser('userId') userId: string) {
-    const canCreateFree = await this.paymentService.canCreateFreeProduct(userId);
-    const hasActiveSubscription = await this.paymentService.hasActiveMonthlySubscription(userId);
-    
+    const canCreateFree =
+      await this.paymentService.canCreateFreeProduct(userId);
+    const hasActiveSubscription =
+      await this.paymentService.hasActiveMonthlySubscription(userId);
+
     return {
       canCreateFree,
       hasActiveMonthlySubscription: hasActiveSubscription,
@@ -192,19 +192,19 @@ export class ProductController {
         monthly: {
           price: 100,
           currency: 'USD',
-          description: 'Unlimited products for 30 days'
+          description: 'Unlimited products for 30 days',
         },
         payPer: {
           price: 20,
           currency: 'USD',
-          description: 'Single product creation'
-        }
+          description: 'Single product creation',
+        },
       },
-      message: canCreateFree 
-        ? 'You can create free products' 
-        : hasActiveSubscription 
+      message: canCreateFree
+        ? 'You can create free products'
+        : hasActiveSubscription
           ? 'You have active monthly subscription'
-          : 'Payment required for more products'
+          : 'Payment required for more products',
     };
   }
 
@@ -212,8 +212,13 @@ export class ProductController {
   @ValidateAuth()
   @ApiBearerAuth()
   @Post('create-monthly-payment')
-  @ApiOperation({ summary: 'Create checkout session for monthly subscription ($100)' })
-  @ApiResponse({ status: 200, description: 'Monthly subscription checkout session created' })
+  @ApiOperation({
+    summary: 'Create checkout session for monthly subscription ($100)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Monthly subscription checkout session created',
+  })
   async createMonthlyPayment(@GetUser('userId') userId: string) {
     return this.paymentService.createMonthlyPlanSession(userId);
   }
@@ -222,10 +227,14 @@ export class ProductController {
   @ValidateAuth()
   @ApiBearerAuth()
   @Post('create-payper-payment')
-  @ApiOperation({ summary: 'Create checkout session for pay-per product ($20)' })
-  @ApiResponse({ status: 200, description: 'Pay-per product checkout session created' })
+  @ApiOperation({
+    summary: 'Create checkout session for pay-per product ($20)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Pay-per product checkout session created',
+  })
   async createPayPerPayment(@GetUser('userId') userId: string) {
     return this.paymentService.createPayPerProductSession(userId);
   }
-
 }

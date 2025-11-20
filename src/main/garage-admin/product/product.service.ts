@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
 import { PaymentService } from '../../shared/payment/service/payment.service';
@@ -11,7 +15,7 @@ export class ProductService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
-  ) { }
+  ) {}
 
   async create(
     userId: string,
@@ -33,7 +37,8 @@ export class ProductService {
     }
 
     // Check if user can create free product (first 2 are free)
-    const canCreateFree = await this.paymentService.canCreateFreeProduct(userId);
+    const canCreateFree =
+      await this.paymentService.canCreateFreeProduct(userId);
 
     if (canCreateFree) {
       // User can create free product, increment count and proceed
@@ -42,7 +47,8 @@ export class ProductService {
       // User has used free products, check plan and payment
       if (plan === 'PAY_PER') {
         // Check if user has product creation credits from pay-per payments
-        const hasCredits = await this.paymentService.hasProductCreationCredits(userId);
+        const hasCredits =
+          await this.paymentService.hasProductCreationCredits(userId);
 
         if (!hasCredits) {
           throw new BadRequestException({
@@ -50,14 +56,15 @@ export class ProductService {
             code: 'PAY_PER_PAYMENT_REQUIRED',
             amount: 20,
             plan: 'PAY_PER',
-            action: 'Please complete $20 payment to create this product'
+            action: 'Please complete $20 payment to create this product',
           });
         }
         // User has credits, use one credit
         await this.paymentService.useProductCreationCredit(userId);
       } else if (plan === 'MONTHLY') {
         // For monthly plan, check if user has active subscription
-        const hasActiveSubscription = await this.paymentService.hasActiveMonthlySubscription(userId);
+        const hasActiveSubscription =
+          await this.paymentService.hasActiveMonthlySubscription(userId);
 
         if (!hasActiveSubscription) {
           throw new BadRequestException({
@@ -65,7 +72,8 @@ export class ProductService {
             code: 'MONTHLY_SUBSCRIPTION_REQUIRED',
             amount: 100,
             plan: 'MONTHLY',
-            action: 'Please activate monthly subscription ($100) to create unlimited products'
+            action:
+              'Please activate monthly subscription ($100) to create unlimited products',
           });
         }
         // User has active monthly subscription, can proceed
@@ -270,7 +278,8 @@ export class ProductService {
     const canAddFreeProduct = freeProductsUsed < 2;
 
     // Check monthly subscription status
-    const hasActiveMonthlySubscription = user.isMembership &&
+    const hasActiveMonthlySubscription =
+      user.isMembership &&
       user.subscriptionEndsAt &&
       new Date(user.subscriptionEndsAt) > new Date();
 

@@ -62,7 +62,10 @@ async function bootstrap() {
 
   // ---------------webhook raw body middleware----------------
   app.use((req: any, res: any, next: any) => {
-    if (req.originalUrl === '/payment/webhook' || req.originalUrl === '/webhook') {
+    if (
+      req.originalUrl === '/payment/webhook' ||
+      req.originalUrl === '/webhook'
+    ) {
       let data = '';
       req.setEncoding('utf8');
       req.on('data', (chunk: any) => {
