@@ -18,8 +18,7 @@ import {
 } from '@nestjs/swagger';
 import {
   ValidateAdmin,
-  ValidateAuth,
-  ValidateSuperAdmin,
+  ValidateAuth
 } from 'src/common/jwt/jwt.decorator';
 import { CreatePartsCategoryDto } from './dto/create-parts-category.dto';
 import { QueryPartsCategoryDto } from './dto/query-parts-category.dto';
@@ -29,7 +28,7 @@ import { PartsCategoryService } from './parts-category.service';
 @ApiTags('Parts Category')
 @Controller('parts-category')
 export class PartsCategoryController {
-  constructor(private readonly partsService: PartsCategoryService) {}
+  constructor(private readonly partsService: PartsCategoryService) { }
 
   @ApiBearerAuth()
   @ValidateAuth()
@@ -114,18 +113,18 @@ export class PartsCategoryController {
     return this.partsService.remove(id);
   }
 
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @ValidateSuperAdmin()
-  @Get('statistics/overview')
-  @ApiOperation({
-    summary: 'Get parts category statistics with product count and percentage',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Parts category statistics retrieved successfully',
-  })
-  async getStatistics() {
-    return this.partsService.getStatistics();
-  }
+  // @ApiBearerAuth()
+  // @ValidateAuth()
+  // @ValidateSuperAdmin()
+  // @Get('statistics/overview')
+  // @ApiOperation({
+  //   summary: 'Get parts category statistics with product count and percentage',
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Parts category statistics retrieved successfully',
+  // })
+  // async getStatistics() {
+  //   return this.partsService.getStatistics();
+  // }
 }

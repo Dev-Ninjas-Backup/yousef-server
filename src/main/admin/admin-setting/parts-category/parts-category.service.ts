@@ -12,7 +12,7 @@ import { UpdatePartsCategoryDto } from './dto/update-parts-category.dto';
 
 @Injectable()
 export class PartsCategoryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   @HandleError('Failed to create parts category', 'Parts Category')
   async create(
@@ -47,11 +47,11 @@ export class PartsCategoryService {
 
     const where = query?.search
       ? {
-          name: {
-            contains: query.search,
-            mode: 'insensitive' as const,
-          },
-        }
+        name: {
+          contains: query.search,
+          mode: 'insensitive' as const,
+        },
+      }
       : {};
 
     const [categories, total] = await Promise.all([
@@ -144,45 +144,45 @@ export class PartsCategoryService {
     return successResponse(null, 'Parts category deleted successfully');
   }
 
-  @HandleError('Failed to fetch parts category statistics', 'Parts Category')
-  async getStatistics(): Promise<TResponse<any>> {
-    // Get total product count
-    const totalProducts = await this.prisma.product.count();
+  // @HandleError('Failed to fetch parts category statistics', 'Parts Category')
+  // async getStatistics(): Promise<TResponse<any>> {
+  //   // Get total product count
+  //   const totalProducts = await this.prisma.product.count();
 
-    // Get product count by category
-    const categoryStats = await this.prisma.product.groupBy({
-      by: ['category'],
-      _count: {
-        category: true,
-      },
-      orderBy: {
-        _count: {
-          category: 'asc',
-        },
-      },
-    });
-    console.log(categoryStats);
+  //   // Get product count by category
+  //   const categoryStats = await this.prisma.product.groupBy({
+  //     by: ['category'],
+  //     _count: {
+  //       category: true,
+  //     },
+  //     orderBy: {
+  //       _count: {
+  //         category: 'asc',
+  //       },
+  //     },
+  //   });
+  //   console.log(categoryStats);
 
-    // Calculate percentages and format data
-    const statistics = categoryStats.map((stat) => ({
-      category: stat.category,
-      productCount: stat._count.category,
-      percentage:
-        totalProducts > 0
-          ? parseFloat(
-              ((stat._count.category / totalProducts) * 100).toFixed(2),
-            )
-          : 0,
-    }));
+  //   // Calculate percentages and format data
+  //   const statistics = categoryStats.map((stat) => ({
+  //     category: stat.category,
+  //     productCount: stat._count.category,
+  //     percentage:
+  //       totalProducts > 0
+  //         ? parseFloat(
+  //             ((stat._count.category / totalProducts) * 100).toFixed(2),
+  //           )
+  //         : 0,
+  //   }));
 
-    const result = {
-      totalProducts,
-      categoryStatistics: statistics,
-    };
+  //   const result = {
+  //     totalProducts,
+  //     categoryStatistics: statistics,
+  //   };
 
-    return successResponse(
-      result,
-      'Parts category statistics retrieved successfully',
-    );
-  }
+  //   return successResponse(
+  //     result,
+  //     'Parts category statistics retrieved successfully',
+  //   );
+  // }
 }
