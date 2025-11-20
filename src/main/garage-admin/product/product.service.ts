@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
+import { PaymentService } from '../../shared/payment/service/payment.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -9,7 +10,8 @@ export class ProductService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) {}
+    private paymentService: PaymentService,
+  ) { }
 
   async create(
     userId: string,
@@ -22,18 +24,52 @@ export class ProductService {
       sellerPhoneNumber,
       sellerType,
       photos,
+      plan,
       ...productData
     } = createProductDto;
 
-    // Check if product is promoted and require payment
-    if (productData.isPromoted) {
-      throw new Error(
-        'To promote your product, you need to pay 20 AED first. Please complete the payment to create a promoted listing.',
-      );
-    }
-
     if (!sellerEmail) {
       throw new Error('validation: Seller email is required.');
+    }
+
+    // Check if user can create free product (first 2 are free)
+    const canCreateFree = await this.paymentService.canCreateFreeProduct(userId);
+
+    if (canCreateFree) {
+      // User can create free product, increment count and proceed
+      await this.paymentService.incrementFreeProductCount(userId);
+    } else {
+      // User has used free products, check plan and payment
+      if (plan === 'PAY_PER') {
+        // Check if user has product creation credits from pay-per payments
+        const hasCredits = await this.paymentService.hasProductCreationCredits(userId);
+
+        if (!hasCredits) {
+          throw new BadRequestException({
+            message: 'Payment required for pay-per product creation',
+            code: 'PAY_PER_PAYMENT_REQUIRED',
+            amount: 20,
+            plan: 'PAY_PER',
+            action: 'Please complete $20 payment to create this product'
+          });
+        }
+        // User has credits, use one credit
+        await this.paymentService.useProductCreationCredit(userId);
+      } else if (plan === 'MONTHLY') {
+        // For monthly plan, check if user has active subscription
+        const hasActiveSubscription = await this.paymentService.hasActiveMonthlySubscription(userId);
+
+        if (!hasActiveSubscription) {
+          throw new BadRequestException({
+            message: 'Monthly subscription required',
+            code: 'MONTHLY_SUBSCRIPTION_REQUIRED',
+            amount: 100,
+            plan: 'MONTHLY',
+            action: 'Please activate monthly subscription ($100) to create unlimited products'
+          });
+        }
+        // User has active monthly subscription, can proceed
+      }
     }
 
     // Find or create seller based on email
@@ -54,45 +90,6 @@ export class ProductService {
       });
     }
 
-    // Check free product limit per USER (role-based)
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      console.log(`❌ ERROR: User with ID ${userId} not found in database`);
-      throw new Error('User not found. Please login again or contact support.');
-    }
-
-    const userFreeProductsUsed = user.freeProductsListing || 0;
-
-    console.log(`=== USER LIMIT CHECK ===`);
-    console.log(`User ID: ${userId}`);
-    console.log(`User Email: ${user.email}`);
-    console.log(`Current freeProductsListing: ${userFreeProductsUsed}`);
-    console.log(`Can create product: ${userFreeProductsUsed < 2}`);
-
-    if (userFreeProductsUsed >= 2) {
-      console.log(`❌ BLOCKED: User has reached limit`);
-      throw new Error(
-        'You have already used your 2 free product listings. To continue selling, please upgrade to a paid plan.',
-      );
-    }
-
-    console.log(
-      `✅ ALLOWED: Incrementing count from ${userFreeProductsUsed} to ${userFreeProductsUsed + 1}`,
-    );
-
-    // Increment user's free products used count
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        freeProductsListing: userFreeProductsUsed + 1,
-      },
-    });
-
-    console.log(`=== USER LIMIT CHECK COMPLETE ===`);
-
     // Upload photos to S3
     const photoUrls: string[] = [];
     if (files && files.length > 0) {
@@ -106,7 +103,7 @@ export class ProductService {
       }
     }
 
-    // Create product with photos array and default promoCost
+    // Create product with photos array
     const product = await this.prisma.product.create({
       data: {
         sellerId: sellerInstance.id,
@@ -263,13 +260,19 @@ export class ProductService {
         freeProductsUsed: 0,
         freeProductsRemaining: 2,
         canAddFreeProduct: true,
+        hasActiveMonthlySubscription: false,
+        subscriptionEndsAt: null,
       };
     }
 
-    const freeProductsUsed = user.freeProductsListing || 0;
-
+    const freeProductsUsed = user.freeProductsUsed || 0;
     const freeProductsRemaining = Math.max(0, 2 - freeProductsUsed);
     const canAddFreeProduct = freeProductsUsed < 2;
+
+    // Check monthly subscription status
+    const hasActiveMonthlySubscription = user.isMembership &&
+      user.subscriptionEndsAt &&
+      new Date(user.subscriptionEndsAt) > new Date();
 
     return {
       userId,
@@ -277,6 +280,8 @@ export class ProductService {
       freeProductsUsed,
       freeProductsRemaining,
       canAddFreeProduct,
+      hasActiveMonthlySubscription,
+      subscriptionEndsAt: user.subscriptionEndsAt,
     };
   }
 }

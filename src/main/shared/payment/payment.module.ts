@@ -9,5 +9,6 @@ import { PaymentWebhookController } from './controller/paymentwebhook.controller
   imports: [ScheduleModule, LibModule],
   controllers: [PaymentController, PaymentWebhookController],
   providers: [PaymentService],
+  exports: [PaymentService],
 })
 export class PaymentModule {}

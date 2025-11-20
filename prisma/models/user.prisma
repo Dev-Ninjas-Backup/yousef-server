@@ -48,6 +48,7 @@ model User {
   isTrialActive           Boolean           @default(false)
   productApprovalAlerts   Boolean           @default(false)
   freeProductsListing     Int               @default(0)
+  freeProductsUsed        Int               @default(0)
   // Payment tracking
   hasPaid                 Boolean           @default(false)
   nextBillingDate         DateTime?

@@ -24,6 +24,11 @@ enum ProductStatus {
   REJECTED = 'REJECTED',
 }
 
+enum PlanType {
+  MONTHLY = 'MONTHLY',
+  PAY_PER = 'PAY_PER',
+}
+
 export class CreateProductDto {
   @ApiProperty({
     description: 'Name of the product (Part Name)',
@@ -108,6 +113,14 @@ export class CreateProductDto {
   })
   @IsEnum(SellerType)
   sellerType: SellerType;
+
+  @ApiProperty({
+    description: 'Payment plan type',
+    enum: PlanType,
+    example: PlanType.PAY_PER,
+  })
+  @IsEnum(PlanType)
+  plan: PlanType;
 
   @ApiPropertyOptional({
     type: 'array',

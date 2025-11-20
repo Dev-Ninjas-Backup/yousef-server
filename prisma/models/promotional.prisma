@@ -16,7 +16,7 @@ model Promotion {
   adTitle     String
   description String
   adType      String
-  discount    Decimal?
+  discount    Float?
   location    String
   validFrom   DateTime
   validUntil  DateTime
