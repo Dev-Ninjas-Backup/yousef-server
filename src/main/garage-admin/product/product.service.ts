@@ -9,7 +9,7 @@ export class ProductService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) { }
+  ) {}
 
   async create(
     userId: string,
@@ -27,7 +27,9 @@ export class ProductService {
 
     // Check if product is promoted and require payment
     if (productData.isPromoted) {
-      throw new Error('To promote your product, you need to pay 20 AED first. Please complete the payment to create a promoted listing.');
+      throw new Error(
+        'To promote your product, you need to pay 20 AED first. Please complete the payment to create a promoted listing.',
+      );
     }
 
     if (!sellerEmail) {
@@ -77,7 +79,9 @@ export class ProductService {
       );
     }
 
-    console.log(`✅ ALLOWED: Incrementing count from ${userFreeProductsUsed} to ${userFreeProductsUsed + 1}`);
+    console.log(
+      `✅ ALLOWED: Incrementing count from ${userFreeProductsUsed} to ${userFreeProductsUsed + 1}`,
+    );
 
     // Increment user's free products used count
     await this.prisma.user.update({
@@ -199,19 +203,12 @@ export class ProductService {
     }
 
     // Update seller if provided
-    if (
-      sellerName ||
-      sellerEmail ||
-      sellerPhoneNumber ||
-      sellerType ||
-      false
-    ) {
+    if (sellerName || sellerEmail || sellerPhoneNumber || sellerType || false) {
       const sellerUpdateData: any = {};
       if (sellerName) sellerUpdateData.name = sellerName;
       if (sellerEmail) sellerUpdateData.email = sellerEmail;
       if (sellerPhoneNumber) sellerUpdateData.phoneNumber = sellerPhoneNumber;
       if (sellerType) sellerUpdateData.sellerType = sellerType;
-
 
       await this.prisma.seller.update({
         where: { id: product.sellerId },

@@ -32,7 +32,7 @@ import { ProductService } from './product.service';
 @ApiTags('Products')
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -66,7 +66,9 @@ export class ProductController {
         error instanceof NotFoundException ||
         error.message.includes('validation') ||
         error.message.includes('already used your 2 free product listings') ||
-        error.message.includes('To promote your product, you need to pay 20 AED') ||
+        error.message.includes(
+          'To promote your product, you need to pay 20 AED',
+        ) ||
         error.message.includes('User not found')
       ) {
         throw new BadRequestException(error.message);
@@ -155,7 +157,9 @@ export class ProductController {
   @ValidateAuth()
   @ApiBearerAuth()
   @Get('user/limit')
-  @ApiOperation({ summary: 'Check user free product limit status (role-based)' })
+  @ApiOperation({
+    summary: 'Check user free product limit status (role-based)',
+  })
   @ApiResponse({
     status: 200,
     description:
@@ -164,6 +168,4 @@ export class ProductController {
   async getUserLimit(@GetUser('userId') userId: string) {
     return this.productService.getUserProductLimit(userId);
   }
-
-
 }

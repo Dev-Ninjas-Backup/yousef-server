@@ -80,14 +80,15 @@ export class CreateProductDto {
   @IsBoolean()
   isPromoted?: boolean;
 
-
-
   @ApiPropertyOptional({ description: 'Seller name', example: 'John Doe' })
   @IsOptional()
   @IsString()
   sellerName?: string;
 
-  @ApiPropertyOptional({ description: 'Seller email', example: 'john@example.com' })
+  @ApiPropertyOptional({
+    description: 'Seller email',
+    example: 'john@example.com',
+  })
   @IsOptional()
   @IsEmail()
   sellerEmail?: string;
@@ -107,8 +108,6 @@ export class CreateProductDto {
   })
   @IsEnum(SellerType)
   sellerType: SellerType;
-
-
 
   @ApiPropertyOptional({
     type: 'array',
