@@ -32,7 +32,7 @@ import { ProductService } from './product.service';
 @ApiTags('Products')
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -66,7 +66,8 @@ export class ProductController {
         error instanceof NotFoundException ||
         error.message.includes('validation') ||
         error.message.includes('already used your 2 free product listings') ||
-        error.message.includes('validation')
+        error.message.includes('To promote your product, you need to pay 20 AED') ||
+        error.message.includes('User not found')
       ) {
         throw new BadRequestException(error.message);
       }
@@ -151,20 +152,18 @@ export class ProductController {
     }
   }
 
-  @Get('seller/:sellerId/limit')
-  @ApiOperation({ summary: 'Check seller free product limit status' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Returns seller product limit information including used and remaining free listings.' 
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Get('user/limit')
+  @ApiOperation({ summary: 'Check user free product limit status (role-based)' })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns user product limit information including used and remaining free listings.',
   })
-  async getSellerLimit(@Param('sellerId') sellerId: string) {
-    return this.productService.getSellerProductLimit(sellerId);
+  async getUserLimit(@GetUser('userId') userId: string) {
+    return this.productService.getUserProductLimit(userId);
   }
 
-  @Delete('seller/:sellerId/reset-limit')
-  @ApiOperation({ summary: 'Reset seller free product limit (delete all products)' })
-  @ApiResponse({ status: 200, description: 'Seller limit reset successfully.' })
-  async resetSellerLimit(@Param('sellerId') sellerId: string) {
-    return this.productService.resetSellerFreeLimit(sellerId);
-  }
+
 }

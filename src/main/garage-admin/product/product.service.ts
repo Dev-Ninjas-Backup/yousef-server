@@ -21,10 +21,14 @@ export class ProductService {
       sellerName,
       sellerPhoneNumber,
       sellerType,
-      sellerIsVerified,
       photos,
       ...productData
     } = createProductDto;
+
+    // Check if product is promoted and require payment
+    if (productData.isPromoted) {
+      throw new Error('To promote your product, you need to pay 20 AED first. Please complete the payment to create a promoted listing.');
+    }
 
     if (!sellerEmail) {
       throw new Error('validation: Seller email is required.');
@@ -43,27 +47,47 @@ export class ProductService {
           email: sellerEmail,
           phoneNumber: sellerPhoneNumber,
           sellerType,
-          isVerified: sellerIsVerified || false,
+          freeProductsUsed: 0,
         },
       });
     }
 
-    // Check free product limit using seller's freeProductsUsed field
-    const currentFreeProductsUsed = sellerInstance.freeProductsUsed || 0;
-    
-    console.log(`Seller ${sellerInstance.email} has used ${currentFreeProductsUsed} free products`);
+    // Check free product limit per USER (role-based)
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-    if (currentFreeProductsUsed >= 2) {
-      throw new Error('You have already used your 2 free product listings. To continue selling, please upgrade to a paid plan.');
+    if (!user) {
+      console.log(`❌ ERROR: User with ID ${userId} not found in database`);
+      throw new Error('User not found. Please login again or contact support.');
     }
 
-    // Increment free products used count
-    await this.prisma.seller.update({
-      where: { id: sellerInstance.id },
+    const userFreeProductsUsed = user.freeProductsListing || 0;
+
+    console.log(`=== USER LIMIT CHECK ===`);
+    console.log(`User ID: ${userId}`);
+    console.log(`User Email: ${user.email}`);
+    console.log(`Current freeProductsListing: ${userFreeProductsUsed}`);
+    console.log(`Can create product: ${userFreeProductsUsed < 2}`);
+
+    if (userFreeProductsUsed >= 2) {
+      console.log(`❌ BLOCKED: User has reached limit`);
+      throw new Error(
+        'You have already used your 2 free product listings. To continue selling, please upgrade to a paid plan.',
+      );
+    }
+
+    console.log(`✅ ALLOWED: Incrementing count from ${userFreeProductsUsed} to ${userFreeProductsUsed + 1}`);
+
+    // Increment user's free products used count
+    await this.prisma.user.update({
+      where: { id: userId },
       data: {
-        freeProductsUsed: currentFreeProductsUsed + 1
-      }
+        freeProductsListing: userFreeProductsUsed + 1,
+      },
     });
+
+    console.log(`=== USER LIMIT CHECK COMPLETE ===`);
 
     // Upload photos to S3
     const photoUrls: string[] = [];
@@ -78,13 +102,14 @@ export class ProductService {
       }
     }
 
-    // Create product with photos array
+    // Create product with photos array and default promoCost
     const product = await this.prisma.product.create({
       data: {
         sellerId: sellerInstance.id,
         status: 'PENDING',
         photos: photoUrls,
         views: 0,
+        promoCost: productData.isPromoted ? 20 : null,
         ...productData,
       },
       include: {
@@ -146,7 +171,7 @@ export class ProductService {
       sellerEmail,
       sellerPhoneNumber,
       sellerType,
-      sellerIsVerified,
+
       photos,
       ...productData
     } = updateProductDto;
@@ -179,15 +204,14 @@ export class ProductService {
       sellerEmail ||
       sellerPhoneNumber ||
       sellerType ||
-      sellerIsVerified !== undefined
+      false
     ) {
       const sellerUpdateData: any = {};
       if (sellerName) sellerUpdateData.name = sellerName;
       if (sellerEmail) sellerUpdateData.email = sellerEmail;
       if (sellerPhoneNumber) sellerUpdateData.phoneNumber = sellerPhoneNumber;
       if (sellerType) sellerUpdateData.sellerType = sellerType;
-      if (sellerIsVerified !== undefined)
-        sellerUpdateData.isVerified = sellerIsVerified;
+
 
       await this.prisma.seller.update({
         where: { id: product.sellerId },
@@ -230,35 +254,32 @@ export class ProductService {
     });
   }
 
-  async getSellerProductLimit(sellerId: string) {
-    const seller = await this.prisma.seller.findUnique({
-      where: { id: sellerId },
+  async getUserProductLimit(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    if (!seller) {
-      throw new Error('Seller not found');
+    if (!user) {
+      return {
+        userId,
+        userEmail: 'User not found',
+        freeProductsUsed: 0,
+        freeProductsRemaining: 2,
+        canAddFreeProduct: true,
+      };
     }
 
-    const freeProductsUsed = seller.freeProductsUsed || 0;
+    const freeProductsUsed = user.freeProductsListing || 0;
 
     const freeProductsRemaining = Math.max(0, 2 - freeProductsUsed);
     const canAddFreeProduct = freeProductsUsed < 2;
 
     return {
-      sellerId,
-      sellerName: seller.name,
+      userId,
+      userEmail: user.email,
       freeProductsUsed,
       freeProductsRemaining,
       canAddFreeProduct,
     };
-  }
-
-  async resetSellerFreeLimit(sellerId: string) {
-    // Delete all products for this seller to reset their free limit
-    await this.prisma.product.deleteMany({
-      where: { sellerId },
-    });
-    
-    return { message: 'Seller free limit reset successfully' };
   }
 }
