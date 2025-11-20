@@ -30,6 +30,7 @@ model Seller {
 
   subscriptionPlan      ListingPlan @default(PAY_PER_LISTING)
   subscriptionExpiresAt DateTime?
+  freeProductsUsed      Int         @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -64,7 +64,12 @@ export class ProductController {
     } catch (error) {
       if (
         error instanceof NotFoundException ||
-        error.message.includes('validation')
+        error.message.includes('validation') ||
+        error.message.includes('already used your 2 free product listings') ||
+        error.message.includes(
+          'To promote your product, you need to pay 20 AED',
+        ) ||
+        error.message.includes('User not found')
       ) {
         throw new BadRequestException(error.message);
       }
@@ -147,5 +152,20 @@ export class ProductController {
       }
       throw new InternalServerErrorException('Failed to delete product');
     }
+  }
+
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Get('user/limit')
+  @ApiOperation({
+    summary: 'Check user free product limit status (role-based)',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns user product limit information including used and remaining free listings.',
+  })
+  async getUserLimit(@GetUser('userId') userId: string) {
+    return this.productService.getUserProductLimit(userId);
   }
 }

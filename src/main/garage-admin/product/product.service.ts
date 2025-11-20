@@ -21,26 +21,19 @@ export class ProductService {
       sellerName,
       sellerPhoneNumber,
       sellerType,
-      sellerIsVerified,
       photos,
       ...productData
     } = createProductDto;
 
-    if (!sellerEmail) {
-      throw new Error('validation: Seller email is required.');
+    // Check if product is promoted and require payment
+    if (productData.isPromoted) {
+      throw new Error(
+        'To promote your product, you need to pay 20 AED first. Please complete the payment to create a promoted listing.',
+      );
     }
 
-    // Upload photos to S3
-    const photoUrls: string[] = [];
-    if (files && files.length > 0) {
-      for (const file of files) {
-        try {
-          const { url } = await this.s3FileService.processUploadedFile(file);
-          photoUrls.push(url);
-        } catch (error) {
-          throw new Error(`Failed to upload photo: ${error.message}`);
-        }
-      }
+    if (!sellerEmail) {
+      throw new Error('validation: Seller email is required.');
     }
 
     // Find or create seller based on email
@@ -56,17 +49,71 @@ export class ProductService {
           email: sellerEmail,
           phoneNumber: sellerPhoneNumber,
           sellerType,
-          isVerified: sellerIsVerified || false,
+          freeProductsUsed: 0,
         },
       });
     }
 
-    // Create product with photos array
+    // Check free product limit per USER (role-based)
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      console.log(`❌ ERROR: User with ID ${userId} not found in database`);
+      throw new Error('User not found. Please login again or contact support.');
+    }
+
+    const userFreeProductsUsed = user.freeProductsListing || 0;
+
+    console.log(`=== USER LIMIT CHECK ===`);
+    console.log(`User ID: ${userId}`);
+    console.log(`User Email: ${user.email}`);
+    console.log(`Current freeProductsListing: ${userFreeProductsUsed}`);
+    console.log(`Can create product: ${userFreeProductsUsed < 2}`);
+
+    if (userFreeProductsUsed >= 2) {
+      console.log(`❌ BLOCKED: User has reached limit`);
+      throw new Error(
+        'You have already used your 2 free product listings. To continue selling, please upgrade to a paid plan.',
+      );
+    }
+
+    console.log(
+      `✅ ALLOWED: Incrementing count from ${userFreeProductsUsed} to ${userFreeProductsUsed + 1}`,
+    );
+
+    // Increment user's free products used count
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        freeProductsListing: userFreeProductsUsed + 1,
+      },
+    });
+
+    console.log(`=== USER LIMIT CHECK COMPLETE ===`);
+
+    // Upload photos to S3
+    const photoUrls: string[] = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        try {
+          const { url } = await this.s3FileService.processUploadedFile(file);
+          photoUrls.push(url);
+        } catch (error) {
+          throw new Error(`Failed to upload photo: ${error.message}`);
+        }
+      }
+    }
+
+    // Create product with photos array and default promoCost
     const product = await this.prisma.product.create({
       data: {
         sellerId: sellerInstance.id,
         status: 'PENDING',
         photos: photoUrls,
+        views: 0,
+        promoCost: productData.isPromoted ? 20 : null,
         ...productData,
       },
       include: {
@@ -95,7 +142,18 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
-    return product;
+
+    // Increment view count
+    await this.prisma.product.update({
+      where: { id },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
+
+    return { ...product, views: product.views + 1 };
   }
 
   async update(
@@ -117,7 +175,7 @@ export class ProductService {
       sellerEmail,
       sellerPhoneNumber,
       sellerType,
-      sellerIsVerified,
+
       photos,
       ...productData
     } = updateProductDto;
@@ -145,20 +203,12 @@ export class ProductService {
     }
 
     // Update seller if provided
-    if (
-      sellerName ||
-      sellerEmail ||
-      sellerPhoneNumber ||
-      sellerType ||
-      sellerIsVerified !== undefined
-    ) {
+    if (sellerName || sellerEmail || sellerPhoneNumber || sellerType || false) {
       const sellerUpdateData: any = {};
       if (sellerName) sellerUpdateData.name = sellerName;
       if (sellerEmail) sellerUpdateData.email = sellerEmail;
       if (sellerPhoneNumber) sellerUpdateData.phoneNumber = sellerPhoneNumber;
       if (sellerType) sellerUpdateData.sellerType = sellerType;
-      if (sellerIsVerified !== undefined)
-        sellerUpdateData.isVerified = sellerIsVerified;
 
       await this.prisma.seller.update({
         where: { id: product.sellerId },
@@ -199,5 +249,34 @@ export class ProductService {
         seller: true,
       },
     });
+  }
+
+  async getUserProductLimit(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return {
+        userId,
+        userEmail: 'User not found',
+        freeProductsUsed: 0,
+        freeProductsRemaining: 2,
+        canAddFreeProduct: true,
+      };
+    }
+
+    const freeProductsUsed = user.freeProductsListing || 0;
+
+    const freeProductsRemaining = Math.max(0, 2 - freeProductsUsed);
+    const canAddFreeProduct = freeProductsUsed < 2;
+
+    return {
+      userId,
+      userEmail: user.email,
+      freeProductsUsed,
+      freeProductsRemaining,
+      canAddFreeProduct,
+    };
   }
 }

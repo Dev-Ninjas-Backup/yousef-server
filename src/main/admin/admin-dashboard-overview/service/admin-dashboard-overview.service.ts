@@ -3,6 +3,10 @@ import { GarageStatus, UserRole } from '@prisma/client';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import {
+  successResponse,
+  TResponse,
+} from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 dayjs.extend(relativeTime);
@@ -304,22 +308,64 @@ export class AdminDashboardOverviewService {
 
   // --------------------- partsCategory show parts category name & percentage---
 
-  async getPartsCategory() {
-    // 1. Fetch all categories
-    const categories = await this.prisma.partsCategory.findMany();
+  // async getPartsCategory() {
+  //   // 1. Fetch all categories
+  //   const categories = await this.prisma.partsCategory.findMany();
 
-    // 2. Total number of categories
-    const totalCategories = categories.length;
+  //   // 2. Total number of categories
+  //   const totalCategories = categories.length;
 
-    // 3. Map name and calculate percentage
-    const result = categories.map((category) => {
-      const percentage = totalCategories ? (1 / totalCategories) * 100 : 0;
-      return {
-        name: category.name,
-        percentage: Number(percentage.toFixed(2)),
-      };
+  //   // 3. Map name and calculate percentage
+  //   const result = categories.map((category) => {
+  //     const percentage = totalCategories ? (1 / totalCategories) * 100 : 0;
+  //     return {
+  //       name: category.name,
+  //       percentage: Number(percentage.toFixed(2)),
+  //     };
+  //   });
+
+  //   return result;
+  // }
+
+  @HandleError('Failed to fetch parts category statistics', 'Parts Category')
+  async getStatistics(): Promise<TResponse<any>> {
+    // Get total product count
+    const totalProducts = await this.prisma.product.count();
+
+    // Get product count by category
+    const categoryStats = await this.prisma.product.groupBy({
+      by: ['category'],
+      _count: {
+        category: true,
+      },
+      orderBy: {
+        _count: {
+          category: 'asc',
+        },
+      },
     });
+    console.log(categoryStats);
 
-    return result;
+    // Calculate percentages and format data
+    const statistics = categoryStats.map((stat) => ({
+      category: stat.category,
+      productCount: stat._count.category,
+      percentage:
+        totalProducts > 0
+          ? parseFloat(
+              ((stat._count.category / totalProducts) * 100).toFixed(2),
+            )
+          : 0,
+    }));
+
+    const result = {
+      totalProducts,
+      categoryStatistics: statistics,
+    };
+
+    return successResponse(
+      result,
+      'Parts category statistics retrieved successfully',
+    );
   }
 }

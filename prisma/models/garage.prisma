@@ -22,6 +22,7 @@ model Garage {
   weekdaysHours  String?
   weekendsHours  String?
   brandExpertise String[]
+  status         Status   @default(PENDING)
 
   // Relations
   userId   String
@@ -66,4 +67,10 @@ model GarageService {
 enum DayType {
   WEEKDAYS
   WEEKENDS
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
 }
