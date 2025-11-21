@@ -50,6 +50,8 @@ model User {
   freeProductsListing     Int               @default(0)
   freeProductsUsed        Int               @default(0)
   promotionCredits        Int               @default(0)
+  garageTrailMember       Boolean           @default(true)
+  garagePaidMember        Boolean           @default(false)
   // Payment tracking
   hasPaid                 Boolean           @default(false)
   nextBillingDate         DateTime?
@@ -100,4 +102,6 @@ enum GarageStatus {
   APPROVE
   PENDING
   DECLINE
+  GARAGE_PAID_OWNER
+  GARAGE_TRAIL_OWNER
 }

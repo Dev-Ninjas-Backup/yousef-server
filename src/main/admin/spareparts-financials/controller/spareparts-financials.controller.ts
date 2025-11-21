@@ -1,15 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { CreateSparepartsFinancialDto } from '../dto/create-spareparts-financial.dto';
-import { UpdateSparepartsFinancialDto } from '../dto/update-spareparts-financial.dto';
+import { Body, Controller, Delete, Param, Patch } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ValidateAdmin } from 'src/common/jwt/jwt.decorator';
+import { UpdateSparepartsDto } from '../dto/UpdateSpareparts.dto';
 import { SparepartsFinancialsService } from '../service/spareparts-financials.service';
 @ApiTags('Admin-Spareparts-Financials')
 @Controller('spareparts-financials')
@@ -18,36 +10,25 @@ export class SparepartsFinancialsController {
     private readonly sparepartsFinancialsService: SparepartsFinancialsService,
   ) {}
 
-  @Post()
-  create(@Body() createSparepartsFinancialDto: CreateSparepartsFinancialDto) {
-    return this.sparepartsFinancialsService.create(
-      createSparepartsFinancialDto,
-    );
-  }
-
-  @Get()
-  findAll() {
-    return this.sparepartsFinancialsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.sparepartsFinancialsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
+  //  -------------admin approve spareparts --------------
+  // Admin approve spareparts (optional dto to change status)
+  @ApiBearerAuth()
+  @ValidateAdmin()
+  @ApiOperation({ summary: 'Approve spareparts' })
+  @Patch('parts/approve/:id')
+  async updateSparepartsStatus(
     @Param('id') id: string,
-    @Body() updateSparepartsFinancialDto: UpdateSparepartsFinancialDto,
+    @Body() dto: UpdateSparepartsDto,
   ) {
-    return this.sparepartsFinancialsService.update(
-      +id,
-      updateSparepartsFinancialDto,
-    );
+    return this.sparepartsFinancialsService.updateSparepartsStatus(id, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.sparepartsFinancialsService.remove(+id);
+  // Admin delete spareparts
+  @ApiBearerAuth()
+  @ValidateAdmin()
+  @ApiOperation({ summary: 'Delete spareparts' })
+  @Delete('parts/remove/:id')
+  async removeParts(@Param('id') id: string) {
+    return this.sparepartsFinancialsService.removeParts(id);
   }
 }

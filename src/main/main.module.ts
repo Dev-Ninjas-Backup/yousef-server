@@ -16,6 +16,7 @@ import { PartsFinancialsModule } from './parts-financials/parts-financials.modul
 import { GarageAdminModule } from './garage-admin/garage-admin.module';
 import { PrivateMessageModule } from './shared/private-message/private-message.module';
 import { ReviewModule } from './review/review.module';
+import { GarageLocationModule } from './shared/garage-location/garage-location.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ReviewModule } from './review/review.module';
     GarageAdminModule,
     PrivateMessageModule,
     ReviewModule,
+    GarageLocationModule,
   ],
   controllers: [],
   providers: [],

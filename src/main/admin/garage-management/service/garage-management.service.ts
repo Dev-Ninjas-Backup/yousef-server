@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { GarageStatus } from '@prisma/client';
 import { HandleError } from 'src/common/error/handle-error.decorator';
-import { successResponse } from 'src/common/utilsResponse/response.util';
+import {
+  successResponse,
+  TResponse,
+} from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
+import { SearchGarageDto } from '../dto/filter.grage.dto';
 import {
   UpdateGarageDto,
   UpdateGarageStatusDto,
@@ -14,29 +19,157 @@ export class GarageManagementService {
   // ---------get all garage----------------
   @HandleError('Failed to get all garage', 'Garage')
   async getAllGarage() {
-    const garage = await this.prisma.user.findMany({
-      where: {
-        role: 'GARAGE_OWNER',
-      },
+    const users = await this.prisma.user.findMany({
       select: {
         id: true,
         fullName: true,
-        email: true,
         phone: true,
         serviceCategories: true,
-        isVerified: true,
-        isTrialActive: true,
-        trialStartDate: true,
-        trialEndDate: true,
-        freeProductsListing: true,
-        garageLogo: true,
         tradeLicense: true,
+        garageLogo: true,
+        garageName: true,
+        createdAt: true,
+        updatedAt: true,
+
+        // ------------ Payments ------------
+        Payment: {
+          select: {
+            amount: true,
+          },
+        },
+
+        // ------------ All Garages ------------
+        garages: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            status: true,
+          },
+        },
       },
     });
-    return successResponse(garage, 'Garage fetched successfully');
+
+    const result = users.map((u) => ({
+      userId: u.id,
+      ownerName: u.fullName,
+      phone: u.phone,
+      Garage_Name: u.garageName,
+      serviceCategories: u.serviceCategories,
+      Contract: u.phone,
+      tradeLicense: u.tradeLicense,
+      garageLogo: u.garageLogo,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt,
+      revenue: u.Payment.reduce((acc, p) => acc + (p.amount || 0), 0),
+
+      garages: u.garages.map((g) => ({
+        garageId: g.id,
+        garageName: g.name,
+        location: g.address,
+        garageStatus: g.status,
+      })),
+    }));
+
+    return successResponse(result, 'All garage fetched successfully');
   }
-  // ---------updater garage status---------------
-  async update(id: string, dto: UpdateGarageDto) {
+
+  // ----------search garage-------------
+
+  @HandleError('Failed to search garage', 'Garage')
+  async searchGarages(dto: SearchGarageDto) {
+    const { page, limit, name, status } = dto;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (name) {
+      where.garageName = { contains: name.trim(), mode: 'insensitive' };
+    }
+
+    if (status) {
+      const s = status.trim().toUpperCase();
+      if (Object.values(GarageStatus).includes(s as GarageStatus)) {
+        where.garageStatus = s as GarageStatus;
+      } else {
+        throw new Error(
+          `Invalid status filter. Expected one of: ${Object.values(
+            GarageStatus,
+          ).join(', ')}`,
+        );
+      }
+    }
+
+    // Count total
+    const total = await this.prisma.user.count({ where });
+
+    //----------------------  Fetch paginated -----------------------
+    const users = await this.prisma.user.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        fullName: true,
+        phone: true,
+        garageName: true,
+        serviceCategories: true,
+        tradeLicense: true,
+        garageLogo: true,
+        createdAt: true,
+        updatedAt: true,
+        garageStatus: true,
+        garages: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+          },
+        },
+        Payment: { select: { amount: true } },
+      },
+    });
+
+    //------------------  Format result ---------------------
+    const result = users.map((u) => ({
+      userId: u.id,
+      ownerName: u.fullName,
+      phone: u.phone,
+      Garage_Name: u.garageName,
+      serviceCategories: u.serviceCategories,
+      Contract: u.phone,
+      tradeLicense: u.tradeLicense,
+      garageLogo: u.garageLogo,
+      garageStatus: u.garageStatus,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt,
+      revenue: u.Payment.reduce((acc, p) => acc + (p.amount || 0), 0),
+
+      garages: u.garages.map((g) => ({
+        garageId: g.id,
+        garageName: g.name,
+        location: g.address,
+        garageStatus: u.garageStatus,
+      })),
+    }));
+
+    return {
+      success: true,
+      message: 'Garage list fetched successfully',
+      data: result,
+      metadata: {
+        page,
+        limit,
+        total,
+        totalPage: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  // ---------updater garage sINFORMATION--------------
+  @HandleError('Failed to update garage info', 'Garage')
+  async updateGarageInfo(id: string, dto: UpdateGarageDto) {
     const garage = await this.prisma.user.findUnique({ where: { id } });
     if (!garage) throw new NotFoundException('Garage not found');
 
@@ -50,15 +183,46 @@ export class GarageManagementService {
   // -------Only update garage updateStatus-------------
 
   @HandleError('Failed to update garage status', 'Garage')
-  async updateStatus(id: string, dto: UpdateGarageStatusDto) {
+  async updateStatus(
+    id: string,
+    dto: UpdateGarageStatusDto,
+  ): Promise<TResponse<any>> {
+    // ----------- Find the garage user-----------------
     const garage = await this.prisma.user.findUnique({ where: { id } });
     if (!garage) throw new NotFoundException('Garage not found');
 
-    return this.prisma.user.update({
+    //------------- If status is being updated to APPROVE and trial hasn't started yet----------------
+    let trialData = {};
+    if (dto.garageStatus === 'APPROVE' && !garage.isTrialActive) {
+      const trialStart = new Date();
+      const trialEnd = new Date();
+      trialEnd.setMonth(trialEnd.getMonth() + 2);
+
+      trialData = {
+        trialStartDate: trialStart,
+        trialEndDate: trialEnd,
+        isTrialActive: true,
+      };
+    }
+
+    // ------------Update role to GARAGE_OWNER------------------
+    await this.prisma.user.update({
       where: { id },
-      data: { ...dto },
+      data: { role: 'GARAGE_OWNER' },
     });
+
+    // ------------------Update status + trial info if needed-------------------
+    const updatedGarage = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ...dto,
+        ...trialData,
+      },
+    });
+
+    return successResponse(updatedGarage, 'Garage status updated successfully');
   }
+
   // ------------GET BY ID WISE GARAGE----
   @HandleError('Failed to get garage by id', 'Garage')
   async getGarageInfoById(id: string) {
@@ -92,7 +256,7 @@ export class GarageManagementService {
     const garage = await this.prisma.user.findUnique({ where: { id } });
     if (!garage) throw new NotFoundException('Garage not found');
 
-    return this.prisma.user.update({
+    const deletedGarage = await this.prisma.user.update({
       where: { id },
       data: {
         isDeleted: true,
@@ -103,10 +267,12 @@ export class GarageManagementService {
         emirate: null,
         garageLogo: null,
         tradeLicense: null,
-        garageStatus: 'PENDING',
+
         isGarageVerified: false,
       },
     });
+
+    return successResponse(deletedGarage, 'Garage deleted successfully');
   }
 
   findAll() {
