@@ -21,7 +21,7 @@ import { PaymentService } from '../service/payment.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) { }
+  constructor(private readonly paymentService: PaymentService) {}
   @ApiBearerAuth()
   @ValidateAuth()
   @Post()
@@ -48,7 +48,6 @@ export class PaymentController {
     return this.paymentService.findAllPayments();
   }
 
-
   // Get payments for specific product
   @ApiBearerAuth()
   @ValidateAuth()
@@ -59,7 +58,6 @@ export class PaymentController {
   ) {
     return this.paymentService.getProductPayments(productId, userId);
   }
-
 
   // Stripe webhook for payments
   @Post('/webhook')

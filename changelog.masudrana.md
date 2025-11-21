@@ -34,8 +34,14 @@
 - [x] Explored WebSocket for some time.
 
 
-# 19/11/25
+## 19/11/25
 
 - [x] Added **Parts Category Statistics** API with **Admin Dashboard Overview** module 
 - [x] Updated **Product Module** for a user maximum 2 products free added in this platform but added 2 more products with pay single product.
 - [x] Explore payment system **Stripe**
+
+
+## 20/11/2025
+
+- [x] Explored the **Stripe** payment system and **Webhooks**, and implemented them in the project.
+- [x] Implemented the **Product Module** with **Product Promotion Payment**, **Monthly Subscription Payment**, and **Pay-Per-Product Payment** for creating a product.
