@@ -36,6 +36,25 @@ export class ProductService {
       throw new Error('validation: Seller email is required.');
     }
 
+    // Check if product is promoted and require payment
+    if (productData.isPromoted) {
+      // Check if user has promotion credits (from $20 promotion payments)
+      const hasPromotionCredits = await this.paymentService.hasPromotionCredits(userId);
+      
+      if (!hasPromotionCredits) {
+        throw new BadRequestException({
+          message: 'Payment required for product promotion',
+          code: 'PROMOTION_PAYMENT_REQUIRED',
+          amount: 20,
+          type: 'PROMOTION',
+          action: 'Please complete $20 payment to promote this product'
+        });
+      }
+      
+      // Use one promotion credit
+      await this.paymentService.usePromotionCredit(userId);
+    }
+
     // Check if user can create free product (first 2 are free)
     const canCreateFree =
       await this.paymentService.canCreateFreeProduct(userId);

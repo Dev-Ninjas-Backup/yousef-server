@@ -345,6 +345,33 @@ export class PaymentService {
         '✅ User updated with credit:',
         updatedUser.freeProductsListing,
       );
+    } else if (type === 'product_promotion_credit') {
+      console.log('🎯 Processing promotion credit for user:', userId);
+      // Create payment record for promotion credit
+      await this.prisma.payment.create({
+        data: {
+          sessionId: session.id,
+          transactionId: session.payment_intent as string,
+          amount: parseInt(amount) * 100,
+          currency: 'usd',
+          status: 'COMPLETED',
+          paymentMethod: 'card',
+          userId,
+          // planId: null for custom payments
+        },
+      });
+      
+      // Give user 1 promotion credit
+      const updatedUser = await this.prisma.user.update({
+        where: { id: userId },
+        data: { 
+          hasPaid: true,
+          promotionCredits: {
+            increment: 1
+          }
+        }
+      });
+      console.log('✅ User updated with promotion credit:', updatedUser.promotionCredits);
     } else if (type === 'product_promotion' && productId) {
       // Create payment record
       await this.prisma.payment.create({
@@ -356,7 +383,7 @@ export class PaymentService {
           status: 'COMPLETED',
           paymentMethod: 'card',
           userId,
-          planId: `product-promotion-${productId}`,
+          // planId: null for custom payments
         },
       });
 
@@ -558,5 +585,64 @@ export class PaymentService {
         },
       },
     });
+  }
+
+  // Check if user has promotion credits
+  @HandleError('Failed to check promotion credits')
+  async hasPromotionCredits(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { promotionCredits: true }
+    });
+    
+    if (!user) throw new NotFoundException('User not found');
+    
+    return (user.promotionCredits || 0) > 0;
+  }
+
+  // Use one promotion credit
+  @HandleError('Failed to use promotion credit')
+  async usePromotionCredit(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        promotionCredits: {
+          decrement: 1
+        }
+      }
+    });
+  }
+
+  // Create checkout session for product promotion ($20)
+  @HandleError('Failed to create promotion session')
+  async createPromotionPaymentSession(userId: string): Promise<{ url: string }> {
+    console.log('🎯 Creating promotion session for user:', userId);
+    
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Product Promotion',
+              description: 'Promote your product listing',
+            },
+            unit_amount: 2000, // $20 in cents
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=promotion`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=promotion`,
+      metadata: {
+        userId,
+        type: 'product_promotion_credit',
+        amount: '20',
+      },
+    });
+
+    return { url: session.url! };
   }
 }

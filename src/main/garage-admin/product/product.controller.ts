@@ -37,7 +37,7 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly paymentService: PaymentService,
-  ) {}
+  ) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -173,40 +173,7 @@ export class ProductController {
     return this.productService.getUserProductLimit(userId);
   }
 
-  // Check payment status and options
-  @ValidateAuth()
-  @ApiBearerAuth()
-  @Get('payment-status')
-  @ApiOperation({ summary: 'Check user payment status and available options' })
-  @ApiResponse({ status: 200, description: 'Payment status and options' })
-  async getPaymentStatus(@GetUser('userId') userId: string) {
-    const canCreateFree =
-      await this.paymentService.canCreateFreeProduct(userId);
-    const hasActiveSubscription =
-      await this.paymentService.hasActiveMonthlySubscription(userId);
 
-    return {
-      canCreateFree,
-      hasActiveMonthlySubscription: hasActiveSubscription,
-      paymentOptions: {
-        monthly: {
-          price: 100,
-          currency: 'USD',
-          description: 'Unlimited products for 30 days',
-        },
-        payPer: {
-          price: 20,
-          currency: 'USD',
-          description: 'Single product creation',
-        },
-      },
-      message: canCreateFree
-        ? 'You can create free products'
-        : hasActiveSubscription
-          ? 'You have active monthly subscription'
-          : 'Payment required for more products',
-    };
-  }
 
   // Create checkout session for monthly plan
   @ValidateAuth()
@@ -236,5 +203,15 @@ export class ProductController {
   })
   async createPayPerPayment(@GetUser('userId') userId: string) {
     return this.paymentService.createPayPerProductSession(userId);
+  }
+
+  // Create checkout session for product promotion
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Post('create-promotion-payment')
+  @ApiOperation({ summary: 'Create checkout session for product promotion ($20)' })
+  @ApiResponse({ status: 200, description: 'Product promotion checkout session created' })
+  async createPromotionPayment(@GetUser('userId') userId: string) {
+    return this.paymentService.createPromotionPaymentSession(userId);
   }
 }

@@ -49,6 +49,7 @@ model User {
   productApprovalAlerts   Boolean           @default(false)
   freeProductsListing     Int               @default(0)
   freeProductsUsed        Int               @default(0)
+  promotionCredits        Int               @default(0)
   // Payment tracking
   hasPaid                 Boolean           @default(false)
   nextBillingDate         DateTime?
