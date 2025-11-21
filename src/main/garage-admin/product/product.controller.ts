@@ -37,7 +37,7 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly paymentService: PaymentService,
-  ) { }
+  ) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -173,8 +173,6 @@ export class ProductController {
     return this.productService.getUserProductLimit(userId);
   }
 
-
-
   // Create checkout session for monthly plan
   @ValidateAuth()
   @ApiBearerAuth()
@@ -209,8 +207,13 @@ export class ProductController {
   @ValidateAuth()
   @ApiBearerAuth()
   @Post('create-promotion-payment')
-  @ApiOperation({ summary: 'Create checkout session for product promotion ($20)' })
-  @ApiResponse({ status: 200, description: 'Product promotion checkout session created' })
+  @ApiOperation({
+    summary: 'Create checkout session for product promotion ($20)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Product promotion checkout session created',
+  })
   async createPromotionPayment(@GetUser('userId') userId: string) {
     return this.paymentService.createPromotionPaymentSession(userId);
   }

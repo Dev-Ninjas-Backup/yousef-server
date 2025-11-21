@@ -3,27 +3,25 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Param,
   Post,
-  Headers,
   Req,
 } from '@nestjs/common';
-import type { Request } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import type { Request } from 'express';
 import {
   GetUser,
   ValidateAuth,
   ValidateSuperAdmin,
 } from 'src/common/jwt/jwt.decorator';
 import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
-import { CreateProductPaymentDto } from '../dto/create-product-payment.dto';
-import { ProductPaymentDto } from '../dto/product-payment.dto';
 
 import { PaymentService } from '../service/payment.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly paymentService: PaymentService) { }
   @ApiBearerAuth()
   @ValidateAuth()
   @Post()
@@ -50,50 +48,6 @@ export class PaymentController {
     return this.paymentService.findAllPayments();
   }
 
-  // Check if user can create free product
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @Get('/check-product-limit')
-  async checkProductLimit(@GetUser('userId') userId: string) {
-    const canCreate = await this.paymentService.canCreateFreeProduct(userId);
-    return {
-      canCreateFree: canCreate,
-      message: canCreate
-        ? 'You can create free product'
-        : 'Payment required for more products',
-    };
-  }
-
-  // Create checkout session for specific product promotion
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @Post('/product-promotion')
-  async createProductPromotion(
-    @GetUser('userId') userId: string,
-    @Body() payload: ProductPaymentDto,
-  ) {
-    return this.paymentService.createProductPaymentSession(
-      userId,
-      payload.productId,
-      payload.description,
-    );
-  }
-
-  // Create checkout session for product payment (dynamic price)
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @Post('/create-product-payment')
-  async createProductPayment(
-    @GetUser('userId') userId: string,
-    @Body() payload: CreateProductPaymentDto,
-  ) {
-    return this.paymentService.createProductCheckoutSession(
-      userId,
-      payload.productName,
-      payload.amount,
-      payload.description,
-    );
-  }
 
   // Get payments for specific product
   @ApiBearerAuth()
@@ -106,51 +60,8 @@ export class PaymentController {
     return this.paymentService.getProductPayments(productId, userId);
   }
 
-  // Create checkout session for monthly subscription ($100)
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @Post('/monthly-subscription')
-  async createMonthlySubscription(@GetUser('userId') userId: string) {
-    return this.paymentService.createMonthlyPlanSession(userId);
-  }
 
-  // Create checkout session for pay-per product ($20)
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @Post('/pay-per-product')
-  async createPayPerProduct(@GetUser('userId') userId: string) {
-    return this.paymentService.createPayPerProductSession(userId);
-  }
-
-  // Check user subscription and payment status
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @Get('/subscription-status')
-  async getSubscriptionStatus(@GetUser('userId') userId: string) {
-    const canCreateFree =
-      await this.paymentService.canCreateFreeProduct(userId);
-    const hasActiveSubscription =
-      await this.paymentService.hasActiveMonthlySubscription(userId);
-
-    return {
-      canCreateFree,
-      hasActiveMonthlySubscription: hasActiveSubscription,
-      paymentOptions: {
-        monthly: {
-          price: 100,
-          currency: 'USD',
-          description: 'Unlimited products for 30 days',
-        },
-        payPer: {
-          price: 20,
-          currency: 'USD',
-          description: 'Single product creation',
-        },
-      },
-    };
-  }
-
-  // Stripe webhook for product payments
+  // Stripe webhook for payments
   @Post('/webhook')
   async handleWebhook(
     @Headers('stripe-signature') signature: string,
