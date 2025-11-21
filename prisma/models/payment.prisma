@@ -14,8 +14,12 @@ model Payment {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  planId String
-  plan   Paymentplan @relation(fields: [planId], references: [id])
+  planId String?
+  plan   Paymentplan? @relation(fields: [planId], references: [id])
+
+  // Product relation for product-specific payments
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@map("payments")
 }

@@ -14,6 +14,7 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
+
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
@@ -25,6 +26,7 @@ import {
 } from '@nestjs/swagger';
 import { GetUser, ValidateAuth } from 'src/common/jwt/jwt.decorator';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
+import { PaymentService } from '../../shared/payment/service/payment.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductService } from './product.service';
@@ -32,7 +34,10 @@ import { ProductService } from './product.service';
 @ApiTags('Products')
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly paymentService: PaymentService,
+  ) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -64,14 +69,13 @@ export class ProductController {
     } catch (error) {
       if (
         error instanceof NotFoundException ||
+        error instanceof BadRequestException ||
         error.message.includes('validation') ||
-        error.message.includes('already used your 2 free product listings') ||
-        error.message.includes(
-          'To promote your product, you need to pay 20 AED',
-        ) ||
+        error.message.includes('Payment required') ||
+        error.message.includes('subscription required') ||
         error.message.includes('User not found')
       ) {
-        throw new BadRequestException(error.message);
+        throw new BadRequestException(error.message || error);
       }
       throw new InternalServerErrorException('Failed to create product');
     }
@@ -167,5 +171,50 @@ export class ProductController {
   })
   async getUserLimit(@GetUser('userId') userId: string) {
     return this.productService.getUserProductLimit(userId);
+  }
+
+  // Create checkout session for monthly plan
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Post('create-monthly-payment')
+  @ApiOperation({
+    summary: 'Create checkout session for monthly subscription ($100)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Monthly subscription checkout session created',
+  })
+  async createMonthlyPayment(@GetUser('userId') userId: string) {
+    return this.paymentService.createMonthlyPlanSession(userId);
+  }
+
+  // Create checkout session for pay-per product
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Post('create-payper-payment')
+  @ApiOperation({
+    summary: 'Create checkout session for pay-per product ($20)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Pay-per product checkout session created',
+  })
+  async createPayPerPayment(@GetUser('userId') userId: string) {
+    return this.paymentService.createPayPerProductSession(userId);
+  }
+
+  // Create checkout session for product promotion
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Post('create-promotion-payment')
+  @ApiOperation({
+    summary: 'Create checkout session for product promotion ($20)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Product promotion checkout session created',
+  })
+  async createPromotionPayment(@GetUser('userId') userId: string) {
+    return this.paymentService.createPromotionPaymentSession(userId);
   }
 }

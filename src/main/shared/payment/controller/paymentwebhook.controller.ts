@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { MailService } from 'src/lib/mail/mail.service';
+import { PaymentService } from '../service/payment.service';
 import Stripe from 'stripe';
 import { PaymentStatus } from '@prisma/client';
 
@@ -17,15 +18,32 @@ console.log(process.env.STRIPE_SECRET_KEY);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {});
 
-@Controller('stripe')
+@Controller('payments')
 export class PaymentWebhookController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly paymentService: PaymentService,
   ) {}
 
   @Post('webhook')
   async handleWebhook(
+    @Req() req,
+    @Res() res,
+    @Headers('stripe-signature') signature: string,
+  ) {
+    try {
+      await this.paymentService.handleWebhook(signature, req.body);
+      return res.status(HttpStatus.OK).json({ received: true });
+    } catch (err) {
+      console.error('Webhook handling error:', err);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  }
+
+  // Legacy webhook for subscription plans
+  @Post('stripe-webhook')
+  async handleLegacyWebhook(
     @Req() req,
     @Res() res,
     @Headers('stripe-signature') signature: string,

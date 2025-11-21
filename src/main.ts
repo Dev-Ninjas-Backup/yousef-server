@@ -3,12 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
+import * as express from 'express';
 import { AppModule } from './app.module';
 import { ENVEnum } from './common/enum/env.enum';
 import { AllExceptionsFilter } from './common/filter/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+  });
 
   // --------------Swagger config with Bearer Auth------------------
   const config = new DocumentBuilder()
@@ -57,8 +60,30 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  // ---------------webhook raw body middleware----------------
+  app.use((req: any, res: any, next: any) => {
+    if (
+      req.originalUrl === '/payment/webhook' ||
+      req.originalUrl === '/webhook'
+    ) {
+      let data = '';
+      req.setEncoding('utf8');
+      req.on('data', (chunk: any) => {
+        data += chunk;
+      });
+      req.on('end', () => {
+        req.rawBody = Buffer.from(data);
+        next();
+      });
+    } else {
+      next();
+    }
+  });
+
   // ---------------webhook raw body parser----------------
   // Stripe requires the raw body to construct the event.
+  app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
+  app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
   app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
   const configService = app.get(ConfigService);
   const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '5000', 10);
