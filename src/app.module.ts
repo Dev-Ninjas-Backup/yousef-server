@@ -10,8 +10,8 @@ import { ENVEnum } from './common/enum/env.enum';
 import { JwtStrategy } from './common/jwt/jwt.strategy';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { LibModule } from './lib/lib.module';
-import { MainModule } from './main/main.module';
 import { NotificationModule } from './lib/notificaton/notification.module';
+import { MainModule } from './main/main.module';
 
 @Module({
   imports: [

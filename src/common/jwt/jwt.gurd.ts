@@ -1,4 +1,3 @@
-import { AuthGuard } from '@nestjs/passport';
 import {
   CanActivate,
   ExecutionContext,
@@ -6,21 +5,22 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
 
+import { PrismaService } from '../../lib/prisma/prisma.service';
 import { UserEnum } from '../enum/user.enum';
 import { ROLES_KEY } from './jwt.decorator';
 import { RequestWithUser } from './jwt.interface';
-import { PrismaService } from '../../lib/prisma/prisma.service';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {}
+export class JwtAuthGuard extends AuthGuard('jwt') { }
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private prisma: PrismaService,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<UserEnum[]>(
@@ -38,7 +38,6 @@ export class RolesGuard implements CanActivate {
     }
 
     const hasRole = requiredRoles.some((role) => user.roles!.includes(role));
-
     if (!hasRole) {
       throw new ForbiddenException('Insufficient role');
     }
