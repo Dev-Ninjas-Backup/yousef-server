@@ -151,6 +151,11 @@ export class PaymentService {
   // Handle webhook events
   @HandleError('Failed to handle webhook')
   async handleWebhook(signature: string, body: Buffer): Promise<void> {
+    console.log('🔥 PaymentService.handleWebhook called');
+    console.log('Signature:', signature);
+    console.log('Body length:', body?.length);
+    console.log('Webhook Secret:', process.env.STRIPE_WEBHOOK_SECRET?.substring(0, 10) + '...');
+    
     let event: Stripe.Event;
 
     try {
@@ -159,7 +164,10 @@ export class PaymentService {
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!,
       );
+      console.log('✅ Webhook signature verified successfully');
+      console.log('Event type:', event.type);
     } catch (err) {
+      console.error('❌ Webhook signature verification failed:', err.message);
       throw new BadRequestException(
         `Webhook signature verification failed: ${err.message}`,
       );
@@ -167,22 +175,25 @@ export class PaymentService {
 
     switch (event.type) {
       case 'checkout.session.completed':
+        console.log('💰 Processing checkout.session.completed');
         await this.handleCheckoutSuccess(
           event.data.object as Stripe.Checkout.Session,
         );
         break;
       case 'payment_intent.succeeded':
+        console.log('✅ Processing payment_intent.succeeded');
         await this.handlePaymentSuccess(
           event.data.object as Stripe.PaymentIntent,
         );
         break;
       case 'payment_intent.payment_failed':
+        console.log('❌ Processing payment_intent.payment_failed');
         await this.handlePaymentFailed(
           event.data.object as Stripe.PaymentIntent,
         );
         break;
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`⚠️ Unhandled event type: ${event.type}`);
     }
   }
 

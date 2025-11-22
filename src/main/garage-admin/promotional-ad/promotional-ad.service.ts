@@ -8,7 +8,7 @@ export class PromotionalAdService {
   async getPromotedProducts(userId: string) {
     return this.prisma.product.findMany({
       where: {
-        sellerId: userId,
+        createdById: userId,
         isPromoted: true,
         status: 'APPROVED',
       },
@@ -20,6 +20,13 @@ export class PromotionalAdService {
             email: true,
             sellerType: true,
             isVerified: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
           },
         },
       },
