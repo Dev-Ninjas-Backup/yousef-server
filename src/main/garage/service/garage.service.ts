@@ -14,14 +14,13 @@ import { CreateGarageDto } from '../dto/create-garage.dto';
 import { QueryGarageDto } from '../dto/query-garage.dto';
 import { UpdateGarageDto } from '../dto/update-garage.dto';
 
-
 @Injectable()
 export class GarageService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-    private configService: ConfigService
-  ) { }
+    private configService: ConfigService,
+  ) {}
 
   @HandleError('Failed to create garage', 'Garage')
   async create(
@@ -362,7 +361,6 @@ export class GarageService {
     return successResponse(null, 'Garage deleted successfully');
   }
 
-
   // ---------------- Garage Management --------------
   // @HandleError('Failed to create garage', 'Garage')
   // async locationcreate(
@@ -463,5 +461,4 @@ export class GarageService {
 
   //   return successResponse(garage, 'Garage created successfully');
   // }
-
 }

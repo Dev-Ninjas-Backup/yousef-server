@@ -16,16 +16,16 @@ import {
 
 @Injectable()
 export class GarageManagementService {
-  constructor(private readonly prisma: PrismaService,
-    private readonly mail: MailService
-  ) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailService,
+  ) {}
 
   // ---------get all garage----------------
   @HandleError('Failed to get all garage', 'Garage')
   async getAllGarage() {
     const users = await this.prisma.user.findMany({
       where: {
-
         isDeleted: false,
       },
       select: {

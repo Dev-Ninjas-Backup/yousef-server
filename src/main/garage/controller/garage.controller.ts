@@ -35,7 +35,7 @@ import { GarageService } from '../service/garage.service';
 @ApiTags('Garages')
 @Controller('garages')
 export class GarageController {
-  constructor(private readonly garageService: GarageService) { }
+  constructor(private readonly garageService: GarageService) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -190,7 +190,6 @@ export class GarageController {
     return this.garageService.remove(userId, id);
   }
 
-
   // -----------grage with long -----
   // @ValidateAuth()
   // @ApiBearerAuth()
@@ -234,5 +233,4 @@ export class GarageController {
   //     profileImage: files.profileImage?.[0],
   //   });
   // }
-
 }

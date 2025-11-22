@@ -1,10 +1,10 @@
 export const GarageAcceptEmailTemplate = (data: {
-    name?: string;
-    garageName?: string;
+  name?: string;
+  garageName?: string;
 }) => {
-    const username = data.name || "Garage Owner";
+  const username = data.name || 'Garage Owner';
 
-    return `
+  return `
   <div style="font-family: Arial, sans-serif; background:#f6f9fc; padding:25px;">
     <div style="max-width:600px; margin:auto; background:#fff; border-radius:10px;
                 padding:30px; border:1px solid #e5e7eb;">
