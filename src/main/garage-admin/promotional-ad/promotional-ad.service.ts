@@ -3,14 +3,14 @@ import { PrismaService } from '../../../lib/prisma/prisma.service';
 
 @Injectable()
 export class PromotionalAdService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async getPromotedProducts(userId: string) {
     return this.prisma.product.findMany({
       where: {
         sellerId: userId,
         isPromoted: true,
-        status: 'APPROVED'
+        status: 'APPROVED',
       },
       include: {
         seller: {
@@ -19,13 +19,13 @@ export class PromotionalAdService {
             name: true,
             email: true,
             sellerType: true,
-            isVerified: true
-          }
-        }
+            isVerified: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     });
   }
 }

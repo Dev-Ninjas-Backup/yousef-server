@@ -13,14 +13,14 @@ import { ROLES_KEY } from './jwt.decorator';
 import { RequestWithUser } from './jwt.interface';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') { }
+export class JwtAuthGuard extends AuthGuard('jwt') {}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private prisma: PrismaService,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<UserEnum[]>(

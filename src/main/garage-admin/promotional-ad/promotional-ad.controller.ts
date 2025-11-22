@@ -5,7 +5,7 @@ import { PromotionalAdService } from './promotional-ad.service';
 
 @Controller('promotional-ad')
 export class PromotionalAdController {
-  constructor(private readonly promotionalAdService: PromotionalAdService) { }
+  constructor(private readonly promotionalAdService: PromotionalAdService) {}
 
   @ApiBearerAuth()
   @ValidateUser()

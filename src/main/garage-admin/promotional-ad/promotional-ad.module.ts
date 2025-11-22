@@ -6,6 +6,6 @@ import { PrismaModule } from '../../../lib/prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   controllers: [PromotionalAdController],
-  providers: [PromotionalAdService]
+  providers: [PromotionalAdService],
 })
 export class PromotionalAdModule {}

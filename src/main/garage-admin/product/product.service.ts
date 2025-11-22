@@ -15,7 +15,7 @@ export class ProductService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
-  ) { }
+  ) {}
 
   async create(
     userId: string,

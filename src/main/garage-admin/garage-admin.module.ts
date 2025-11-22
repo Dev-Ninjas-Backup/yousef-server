@@ -5,4 +5,4 @@ import { PromotionalAdModule } from './promotional-ad/promotional-ad.module';
 @Module({
   imports: [ProductModule, PromotionalAdModule],
 })
-export class GarageAdminModule { }
+export class GarageAdminModule {}
