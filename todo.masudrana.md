@@ -44,3 +44,10 @@
 - [ ] Implement the remaining sections related to the **payment** system.
 - [ ] Work on the Platform **Configuration**.
 - [ ] Any remaining parts of the project.
+
+
+# 22/11/2025
+
+- [ ] Complete the **Promotional Ad** ad module
+- [ ] Implementing the **Garage Admin Dashboard Overview** module
+- [ ] Any remaining parts of the project.
