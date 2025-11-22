@@ -35,7 +35,7 @@ import { GarageService } from '../service/garage.service';
 @ApiTags('Garages')
 @Controller('garages')
 export class GarageController {
-  constructor(private readonly garageService: GarageService) {}
+  constructor(private readonly garageService: GarageService) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -189,4 +189,50 @@ export class GarageController {
   remove(@GetUser('userId') userId: string, @Param('id') id: string) {
     return this.garageService.remove(userId, id);
   }
+
+
+  // -----------grage with long -----
+  // @ValidateAuth()
+  // @ApiBearerAuth()
+  // @ValidateGarageOwner()
+  // @Post('location')
+  // @ApiOperation({ summary: ' location with long Create a new garage' })
+  // @ApiBody({ type: CreateGarageDto })
+  // @ApiConsumes('multipart/form-data')
+  // @UseInterceptors(
+  //   FileFieldsInterceptor(
+  //     [
+  //       { name: 'coverPhoto', maxCount: 1 },
+  //       { name: 'profileImage', maxCount: 1 },
+  //     ],
+  //     new MulterService().createMulterOptions(
+  //       './Uploads',
+  //       'content',
+  //       FileType.IMAGE,
+  //     ),
+  //   ),
+  // )
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'The garage has been successfully created.',
+  // })
+  // @ApiResponse({ status: 400, description: 'Invalid input data.' })
+  // @ApiResponse({ status: 409, description: 'Garage name already exists.' })
+  // async locationcreate(
+  //   @GetUser('userId') userId: string,
+  //   @Body() createGarageDto: CreateGarageDto,
+  //   @UploadedFiles()
+  //   files: {
+  //     coverPhoto?: Express.Multer.File[];
+  //     profileImage?: Express.Multer.File[];
+  //   } = {},
+  // ) {
+  //   // console.log('POST /garages hit', { createGarageDto, files });
+  //   console.log('userId', userId);
+  //   return this.garageService.create(userId, createGarageDto, {
+  //     coverPhoto: files.coverPhoto?.[0],
+  //     profileImage: files.profileImage?.[0],
+  //   });
+  // }
+
 }

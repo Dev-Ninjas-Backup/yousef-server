@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { GarageStatus } from '@prisma/client';
+import { GarageAcceptEmailTemplate } from 'src/common/email/garageaccept.template';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import {
   successResponse,
   TResponse,
 } from 'src/common/utilsResponse/response.util';
+import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { SearchGarageDto } from '../dto/filter.grage.dto';
 import {
@@ -14,12 +16,18 @@ import {
 
 @Injectable()
 export class GarageManagementService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,
+    private readonly mail: MailService
+  ) { }
 
   // ---------get all garage----------------
   @HandleError('Failed to get all garage', 'Garage')
   async getAllGarage() {
     const users = await this.prisma.user.findMany({
+      where: {
+
+        isDeleted: false,
+      },
       select: {
         id: true,
         fullName: true,
@@ -100,7 +108,7 @@ export class GarageManagementService {
       }
     }
 
-    // Count total
+    // -------------Count total------------------
     const total = await this.prisma.user.count({ where });
 
     //----------------------  Fetch paginated -----------------------
@@ -220,6 +228,19 @@ export class GarageManagementService {
       },
     });
 
+    // -------------------------------------
+    // ------------------- Send email on approval -----------------------
+    // -------------------------------------
+    if (dto.garageStatus === 'APPROVE' && updatedGarage.email) {
+      await this.mail.sendEmail(
+        updatedGarage.email,
+        'Your Garage Has Been Approved!',
+        GarageAcceptEmailTemplate({
+          name: updatedGarage.fullName ?? undefined,
+          garageName: updatedGarage.garageName ?? undefined,
+        }),
+      );
+    }
     return successResponse(updatedGarage, 'Garage status updated successfully');
   }
 
@@ -261,12 +282,12 @@ export class GarageManagementService {
       data: {
         isDeleted: true,
         deletedAt: new Date(),
-        garageName: null,
+        garageName: undefined,
 
-        city: null,
-        emirate: null,
-        garageLogo: null,
-        tradeLicense: null,
+        city: undefined,
+        emirate: undefined,
+        garageLogo: undefined,
+        tradeLicense: undefined,
 
         isGarageVerified: false,
       },

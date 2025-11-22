@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
+import { ENVEnum } from 'src/common/enum/env.enum';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import {
@@ -12,12 +14,14 @@ import { CreateGarageDto } from '../dto/create-garage.dto';
 import { QueryGarageDto } from '../dto/query-garage.dto';
 import { UpdateGarageDto } from '../dto/update-garage.dto';
 
+
 @Injectable()
 export class GarageService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-  ) {}
+    private configService: ConfigService
+  ) { }
 
   @HandleError('Failed to create garage', 'Garage')
   async create(
@@ -357,4 +361,107 @@ export class GarageService {
     await this.prisma.garage.delete({ where: { id } });
     return successResponse(null, 'Garage deleted successfully');
   }
+
+
+  // ---------------- Garage Management --------------
+  // @HandleError('Failed to create garage', 'Garage')
+  // async locationcreate(
+  //   userId: string,
+  //   createGarageDto: CreateGarageDto,
+  //   files: {
+  //     coverPhoto?: Express.Multer.File;
+  //     profileImage?: Express.Multer.File;
+  //   } = {},
+  // ): Promise<TResponse<any>> {
+  //   let coverPhotoUrl: string | undefined;
+  //   let profileImageUrl: string | undefined;
+
+  //   // Upload coverPhoto
+  //   if (files.coverPhoto) {
+  //     const { url } = await this.s3FileService.processUploadedFile(files.coverPhoto);
+  //     coverPhotoUrl = url;
+  //   }
+
+  //   // Upload profileImage
+  //   if (files.profileImage) {
+  //     const { url } = await this.s3FileService.processUploadedFile(files.profileImage);
+  //     profileImageUrl = url;
+  //   }
+
+  //   // Brand Expertise
+  //   const brandArray = createGarageDto.brandExpertise
+  //     ? createGarageDto.brandExpertise.split(',').map((b) => b.trim())
+  //     : [];
+
+  //   // Certifications
+  //   const certificationsArray = createGarageDto.certifications
+  //     ? createGarageDto.certifications.split(',').map((b) => b.trim())
+  //     : [];
+
+  //   // Check for duplicate name
+  //   const existingGarage = await this.prisma.garage.findFirst({
+  //     where: {
+  //       name: { equals: createGarageDto.name.trim(), mode: 'insensitive' },
+  //     },
+  //   });
+
+  //   if (existingGarage) {
+  //     throw new AppError(409, 'Garage with this name already exists');
+  //   }
+
+  //   // ===============================
+  //   // AUTO GENERATE LAT & LNG
+  //   // ===============================
+  //   const fullAddress = `${createGarageDto.street ?? ''}, ${createGarageDto.city ?? ''}, ${createGarageDto.emirate ?? ''}`
+  //     .replace(/, ,/g, ',')
+  //     .trim();
+
+  //   let lat: number | null = null;
+  //   let lng: number | null = null;
+
+  //   if (fullAddress.length > 3) {
+  //     const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+  //       fullAddress,
+  //     )}&key=${this.configService.get<string>(ENVEnum.GOOGLE_MAPS_API_KEY)}`;
+
+  //     const response = await fetch(geoUrl);
+  //     const data = await response.json();
+
+  //     if (data.status === 'OK' && data.results.length > 0) {
+  //       lat = data.results[0].geometry.location.lat;
+  //       lng = data.results[0].geometry.location.lng;
+  //     }
+  //   }
+
+  //   // ===============================
+  //   // Prepare database data
+  //   // ===============================
+  //   const garageData = {
+  //     name: createGarageDto.name.trim(),
+  //     coverPhoto: coverPhotoUrl,
+  //     profileImage: profileImageUrl,
+  //     garagePhone: createGarageDto.phone,
+  //     email: createGarageDto.email,
+  //     street: createGarageDto.street,
+  //     city: createGarageDto.city,
+  //     emirate: createGarageDto.emirate,
+  //     address: createGarageDto.address,
+  //     description: createGarageDto.description,
+  //     certifications: certificationsArray,
+  //     weekdaysHours: createGarageDto.weekdaysHours,
+  //     weekendsHours: createGarageDto.weekendsHours,
+  //     brandExpertise: brandArray,
+  //     userId: userId,
+
+  //     // === Auto generated ===
+  //     garageLat: lat ?? undefined,
+  //     garageLng: lng ?? undefined,
+  //   };
+
+  //   // Save
+  //   const garage = await this.prisma.garage.create({ data: garageData });
+
+  //   return successResponse(garage, 'Garage created successfully');
+  // }
+
 }
