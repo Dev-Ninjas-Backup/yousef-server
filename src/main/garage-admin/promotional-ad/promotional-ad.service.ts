@@ -3,7 +3,7 @@ import { PrismaService } from '../../../lib/prisma/prisma.service';
 
 @Injectable()
 export class PromotionalAdService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async getPromotedProducts(userId: string) {
     return this.prisma.product.findMany({
