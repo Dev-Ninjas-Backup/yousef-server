@@ -87,7 +87,10 @@ async function bootstrap() {
   // ---------------webhook raw body parser----------------
   // Stripe requires the raw body to construct the event.
   app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
-  app.use('/payments/stripe-webhook', bodyParser.raw({ type: 'application/json' }));
+  app.use(
+    '/payments/stripe-webhook',
+    bodyParser.raw({ type: 'application/json' }),
+  );
   app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
   app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
   const configService = app.get(ConfigService);

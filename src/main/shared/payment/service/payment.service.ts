@@ -154,8 +154,11 @@ export class PaymentService {
     console.log('🔥 PaymentService.handleWebhook called');
     console.log('Signature:', signature);
     console.log('Body length:', body?.length);
-    console.log('Webhook Secret:', process.env.STRIPE_WEBHOOK_SECRET?.substring(0, 10) + '...');
-    
+    console.log(
+      'Webhook Secret:',
+      process.env.STRIPE_WEBHOOK_SECRET?.substring(0, 10) + '...',
+    );
+
     let event: Stripe.Event;
 
     try {

@@ -15,7 +15,7 @@ export class ProductService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
-  ) { }
+  ) {}
 
   async create(
     userId: string,
@@ -31,7 +31,7 @@ export class ProductService {
       plan,
       ...productData
     } = createProductDto;
-    console.log("UserId", userId);
+    console.log('UserId', userId);
 
     if (!sellerEmail) {
       throw new Error('validation: Seller email is required.');

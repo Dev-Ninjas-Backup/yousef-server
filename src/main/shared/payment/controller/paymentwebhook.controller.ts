@@ -36,7 +36,7 @@ export class PaymentWebhookController {
     console.log('Headers:', req.headers);
     console.log('Signature:', signature);
     console.log('Body type:', typeof req.body);
-    
+
     try {
       await this.paymentService.handleWebhook(signature, req.body);
       console.log('✅ Webhook processed successfully');
