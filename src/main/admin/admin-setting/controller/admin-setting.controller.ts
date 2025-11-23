@@ -1,63 +1,82 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
-import { UpdateAdminSettingDto } from '../dto/update-admin-setting.dto';
+import { GeneralSettingDtoPlatform } from '../dto/platform.setting.dto';
+import { UpdateFreePromotionListingDto } from '../dto/update-free-promotion.dto';
 import { AdminSettingService } from '../service/admin-setting.service';
+
 @ApiTags('Admin-Settings => Approval setting, parts category')
 @Controller('admin-setting')
 export class AdminSettingController {
   constructor(private readonly adminSettingService: AdminSettingService) {}
-  // ------------- Approval settings -----------
+
+  // ----------platform fee setting admin -----------
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'Create or update platform setting' })
+  @Post('platform-setting')
+  createOrUpdatePlatformSetting(@Body() dto: GeneralSettingDtoPlatform) {
+    return this.adminSettingService.createOrUpdatePlatformSetting(dto);
+  }
+
+  // ------------------getPlatformSetting------------
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'get platform setting' })
+  @Get('get-platform-setting')
+  getPlatformSetting() {
+    return this.adminSettingService.getPlatformSetting();
+  }
+  // ------------- -------------------------------------------
+
+  //----------------------- Approval settings ------------
+  // --------------------------------------------------
 
   // ---------auto approval setting garage -----------
   @ApiBearerAuth()
   @ValidateSuperAdmin()
-  @Patch('auto-approval-garages')
+  @ApiOperation({ summary: 'auto approval setting garage' })
+  @Patch('auto-approve-garages')
   autoApprovalSettingGarage() {
-    return this.autoApprovalSettingGarage();
+    return this.adminSettingService.autoApprovalSettingGarage();
   }
-
+  // ----------email notify setting user -----------
   @ApiBearerAuth()
   @ValidateSuperAdmin()
-  @Patch('email-notification/:id')
+  @ApiOperation({ summary: 'update email notification setting user' })
+  @Patch('auto-email-notification')
   updateEmailNotificationForUser(
-    @Param('id') userId: string,
     @Body('isEmailNotification') isEmailNotification: boolean,
   ) {
     return this.adminSettingService.updateEmailNotificationForUser(
-      userId,
       isEmailNotification,
     );
   }
+  // ------------ approval setting garage -----------
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'update approval setting garage' })
+  @Patch('auto-approval-garages')
+  updateApprovalSettingGarage() {
+    return this.adminSettingService.updateApprovalSettingGarage();
+  }
 
-  @Patch('approval-garages/:id')
-  updateApprovalSettingGarage(
-    @Param('id') id: string,
-    @Body() updateAdminSettingDto: UpdateAdminSettingDto,
+  /* -------------------------------------------------------------
+   ----------------- payment related setting-----------------
+  
+   -----------------------------------------------------
+   
+   */
+  // ---------------free promotion listing---------
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'Update free promotion listing' })
+  @Patch('free-promotion-listing')
+  updateFreePromotionProductListing(
+    @Body() dto: UpdateFreePromotionListingDto,
   ) {
-    return this.adminSettingService.update(+id, updateAdminSettingDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.adminSettingService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.adminSettingService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateAdminSettingDto: UpdateAdminSettingDto,
-  ) {
-    return this.adminSettingService.update(+id, updateAdminSettingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.adminSettingService.remove(+id);
+    return this.adminSettingService.updateFreePromotionProductListing(
+      dto.value,
+    );
   }
 }

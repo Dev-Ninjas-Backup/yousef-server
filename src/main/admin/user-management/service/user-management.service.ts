@@ -13,10 +13,14 @@ export class UserManagementService {
       where: {
         isDeleted: false,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
       select: {
         id: true,
         role: true,
         fullName: true,
+        phone: true,
         profilePhoto: true,
         bio: true,
         email: true,
@@ -27,11 +31,22 @@ export class UserManagementService {
         updatedAt: true,
         isVerified: true,
         isDeleted: true,
+        _count: {
+          select: {
+            garages: true,
+          },
+        },
       },
     });
-    return successResponse(users, 'All users retrieved successfully');
-  }
 
+    // Optional: rename _count.garages to garageCount
+    const formattedUsers = users.map((user) => ({
+      ...user,
+      vehicles: user._count.garages,
+    }));
+
+    return successResponse(formattedUsers, 'All users retrieved successfully');
+  }
   // -------------get specific user access admin only--------
   @HandleError('Failed to get user', 'User')
   async getUser(id: string) {
