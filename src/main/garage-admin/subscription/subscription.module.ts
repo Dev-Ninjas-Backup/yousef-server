@@ -8,4 +8,4 @@ import { SubscriptionService } from './subscription.service';
   controllers: [SubscriptionController],
   providers: [SubscriptionService, PrismaService, PaymentService],
 })
-export class SubscriptionModule { }
+export class SubscriptionModule {}
