@@ -1,0 +1,6 @@
+model GeneralSetting {
+    id                  String  @id @default(ulid())
+    platformName        String?
+    supportEmail        String?
+    PlatformDescription String?
+}

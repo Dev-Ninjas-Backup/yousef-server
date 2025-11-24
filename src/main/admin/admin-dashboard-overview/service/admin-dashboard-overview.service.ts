@@ -112,14 +112,11 @@ export class AdminDashboardOverviewService {
         take: limit,
       }),
       // ------------ Fetch recent new garage registrations (Garage Owners)------------------
-      this.prisma.user.findMany({
+      this.prisma.garage.findMany({
         select: {
           id: true,
-          garageName: true,
+          name: true,
           createdAt: true,
-        },
-        where: {
-          role: UserRole.GARAGE_OWNER,
         },
         orderBy: {
           createdAt: 'desc',
@@ -140,7 +137,7 @@ export class AdminDashboardOverviewService {
       ...recentGarages.map((g) => ({
         id: g.id,
         type: 'NEW_GARAGE' as const,
-        message: `New garage registration: ${g.garageName || 'Unnamed Garage'}`,
+        message: `New garage registration: ${g.name || 'Unnamed Garage'}`,
         timestamp: g.createdAt,
         timeAgo: dayjs(g.createdAt).fromNow(),
       })),
