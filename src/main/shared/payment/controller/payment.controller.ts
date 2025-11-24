@@ -59,7 +59,7 @@ export class PaymentController {
     return this.paymentService.getProductPayments(productId, userId);
   }
 
-  // Stripe webhook for payments
+  // ---------------- Stripe webhook for payments-----------------
   @Post('/webhook')
   async handleWebhook(
     @Headers('stripe-signature') signature: string,
