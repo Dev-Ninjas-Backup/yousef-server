@@ -13,10 +13,6 @@ model Payment {
   // -----------relation----------------------
   userId String
   user   User   @relation(fields: [userId], references: [id])
-
-  planId String?
-  plan   Paymentplan? @relation(fields: [planId], references: [id])
-
   // Product relation for product-specific payments
   productId String?
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
@@ -24,20 +20,7 @@ model Payment {
   @@map("payments")
 }
 
-model Paymentplan {
-  id           String       @id @default(uuid())
-  name         String?      @unique
-  Price        Int
-  billingCycle BillingCycle
-  shortBio     String?
-  features     String[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  // --relation----------------------
-  payments     Payment[]
 
-  @@map("payment_plans")
-}
 
 enum PaymentStatus {
   PENDING
