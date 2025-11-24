@@ -67,7 +67,8 @@ export class AdminSettingController {
    -----------------------------------------------------
    
    */
-  // ---------------free promotion listing---------
+  //---------------free promotion listing---------
+  //
   @ApiBearerAuth()
   @ValidateSuperAdmin()
   @ApiOperation({ summary: 'Update free promotion listing' })
