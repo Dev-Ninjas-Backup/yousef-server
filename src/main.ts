@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
-import * as express from 'express';
 import { AppModule } from './app.module';
 import { ENVEnum } from './common/enum/env.enum';
 import { AllExceptionsFilter } from './common/filter/http-exception.filter';
@@ -38,6 +37,7 @@ async function bootstrap() {
         'https://australiancanvas.com',
         'https://beta.australiancanvas.com',
         'https://ai.australiancanvas.com',
+        'https://c039be995102.ngrok-free.app'
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
