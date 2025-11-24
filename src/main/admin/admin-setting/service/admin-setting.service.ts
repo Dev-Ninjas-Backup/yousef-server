@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { successResponse } from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { GeneralSettingDtoPlatform } from '../dto/platform.setting.dto';
+import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 
 @Injectable()
 export class AdminSettingService {
@@ -159,6 +160,60 @@ export class AdminSettingService {
     return successResponse(
       updated,
       'Free promotion product listing updated successfully',
+    );
+  }
+
+  // -----------------getPaymentConfig ----------------
+  @HandleError('Failed to get payment config')
+  async getPaymentConfig() {
+    const getpaymentConfig = await this.prisma.paymentConfigure.findFirst();
+    return successResponse(
+      getpaymentConfig,
+      'Payment config retrieved successfully',
+    );
+  }
+
+  // ----------------------update updatePaymentConfig ---------------
+  @HandleError('Failed to update payment config')
+  async updatePaymentConfig(dto: UpdatePaymentConfigureDto) {
+    const existing = await this.prisma.paymentConfigure.findFirst();
+
+    if (!existing) {
+      throw new NotFoundException('Payment configure not found');
+    }
+
+    const updated = await this.prisma.paymentConfigure.update({
+      where: { id: existing.id },
+      data: dto,
+    });
+
+    return successResponse(
+      { Udated: updated },
+      'Payment config updated successfully',
+    );
+  }
+
+  // ------------------updateFreePromotionalListingStatus------------------
+  @HandleError('Failed to update free promotional listing status')
+  async updateFreePromotionalListingStatus() {
+    const existing = await this.prisma.paymentConfigure.findFirst();
+
+    if (!existing) {
+      throw new NotFoundException('Payment configure not found');
+    }
+
+    const newStatus = !existing.freePromotionalListingStatus;
+
+    await this.prisma.paymentConfigure.update({
+      where: { id: existing.id },
+      data: {
+        freePromotionalListingStatus: newStatus,
+      },
+    });
+
+    return successResponse(
+      { status: newStatus },
+      `Free promotional listing status changed`,
     );
   }
 }
