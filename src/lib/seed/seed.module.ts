@@ -8,4 +8,4 @@ import { SuperAdminService } from './service/super-admin.service';
   imports: [],
   providers: [SuperAdminService, FileService, PaymentConfigureService],
 })
-export class SeedModule { }
+export class SeedModule {}

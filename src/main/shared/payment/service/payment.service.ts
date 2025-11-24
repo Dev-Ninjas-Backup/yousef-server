@@ -224,7 +224,7 @@ export class PaymentService {
         },
       });
 
-      console.log('monthly payment created', monthlypayment)
+      console.log('monthly payment created', monthlypayment);
       // Update user's subscription status
       const subscriptionEndDate = new Date();
       subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // Add 1 month
@@ -317,7 +317,7 @@ export class PaymentService {
           // planId: null for custom payments
         },
       });
-      console.log('the create payment', paymentcreate)
+      console.log('the create payment', paymentcreate);
       // Update product status to APPROVED and set promoted
       await this.prisma.product.update({
         where: { id: productId },
@@ -455,7 +455,7 @@ export class PaymentService {
         amount: '100',
       },
     });
-    console.log('the session is', session)
+    console.log('the session is', session);
     return { url: session.url! };
   }
 

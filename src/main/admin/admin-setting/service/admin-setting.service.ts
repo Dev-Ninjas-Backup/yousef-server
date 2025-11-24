@@ -7,7 +7,7 @@ import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 
 @Injectable()
 export class AdminSettingService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // ---------------platform setting create----
   @HandleError('Failed to create or update platform setting')
@@ -167,7 +167,10 @@ export class AdminSettingService {
   @HandleError('Failed to get payment config')
   async getPaymentConfig() {
     const getpaymentConfig = await this.prisma.paymentConfigure.findFirst();
-    return successResponse(getpaymentConfig, 'Payment config retrieved successfully');
+    return successResponse(
+      getpaymentConfig,
+      'Payment config retrieved successfully',
+    );
   }
 
   // ----------------------update updatePaymentConfig ---------------
@@ -184,7 +187,10 @@ export class AdminSettingService {
       data: dto,
     });
 
-    return successResponse({ Udated: updated }, 'Payment config updated successfully');
+    return successResponse(
+      { Udated: updated },
+      'Payment config updated successfully',
+    );
   }
 
   // ------------------updateFreePromotionalListingStatus------------------
@@ -205,13 +211,9 @@ export class AdminSettingService {
       },
     });
 
-
     return successResponse(
       { status: newStatus },
-      `Free promotional listing status changed`
+      `Free promotional listing status changed`,
     );
   }
-
-
-
 }

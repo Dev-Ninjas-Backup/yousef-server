@@ -9,7 +9,7 @@ import { AdminSettingService } from '../service/admin-setting.service';
 @ApiTags('Admin-Settings => Approval setting, parts category')
 @Controller('admin-setting')
 export class AdminSettingController {
-  constructor(private readonly adminSettingService: AdminSettingService) { }
+  constructor(private readonly adminSettingService: AdminSettingService) {}
 
   // ----------platform fee setting admin -----------
   @ApiBearerAuth()
