@@ -4,11 +4,10 @@ import { PaymentController } from './controller/payment.controller';
 import { ScheduleModule } from './schedule/schedule.module';
 import { PaymentService } from './service/payment.service';
 
-
 @Module({
   imports: [ScheduleModule, LibModule],
   controllers: [PaymentController],
   providers: [PaymentService],
   exports: [PaymentService],
 })
-export class PaymentModule { }
+export class PaymentModule {}

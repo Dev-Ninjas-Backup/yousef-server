@@ -37,7 +37,7 @@ async function bootstrap() {
         'https://australiancanvas.com',
         'https://beta.australiancanvas.com',
         'https://ai.australiancanvas.com',
-        'https://c039be995102.ngrok-free.app'
+        'https://c039be995102.ngrok-free.app',
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
