@@ -109,4 +109,19 @@ export class PartsCategoryController {
   async remove(@Param('id') id: string) {
     return this.partsService.remove(id);
   }
+
+  // @ApiBearerAuth()
+  // @ValidateAuth()
+  // @ValidateSuperAdmin()
+  // @Get('statistics/overview')
+  // @ApiOperation({
+  //   summary: 'Get parts category statistics with product count and percentage',
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Parts category statistics retrieved successfully',
+  // })
+  // async getStatistics() {
+  //   return this.partsService.getStatistics();
+  // }
 }

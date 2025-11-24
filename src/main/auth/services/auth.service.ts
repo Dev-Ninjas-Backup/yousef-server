@@ -35,7 +35,6 @@ export class AuthService {
   // ---------- ----------REGISTER (send email verification OTP) ----------
 
   @HandleError('Failed to Register profile', 'Register')
-  @HandleError('Failed to Register profile', 'Register')
   async register(
     payload: RegisterDto,
     garageLogo?: string,
@@ -70,12 +69,7 @@ export class AuthService {
     const hashedPassword = await this.utils.hash(password);
 
     // Setup trial only for GARAGE_OWNER
-    const trialStart: Date | null = null;
-    const trialEnd: Date | null = null;
-    const isTrialActive = false;
 
-    // serviceCategories must be provided for GARAGE_OWNER (DTO enforced).
-    // Prisma expects enum array for `serviceCategories` field — assign set: serviceCategories or empty
     const categoriesToSet = Array.isArray(serviceCategories)
       ? serviceCategories
       : [];
@@ -88,9 +82,7 @@ export class AuthService {
         password: hashedPassword,
         serviceCategories: { set: categoriesToSet },
         isVerified: false,
-        trialStartDate: trialStart,
-        trialEndDate: trialEnd,
-        isTrialActive,
+
         freeProductsListing: 0,
         garageLogo: garageLogo ?? null,
         tradeLicense: tradeLicense ?? null,

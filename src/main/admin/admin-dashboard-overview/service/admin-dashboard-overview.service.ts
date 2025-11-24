@@ -3,6 +3,10 @@ import { GarageStatus, UserRole } from '@prisma/client';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import {
+  successResponse,
+  TResponse,
+} from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 dayjs.extend(relativeTime);
@@ -108,14 +112,11 @@ export class AdminDashboardOverviewService {
         take: limit,
       }),
       // ------------ Fetch recent new garage registrations (Garage Owners)------------------
-      this.prisma.user.findMany({
+      this.prisma.garage.findMany({
         select: {
           id: true,
-          garageName: true,
+          name: true,
           createdAt: true,
-        },
-        where: {
-          role: UserRole.GARAGE_OWNER,
         },
         orderBy: {
           createdAt: 'desc',
@@ -136,7 +137,7 @@ export class AdminDashboardOverviewService {
       ...recentGarages.map((g) => ({
         id: g.id,
         type: 'NEW_GARAGE' as const,
-        message: `New garage registration: ${g.garageName || 'Unnamed Garage'}`,
+        message: `New garage registration: ${g.name || 'Unnamed Garage'}`,
         timestamp: g.createdAt,
         timeAgo: dayjs(g.createdAt).fromNow(),
       })),
@@ -304,22 +305,119 @@ export class AdminDashboardOverviewService {
 
   // --------------------- partsCategory show parts category name & percentage---
 
-  async getPartsCategory() {
-    // 1. Fetch all categories
-    const categories = await this.prisma.partsCategory.findMany();
+  // async getPartsCategory() {
+  //   // 1. Fetch all categories
+  //   const categories = await this.prisma.partsCategory.findMany();
 
-    // 2. Total number of categories
-    const totalCategories = categories.length;
+  //   // 2. Total number of categories
+  //   const totalCategories = categories.length;
 
-    // 3. Map name and calculate percentage
-    const result = categories.map((category) => {
-      const percentage = totalCategories ? (1 / totalCategories) * 100 : 0;
-      return {
-        name: category.name,
-        percentage: Number(percentage.toFixed(2)),
-      };
+  //   // 3. Map name and calculate percentage
+  //   const result = categories.map((category) => {
+  //     const percentage = totalCategories ? (1 / totalCategories) * 100 : 0;
+  //     return {
+  //       name: category.name,
+  //       percentage: Number(percentage.toFixed(2)),
+  //     };
+  //   });
+
+  //   return result;
+  // }
+
+  @HandleError('Failed to fetch parts category statistics', 'Parts Category')
+  async getStatistics(): Promise<TResponse<any>> {
+    // Get total product count
+    const totalProducts = await this.prisma.product.count();
+
+    // Get product count by category
+    const categoryStats = await this.prisma.product.groupBy({
+      by: ['category'],
+      _count: {
+        category: true,
+      },
+      orderBy: {
+        _count: {
+          category: 'asc',
+        },
+      },
+    });
+    console.log(categoryStats);
+
+    // Calculate percentages and format data
+    const statistics = categoryStats.map((stat) => ({
+      category: stat.category,
+      productCount: stat._count.category,
+      percentage:
+        totalProducts > 0
+          ? parseFloat(
+              ((stat._count.category / totalProducts) * 100).toFixed(2),
+            )
+          : 0,
+    }));
+
+    const result = {
+      totalProducts,
+      categoryStatistics: statistics,
+    };
+
+    return successResponse(
+      result,
+      'Parts category statistics retrieved successfully',
+    );
+  }
+
+  // ------------getRevenueTrends for monthly revenue trend---------
+
+  async getRevenueTrends() {
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        status: 'COMPLETED',
+      },
+      select: {
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
 
-    return result;
+    // Month names array
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    const monthlyRevenue: Record<string, number> = {};
+
+    for (const payment of payments) {
+      if (!payment.amount) continue;
+
+      const monthIndex = payment.createdAt.getMonth();
+      const year = payment.createdAt.getFullYear();
+
+      const key = `${year}-${monthIndex}`;
+
+      monthlyRevenue[key] = (monthlyRevenue[key] || 0) + payment.amount;
+    }
+
+    // Convert to array with month names
+    return Object.entries(monthlyRevenue).map(([key, revenue]) => {
+      const [year, monthIndex] = key.split('-');
+      return {
+        month: `${monthNames[parseInt(monthIndex)]} ${year}`,
+        revenue,
+      };
+    });
   }
 }

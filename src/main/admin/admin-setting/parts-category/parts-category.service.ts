@@ -143,4 +143,46 @@ export class PartsCategoryService {
     });
     return successResponse(null, 'Parts category deleted successfully');
   }
+
+  // @HandleError('Failed to fetch parts category statistics', 'Parts Category')
+  // async getStatistics(): Promise<TResponse<any>> {
+  //   // Get total product count
+  //   const totalProducts = await this.prisma.product.count();
+
+  //   // Get product count by category
+  //   const categoryStats = await this.prisma.product.groupBy({
+  //     by: ['category'],
+  //     _count: {
+  //       category: true,
+  //     },
+  //     orderBy: {
+  //       _count: {
+  //         category: 'asc',
+  //       },
+  //     },
+  //   });
+  //   console.log(categoryStats);
+
+  //   // Calculate percentages and format data
+  //   const statistics = categoryStats.map((stat) => ({
+  //     category: stat.category,
+  //     productCount: stat._count.category,
+  //     percentage:
+  //       totalProducts > 0
+  //         ? parseFloat(
+  //             ((stat._count.category / totalProducts) * 100).toFixed(2),
+  //           )
+  //         : 0,
+  //   }));
+
+  //   const result = {
+  //     totalProducts,
+  //     categoryStatistics: statistics,
+  //   };
+
+  //   return successResponse(
+  //     result,
+  //     'Parts category statistics retrieved successfully',
+  //   );
+  // }
 }

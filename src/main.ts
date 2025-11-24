@@ -8,7 +8,9 @@ import { ENVEnum } from './common/enum/env.enum';
 import { AllExceptionsFilter } from './common/filter/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+  });
 
   // --------------Swagger config with Bearer Auth------------------
   const config = new DocumentBuilder()
@@ -35,6 +37,7 @@ async function bootstrap() {
         'https://australiancanvas.com',
         'https://beta.australiancanvas.com',
         'https://ai.australiancanvas.com',
+        'https://c039be995102.ngrok-free.app',
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
@@ -57,9 +60,39 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  // ---------------webhook raw body middleware----------------
+  app.use((req: any, res: any, next: any) => {
+    console.log('🔍 Middleware check:', req.originalUrl);
+    if (
+      req.originalUrl === '/payments/webhook' ||
+      req.originalUrl === '/payments/stripe-webhook' ||
+      req.originalUrl === '/payment/webhook' ||
+      req.originalUrl === '/webhook'
+    ) {
+      console.log('📦 Processing webhook raw body for:', req.originalUrl);
+      let data = '';
+      req.setEncoding('utf8');
+      req.on('data', (chunk: any) => {
+        data += chunk;
+      });
+      req.on('end', () => {
+        req.rawBody = Buffer.from(data);
+        next();
+      });
+    } else {
+      next();
+    }
+  });
+
   // ---------------webhook raw body parser----------------
   // Stripe requires the raw body to construct the event.
-  app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
+  app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
+  app.use(
+    '/payments/stripe-webhook',
+    bodyParser.raw({ type: 'application/json' }),
+  );
+  app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
+  app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
   const configService = app.get(ConfigService);
   const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '5000', 10);
   await app.listen(port);

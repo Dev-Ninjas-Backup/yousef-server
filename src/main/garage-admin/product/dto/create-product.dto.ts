@@ -24,6 +24,11 @@ enum ProductStatus {
   REJECTED = 'REJECTED',
 }
 
+enum PlanType {
+  MONTHLY = 'MONTHLY',
+  PAY_PER = 'PAY_PER',
+}
+
 export class CreateProductDto {
   @ApiProperty({
     description: 'Name of the product (Part Name)',
@@ -80,25 +85,18 @@ export class CreateProductDto {
   @IsBoolean()
   isPromoted?: boolean;
 
+  @ApiPropertyOptional({ description: 'Seller name', example: 'John Doe' })
+  @IsOptional()
+  @IsString()
+  sellerName?: string;
+
   @ApiPropertyOptional({
-    description: 'Promotion cost in AED',
-    example: 20.0,
+    description: 'Seller email',
+    example: 'john@example.com',
   })
   @IsOptional()
-  @Transform(({ value }) => (value ? parseFloat(value) : undefined))
-  @IsNumber()
-  @Min(0)
-  promoCost?: number;
-
-  @ApiProperty({ description: 'Seller name', example: 'John Doe' })
-  @IsString()
-  @IsNotEmpty()
-  sellerName: string;
-
-  @ApiProperty({ description: 'Seller email', example: 'john@example.com' })
   @IsEmail()
-  @IsNotEmpty()
-  sellerEmail: string;
+  sellerEmail?: string;
 
   @ApiPropertyOptional({
     description: 'Seller phone number',
@@ -116,11 +114,13 @@ export class CreateProductDto {
   @IsEnum(SellerType)
   sellerType: SellerType;
 
-  @ApiPropertyOptional({ description: 'Is seller verified', example: false })
-  @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  @IsBoolean()
-  sellerIsVerified?: boolean;
+  @ApiProperty({
+    description: 'Payment plan type',
+    enum: PlanType,
+    example: PlanType.PAY_PER,
+  })
+  @IsEnum(PlanType)
+  plan: PlanType;
 
   @ApiPropertyOptional({
     type: 'array',

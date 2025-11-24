@@ -1,5 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ValidateAuth, ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
 import {
   AdminDashboardOverviewService,
@@ -33,20 +38,42 @@ export class AdminDashboardOverviewController {
   }
 
   // ---------------partsCategory show parts category name & percentage ---
-  @ValidateAuth()
-  @ValidateSuperAdmin()
-  @ApiBearerAuth()
-  @Get('parts-category')
-  getPartsCategory(): Promise<any> {
-    return this.adminDashboardOverviewService.getPartsCategory();
-  }
+  // @ValidateAuth()
+  // @ValidateSuperAdmin()
+  // @ApiBearerAuth()
+  // @Get('parts-category')
+  // getPartsCategory(): Promise<any> {
+  //   return this.adminDashboardOverviewService.getPartsCategory();
+  // }
 
-  // ----------revenue  next working process-----------------
+  @ApiBearerAuth()
   @ValidateAuth()
   @ValidateSuperAdmin()
+  @Get('parts-category')
+  @ApiOperation({
+    summary: 'Get parts category statistics with product count and percentage',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Parts category statistics retrieved successfully',
+  })
+  async getStatistics() {
+    return this.adminDashboardOverviewService.getStatistics();
+  }
+  //  ------------------ Revenue trends for monthly
+
   @ApiBearerAuth()
-  @Get('revenue')
-  getRevenue(): Promise<any> {
-    return this.adminDashboardOverviewService.getPartsCategory();
+  @ValidateAuth()
+  @ValidateSuperAdmin()
+  @Get('revenue-trends')
+  @ApiOperation({
+    summary: 'Get revenue trends for the last 30 days',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Revenue trends retrieved successfully',
+  })
+  async getRevenueTrends() {
+    return this.adminDashboardOverviewService.getRevenueTrends();
   }
 }

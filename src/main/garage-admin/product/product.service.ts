@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
+import { PaymentService } from '../../shared/payment/service/payment.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -9,6 +14,7 @@ export class ProductService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
+    private paymentService: PaymentService,
   ) {}
 
   async create(
@@ -21,25 +27,77 @@ export class ProductService {
       sellerName,
       sellerPhoneNumber,
       sellerType,
-      sellerIsVerified,
       photos,
+      plan,
       ...productData
     } = createProductDto;
+    console.log('UserId', userId);
 
     if (!sellerEmail) {
       throw new Error('validation: Seller email is required.');
     }
 
-    // Upload photos to S3
-    const photoUrls: string[] = [];
-    if (files && files.length > 0) {
-      for (const file of files) {
-        try {
-          const { url } = await this.s3FileService.processUploadedFile(file);
-          photoUrls.push(url);
-        } catch (error) {
-          throw new Error(`Failed to upload photo: ${error.message}`);
+    // Check if product is promoted and require payment
+    if (productData.isPromoted) {
+      // Check if user has promotion credits (from $20 promotion payments)
+      const hasPromotionCredits =
+        await this.paymentService.hasPromotionCredits(userId);
+
+      if (!hasPromotionCredits) {
+        throw new BadRequestException({
+          message: 'Payment required for product promotion',
+          code: 'PROMOTION_PAYMENT_REQUIRED',
+          amount: 20,
+          type: 'PROMOTION',
+          action: 'Please complete $20 payment to promote this product',
+        });
+      }
+
+      // Use one promotion credit
+      await this.paymentService.usePromotionCredit(userId);
+    }
+
+    // Check if user can create free product (first 2 are free)
+    const canCreateFree =
+      await this.paymentService.canCreateFreeProduct(userId);
+
+    if (canCreateFree) {
+      // User can create free product, increment count and proceed
+      await this.paymentService.incrementFreeProductCount(userId);
+    } else {
+      // User has used free products, check plan and payment
+      if (plan === 'PAY_PER') {
+        // Check if user has product creation credits from pay-per payments
+        const hasCredits =
+          await this.paymentService.hasProductCreationCredits(userId);
+
+        if (!hasCredits) {
+          throw new BadRequestException({
+            message: 'Payment required for pay-per product creation',
+            code: 'PAY_PER_PAYMENT_REQUIRED',
+            amount: 20,
+            plan: 'PAY_PER',
+            action: 'Please complete $20 payment to create this product',
+          });
         }
+        // User has credits, use one credit
+        await this.paymentService.useProductCreationCredit(userId);
+      } else if (plan === 'MONTHLY') {
+        // For monthly plan, check if user has active subscription
+        const hasActiveSubscription =
+          await this.paymentService.hasActiveMonthlySubscription(userId);
+
+        if (!hasActiveSubscription) {
+          throw new BadRequestException({
+            message: 'Monthly subscription required',
+            code: 'MONTHLY_SUBSCRIPTION_REQUIRED',
+            amount: 100,
+            plan: 'MONTHLY',
+            action:
+              'Please activate monthly subscription ($100) to create unlimited products',
+          });
+        }
+        // User has active monthly subscription, can proceed
       }
     }
 
@@ -56,21 +114,44 @@ export class ProductService {
           email: sellerEmail,
           phoneNumber: sellerPhoneNumber,
           sellerType,
-          isVerified: sellerIsVerified || false,
+          freeProductsUsed: 0,
         },
       });
+    }
+
+    // Upload photos to S3
+    const photoUrls: string[] = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        try {
+          const { url } = await this.s3FileService.processUploadedFile(file);
+          photoUrls.push(url);
+        } catch (error) {
+          throw new Error(`Failed to upload photo: ${error.message}`);
+        }
+      }
     }
 
     // Create product with photos array
     const product = await this.prisma.product.create({
       data: {
         sellerId: sellerInstance.id,
+        createdById: userId,
         status: 'PENDING',
         photos: photoUrls,
+        views: 0,
+        promoCost: productData.isPromoted ? 20 : null,
         ...productData,
       },
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
 
@@ -81,6 +162,13 @@ export class ProductService {
     return this.prisma.product.findMany({
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
   }
@@ -90,12 +178,30 @@ export class ProductService {
       where: { id },
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
-    return product;
+
+    // Increment view count
+    await this.prisma.product.update({
+      where: { id },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
+
+    return { ...product, views: product.views + 1 };
   }
 
   async update(
@@ -117,7 +223,7 @@ export class ProductService {
       sellerEmail,
       sellerPhoneNumber,
       sellerType,
-      sellerIsVerified,
+
       photos,
       ...productData
     } = updateProductDto;
@@ -145,20 +251,12 @@ export class ProductService {
     }
 
     // Update seller if provided
-    if (
-      sellerName ||
-      sellerEmail ||
-      sellerPhoneNumber ||
-      sellerType ||
-      sellerIsVerified !== undefined
-    ) {
+    if (sellerName || sellerEmail || sellerPhoneNumber || sellerType || false) {
       const sellerUpdateData: any = {};
       if (sellerName) sellerUpdateData.name = sellerName;
       if (sellerEmail) sellerUpdateData.email = sellerEmail;
       if (sellerPhoneNumber) sellerUpdateData.phoneNumber = sellerPhoneNumber;
       if (sellerType) sellerUpdateData.sellerType = sellerType;
-      if (sellerIsVerified !== undefined)
-        sellerUpdateData.isVerified = sellerIsVerified;
 
       await this.prisma.seller.update({
         where: { id: product.sellerId },
@@ -179,6 +277,13 @@ export class ProductService {
       data: updateData,
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
   }
@@ -197,7 +302,52 @@ export class ProductService {
       where: { id },
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
+  }
+
+  async getUserProductLimit(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return {
+        userId,
+        userEmail: 'User not found',
+        freeProductsUsed: 0,
+        freeProductsRemaining: 2,
+        canAddFreeProduct: true,
+        hasActiveMonthlySubscription: false,
+        subscriptionEndsAt: null,
+      };
+    }
+
+    const freeProductsUsed = user.freeProductsUsed || 0;
+    const freeProductsRemaining = Math.max(0, 2 - freeProductsUsed);
+    const canAddFreeProduct = freeProductsUsed < 2;
+
+    // Check monthly subscription status
+    const hasActiveMonthlySubscription =
+      user.isMembership &&
+      user.subscriptionEndsAt &&
+      new Date(user.subscriptionEndsAt) > new Date();
+
+    return {
+      userId,
+      userEmail: user.email,
+      freeProductsUsed,
+      freeProductsRemaining,
+      canAddFreeProduct,
+      hasActiveMonthlySubscription,
+      subscriptionEndsAt: user.subscriptionEndsAt,
+    };
   }
 }

@@ -14,9 +14,7 @@ import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { AuthGoogleService } from '../services/auth-google.service';
 import { AuthService } from '../services/auth.service';
-
 import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
-
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { unlink } from 'fs/promises';
@@ -80,7 +78,7 @@ export class AuthController {
         try {
           await unlink(file.path);
         } catch (e) {
-          /* ignore */
+          console.warn('Failed to delete local file:', e);
         }
       }
 
