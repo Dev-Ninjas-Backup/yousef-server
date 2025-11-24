@@ -24,10 +24,9 @@ import {
   ValidateAdmin,
   ValidateAuth,
 } from 'src/common/jwt/jwt.decorator';
+import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
 import { UpdatePasswordDto } from '../dto/updatepassword.dto';
 import { UserService } from '../service/user.service';
-
-import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
 @ApiTags('USER Profile Maintain')
 @Controller('user')
 export class UserController {

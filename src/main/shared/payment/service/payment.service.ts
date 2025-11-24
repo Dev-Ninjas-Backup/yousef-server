@@ -320,7 +320,6 @@ export class PaymentService {
           // planId: null for custom payments
         },
       });
-
       // Update product status to APPROVED and set promoted
       await this.prisma.product.update({
         where: { id: productId },
@@ -450,15 +449,15 @@ export class PaymentService {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=monthly`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=monthly`,
+      success_url: `${process.env.FRONTEND_URL}/payment-success`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
       metadata: {
         userId,
         type: 'monthly_subscription',
         amount: '100',
       },
     });
-
+    console.log('the session is', session);
     return { url: session.url! };
   }
 
@@ -478,13 +477,13 @@ export class PaymentService {
               name: 'Pay Per Product',
               description: 'Single product listing fee',
             },
-            unit_amount: 2000, // $20 in cents
+            unit_amount: 2000,
           },
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=pay_per`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=pay_per`,
+      success_url: `${process.env.FRONTEND_URL}/payment-success`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
       metadata: {
         userId,
         type: 'pay_per_product',
@@ -570,8 +569,8 @@ export class PaymentService {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=promotion`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=promotion`,
+      success_url: `${process.env.FRONTEND_URL}/payment-success`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
       metadata: {
         userId,
         type: 'product_promotion_credit',

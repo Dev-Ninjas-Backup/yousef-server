@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
 import { GeneralSettingDtoPlatform } from '../dto/platform.setting.dto';
 import { UpdateFreePromotionListingDto } from '../dto/update-free-promotion.dto';
+import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 import { AdminSettingService } from '../service/admin-setting.service';
 
 @ApiTags('Admin-Settings => Approval setting, parts category')
@@ -67,7 +68,8 @@ export class AdminSettingController {
    -----------------------------------------------------
    
    */
-  // ---------------free promotion listing---------
+  //---------------free promotion listing---------
+  //
   @ApiBearerAuth()
   @ValidateSuperAdmin()
   @ApiOperation({ summary: 'Update free promotion listing' })
@@ -78,5 +80,30 @@ export class AdminSettingController {
     return this.adminSettingService.updateFreePromotionProductListing(
       dto.value,
     );
+  }
+
+  // --------------------- payment configure --
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'Get payment configure' })
+  @Get('payment-config')
+  getPaymentConfig() {
+    return this.adminSettingService.getPaymentConfig();
+  }
+  @ValidateSuperAdmin()
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update payment configure' })
+  @Patch('payment-config')
+  updatePaymentConfig(@Body() dto: UpdatePaymentConfigureDto) {
+    return this.adminSettingService.updatePaymentConfig(dto);
+  }
+
+  // ---------------------  freePromotionalListingStatus-------
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'Update free promotional listing status' })
+  @Patch('free-promotional-listing-status')
+  updateFreePromotionalListingStatus() {
+    return this.adminSettingService.updateFreePromotionalListingStatus();
   }
 }

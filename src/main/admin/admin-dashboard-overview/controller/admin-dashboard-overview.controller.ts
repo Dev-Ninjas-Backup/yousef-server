@@ -60,13 +60,20 @@ export class AdminDashboardOverviewController {
   async getStatistics() {
     return this.adminDashboardOverviewService.getStatistics();
   }
+  //  ------------------ Revenue trends for monthly
 
-  // ----------revenue  next working process-----------------
-  // @ValidateAuth()
-  // @ValidateSuperAdmin()
-  // @ApiBearerAuth()
-  // @Get('revenue')
-  // getRevenue(): Promise<any> {
-  //   return this.adminDashboardOverviewService.getPartsCategory();
-  // }
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ValidateSuperAdmin()
+  @Get('revenue-trends')
+  @ApiOperation({
+    summary: 'Get revenue trends for the last 30 days',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Revenue trends retrieved successfully',
+  })
+  async getRevenueTrends() {
+    return this.adminDashboardOverviewService.getRevenueTrends();
+  }
 }
