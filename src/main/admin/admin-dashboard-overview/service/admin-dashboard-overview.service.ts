@@ -365,4 +365,59 @@ export class AdminDashboardOverviewService {
       'Parts category statistics retrieved successfully',
     );
   }
+
+  // ------------getRevenueTrends for monthly revenue trend---------
+
+  async getRevenueTrends() {
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        status: 'COMPLETED',
+      },
+      select: {
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    // Month names array
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    const monthlyRevenue: Record<string, number> = {};
+
+    for (const payment of payments) {
+      if (!payment.amount) continue;
+
+      const monthIndex = payment.createdAt.getMonth();
+      const year = payment.createdAt.getFullYear();
+
+      const key = `${year}-${monthIndex}`;
+
+      monthlyRevenue[key] = (monthlyRevenue[key] || 0) + payment.amount;
+    }
+
+    // Convert to array with month names
+    return Object.entries(monthlyRevenue).map(([key, revenue]) => {
+      const [year, monthIndex] = key.split('-');
+      return {
+        month: `${monthNames[parseInt(monthIndex)]} ${year}`,
+        revenue,
+      };
+    });
+  }
 }

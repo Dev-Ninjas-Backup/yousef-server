@@ -1,5 +1,14 @@
 model PaymentSetting {
-    id                 String @id @default(uuid())
-    platformCommission Int
-    MinimumPayout      Int
+  id                 String @id @default(uuid())
+  platformCommission Int
+  MinimumPayout      Int
+}
+
+model PaymentConfigure {
+  id                           String  @id @default(uuid())
+  sparePartsMonthly            String?
+  perListingPrice              String?
+  promotionalAdPrice           String?
+  freePromotionalListings      String?
+  freePromotionalListingStatus Boolean @default(true)
 }
