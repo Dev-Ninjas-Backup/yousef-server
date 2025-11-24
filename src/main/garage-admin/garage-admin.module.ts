@@ -5,6 +5,11 @@ import { OverviewModule } from './overview/overview.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
-  imports: [ProductModule, PromotionalAdModule, OverviewModule, SubscriptionModule],
+  imports: [
+    ProductModule,
+    PromotionalAdModule,
+    OverviewModule,
+    SubscriptionModule,
+  ],
 })
 export class GarageAdminModule {}
