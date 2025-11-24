@@ -63,6 +63,15 @@ model User {
   Payment            Payment[]
   subscriptionEndsAt DateTime?
 
+  // garage subscription
+  subscriptionTrialStartDate   DateTime?
+  subscriptionTrialEndDate     DateTime?
+  isSubscriptionTrialActive    Boolean   @default(false)
+  subscriptionStartDate        DateTime?
+  subscriptionEndDate          DateTime?
+  nextSubscriptionBillingDate  DateTime?
+  isSubscribed                 Boolean   @default(false)
+
   // ------------------ Relations ------------------------------
   UserNotification     UserNotification[]
   notificationToggle   NotificationToggle?

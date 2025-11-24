@@ -224,22 +224,26 @@ export class PaymentService {
         },
       });
 
-      // Update user's subscription status
-      const subscriptionEndDate = new Date();
+      // Update user's subscription status with new columns
+      const now = new Date();
+      const subscriptionEndDate = new Date(now);
       subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // Add 1 month
 
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: {
-          hasPaid: true,
-          isMembership: true,
-          subscriptionEndsAt: subscriptionEndDate,
+          isSubscribed: true,
+          subscriptionStartDate: now,
+          subscriptionEndDate: subscriptionEndDate,
+          nextSubscriptionBillingDate: subscriptionEndDate,
+          garageStatus: 'GARAGE_PAID_OWNER',
+          isSubscriptionTrialActive: false, // End trial if active
         },
       });
       console.log(
         '✅ User subscription activated:',
-        updatedUser.isMembership,
-        updatedUser.subscriptionEndsAt,
+        updatedUser.isSubscribed,
+        updatedUser.subscriptionEndDate,
       );
     } else if (type === 'pay_per_product') {
       console.log('💳 Processing pay-per product for user:', userId);
