@@ -211,7 +211,7 @@ export class PaymentService {
     if (type === 'monthly_subscription') {
       console.log('💰 Processing monthly subscription for user:', userId);
       // Create payment record
-      const monthlypayment = await this.prisma.payment.create({
+      await this.prisma.payment.create({
         data: {
           sessionId: session.id,
           transactionId: session.payment_intent as string,
@@ -224,23 +224,26 @@ export class PaymentService {
         },
       });
 
-      console.log('monthly payment created', monthlypayment);
-      // Update user's subscription status
-      const subscriptionEndDate = new Date();
+      // Update user's subscription status with new columns
+      const now = new Date();
+      const subscriptionEndDate = new Date(now);
       subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // Add 1 month
 
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: {
-          hasPaid: true,
-          isMembership: true,
-          subscriptionEndsAt: subscriptionEndDate,
+          isSubscribed: true,
+          subscriptionStartDate: now,
+          subscriptionEndDate: subscriptionEndDate,
+          nextSubscriptionBillingDate: subscriptionEndDate,
+          garageStatus: 'GARAGE_PAID_OWNER',
+          isSubscriptionTrialActive: false, // End trial if active
         },
       });
       console.log(
         '✅ User subscription activated:',
-        updatedUser.isMembership,
-        updatedUser.subscriptionEndsAt,
+        updatedUser.isSubscribed,
+        updatedUser.subscriptionEndDate,
       );
     } else if (type === 'pay_per_product') {
       console.log('💳 Processing pay-per product for user:', userId);
@@ -305,7 +308,7 @@ export class PaymentService {
       );
     } else if (type === 'product_promotion' && productId) {
       // Create payment record
-      const paymentcreate = await this.prisma.payment.create({
+      await this.prisma.payment.create({
         data: {
           sessionId: session.id,
           transactionId: session.payment_intent as string,
@@ -317,7 +320,6 @@ export class PaymentService {
           // planId: null for custom payments
         },
       });
-      console.log('the create payment', paymentcreate);
       // Update product status to APPROVED and set promoted
       await this.prisma.product.update({
         where: { id: productId },
