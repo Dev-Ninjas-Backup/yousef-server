@@ -1,5 +1,5 @@
 export enum UserEnum {
-  CAR_OWNER = ' CAR_OWNER',
+  CAR_OWNER = 'CAR_OWNER',
   GARAGE_OWNER = 'GARAGE_OWNER',
   SUPER_ADMIN = 'SUPER_ADMIN',
   MEMBER = 'MEMBER',

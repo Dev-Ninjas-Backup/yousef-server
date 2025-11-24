@@ -31,6 +31,7 @@ export class ProductService {
       plan,
       ...productData
     } = createProductDto;
+    console.log('UserId', userId);
 
     if (!sellerEmail) {
       throw new Error('validation: Seller email is required.');
@@ -135,6 +136,7 @@ export class ProductService {
     const product = await this.prisma.product.create({
       data: {
         sellerId: sellerInstance.id,
+        createdById: userId,
         status: 'PENDING',
         photos: photoUrls,
         views: 0,
@@ -143,6 +145,13 @@ export class ProductService {
       },
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
 
@@ -153,6 +162,13 @@ export class ProductService {
     return this.prisma.product.findMany({
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
   }
@@ -162,6 +178,13 @@ export class ProductService {
       where: { id },
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
     if (!product) {
@@ -254,6 +277,13 @@ export class ProductService {
       data: updateData,
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
   }
@@ -272,6 +302,13 @@ export class ProductService {
       where: { id },
       include: {
         seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+          },
+        },
       },
     });
   }

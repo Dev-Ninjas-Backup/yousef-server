@@ -32,11 +32,17 @@ export class PaymentWebhookController {
     @Res() res,
     @Headers('stripe-signature') signature: string,
   ) {
+    console.log('🔥 WEBHOOK RECEIVED!');
+    console.log('Headers:', req.headers);
+    console.log('Signature:', signature);
+    console.log('Body type:', typeof req.body);
+
     try {
       await this.paymentService.handleWebhook(signature, req.body);
+      console.log('✅ Webhook processed successfully');
       return res.status(HttpStatus.OK).json({ received: true });
     } catch (err) {
-      console.error('Webhook handling error:', err);
+      console.error('❌ Webhook handling error:', err);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
   }

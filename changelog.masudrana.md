@@ -45,3 +45,15 @@
 
 - [x] Explored the **Stripe** payment system and **Webhooks**, and implemented them in the project.
 - [x] Implemented the **Product Module** with **Product Promotion Payment**, **Monthly Subscription Payment**, and **Pay-Per-Product Payment** for creating a product.
+
+
+## 21/11/2025
+
+- [x] Find out the **Figma** problem and solve this problem with **Figma** designer, this problem fixed with **Figma Designer** discussion and remove this part
+- [x] Replace **Promotional Ad** module but not complete this module
+
+
+## 22/11/2025
+
+- [x] Completed the **Garage Admin Overview** module with all related features and APIs **(/stats)**,  **/performance-summary**, **/recent-activity**, and **/recent-listings**.
+- [x] Added **/stats** api **Promotional Ad** module for garage admin.

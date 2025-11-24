@@ -45,6 +45,10 @@ model Product {
   id       String @id @default(uuid())
   sellerId String
   seller   Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  // User who created the product
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   partName    String
   brand       String?

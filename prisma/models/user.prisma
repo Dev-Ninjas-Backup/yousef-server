@@ -78,6 +78,9 @@ model User {
   privateConversation2 PrivateConversation[]  @relation("User2Conversations")
   privateMessage       PrivateMessage[]
   privateMessageStatus PrivateMessageStatus[]
+  
+  // ------product relation---
+  createdProducts      Product[]
 
   @@map("users")
 }
