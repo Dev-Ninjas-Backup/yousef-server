@@ -44,3 +44,15 @@
 - [ ] Implement the remaining sections related to the **payment** system.
 - [ ] Work on the Platform **Configuration**.
 - [ ] Any remaining parts of the project.
+
+
+# 22/11/2025
+
+- [ ] Complete the **Promotional Ad** ad module
+- [ ] Implementing the **Garage Admin Dashboard Overview** module
+
+
+# 23/11/2025
+- [ ] Work on **Subscription** module for the **Garage** subscription plan 
+- [ ] find out the **Inquiries** and **Messages** features in the garage admin dashboard from **Figma** designer & implement them.
+- [ ] Any remaining parts of the project.
