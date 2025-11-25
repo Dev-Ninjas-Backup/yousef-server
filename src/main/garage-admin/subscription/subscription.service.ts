@@ -7,7 +7,7 @@ export class SubscriptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentService: PaymentService,
-  ) {}
+  ) { }
 
   async getTrialStatus(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -40,7 +40,7 @@ export class SubscriptionService {
     ) {
       const daysRemaining = Math.ceil(
         (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+        (1000 * 60 * 60 * 24),
       );
 
       return {
@@ -63,7 +63,7 @@ export class SubscriptionService {
     ) {
       const daysRemaining = Math.ceil(
         (user.subscriptionEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+        (1000 * 60 * 60 * 24),
       );
 
       return {
@@ -161,7 +161,7 @@ export class SubscriptionService {
         endsAt: user.subscriptionTrialEndDate,
         daysRemaining: Math.ceil(
           (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-            (1000 * 60 * 60 * 24),
+          (1000 * 60 * 60 * 24),
         ),
       };
     } else if (
@@ -197,12 +197,32 @@ export class SubscriptionService {
 
   // Get garage subscription history for a user
   async getSubscriptionHistory(userId: string): Promise<any[]> {
-    return this.prisma.garageSubscription.findMany({
+    const subscriptions = await this.prisma.garageSubscription.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: {
-        payment: true,
-      },
+      include: { payment: true },
+    });
+
+    return subscriptions.map((sub, index) => {
+      const isTrial = sub.type === 'TRIAL';
+      const payment = sub.payment[0];
+
+      // const transactionId = `TXN${String(subscriptions.length - index).padStart(3, '0')}`;
+      const transactionId = payment?.transactionId ? payment.transactionId : "";
+
+      return {
+        transactionId,
+        date: new Date(sub.startDate).toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }),
+        description: isTrial ? '3-Month Free Trial Started' : 'Monthly Subscription',
+        paymentMethod: payment?.paymentMethod ? payment.paymentMethod.charAt(0).toUpperCase() + payment.paymentMethod.slice(1) : '-',
+        amount: isTrial ? 'Free' : sub.amount! / 100,
+        currency: isTrial ? null : sub.currency?.toUpperCase(),
+        status: 'Paid'
+      };
     });
   }
 }
