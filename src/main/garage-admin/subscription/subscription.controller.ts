@@ -9,7 +9,14 @@ import { SubscriptionService } from './subscription.service';
 
 @Controller('subscription')
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) {}
+  constructor(private readonly subscriptionService: SubscriptionService) { }
+
+  @Get('trial-status')
+  @ApiBearerAuth()
+  @ValidateAuth()
+  async getTrialStatus(@GetUser('userId') userId: string) {
+    return this.subscriptionService.getTrialStatus(userId);
+  }
 
   // Admin only: Approve garage and start trial
   @ApiBearerAuth()
@@ -33,5 +40,13 @@ export class SubscriptionController {
   @Post('subscribe-monthly')
   async subscribeMonthly(@GetUser('userId') userId: string) {
     return this.subscriptionService.createMonthlySubscriptionSession(userId);
+  }
+
+  // Get subscription history
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @Get('history')
+  async getHistory(@GetUser('userId') userId: string) {
+    return this.subscriptionService.getSubscriptionHistory(userId);
   }
 }
