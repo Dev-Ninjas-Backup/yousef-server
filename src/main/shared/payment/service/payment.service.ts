@@ -1,8 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+
 import { PaymentStatus } from '@prisma/client';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
@@ -24,7 +21,7 @@ export class PaymentService {
     payload: CreateCheckoutPlanDto,
   ): Promise<{ url: string }> {
     // 1. Find plan from DB
-    const plan = await this.prisma.paymentplan.findUnique({
+    const plan = await this.prisma.paymentPlan.findUnique({
       where: { id: payload.planId },
     });
 
@@ -210,6 +207,26 @@ export class PaymentService {
 
     if (type === 'monthly_subscription') {
       console.log('💰 Processing monthly subscription for user:', userId);
+      const now = new Date();
+      const subscriptionEndDate = new Date(now);
+      subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // Add 1 month
+
+      // Create GarageSubscription record
+      const garageSub = await this.prisma.garageSubscription.create({
+        data: {
+          userId,
+          type: 'PAID',
+          amount: parseInt(amount) * 100,
+          currency: 'usd',
+          stripeSessionId: session.id,
+          stripePaymentId: session.payment_intent as string,
+          startDate: now,
+          endDate: subscriptionEndDate,
+          billingCycle: 'MONTHLY',
+          status: 'ACTIVE',
+        },
+      });
+
       // Create payment record
       await this.prisma.payment.create({
         data: {
@@ -219,16 +236,13 @@ export class PaymentService {
           currency: 'usd',
           status: 'COMPLETED',
           paymentMethod: 'card',
+          paymentType: 'GARAGE_SUBSCRIPTION',
           userId,
-          // planId: null for custom payments
+          garageSubscriptionId: garageSub.id,
         },
       });
 
       // Update user's subscription status with new columns
-      const now = new Date();
-      const subscriptionEndDate = new Date(now);
-      subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // Add 1 month
-
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: {
@@ -256,8 +270,8 @@ export class PaymentService {
           currency: 'usd',
           status: 'COMPLETED',
           paymentMethod: 'card',
+          paymentType: 'PAY_PER_PRODUCT',
           userId,
-          // planId: null for custom payments
         },
       });
 
@@ -287,6 +301,7 @@ export class PaymentService {
           currency: 'usd',
           status: 'COMPLETED',
           paymentMethod: 'card',
+          paymentType: 'PRODUCT_PROMOTION_CREDIT',
           userId,
           // planId: null for custom payments
         },
@@ -316,10 +331,13 @@ export class PaymentService {
           currency: 'usd',
           status: 'COMPLETED',
           paymentMethod: 'card',
+          paymentType: 'PRODUCT_PROMOTION',
           userId,
+          productId,
           // planId: null for custom payments
         },
       });
+
       // Update product status to APPROVED and set promoted
       await this.prisma.product.update({
         where: { id: productId },
@@ -344,6 +362,7 @@ export class PaymentService {
           currency: 'usd',
           status: 'COMPLETED',
           paymentMethod: 'card',
+          paymentType: 'GENERAL',
           userId,
           planId: productName
             ? `product-${productName.toLowerCase().replace(/\s+/g, '-')}`
@@ -373,6 +392,7 @@ export class PaymentService {
           currency: paymentIntent.currency,
           status: 'COMPLETED',
           paymentMethod: 'card',
+          paymentType: 'PAY_PER_PRODUCT',
           userId,
           planId: 'product-creation',
         },
@@ -449,15 +469,15 @@ export class PaymentService {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=monthly`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=monthly`,
       metadata: {
         userId,
         type: 'monthly_subscription',
         amount: '100',
       },
     });
-    console.log('the session is', session);
+
     return { url: session.url! };
   }
 
@@ -477,13 +497,13 @@ export class PaymentService {
               name: 'Pay Per Product',
               description: 'Single product listing fee',
             },
-            unit_amount: 2000,
+            unit_amount: 2000, // $20 in cents
           },
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=pay_per`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=pay_per`,
       metadata: {
         userId,
         type: 'pay_per_product',
@@ -569,8 +589,8 @@ export class PaymentService {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=promotion`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=promotion`,
       metadata: {
         userId,
         type: 'product_promotion_credit',

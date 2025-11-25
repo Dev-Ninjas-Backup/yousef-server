@@ -63,7 +63,7 @@ model User {
   Payment            Payment[]
   subscriptionEndsAt DateTime?
 
-  // garage subscription
+  // New columns for garage subscription
   subscriptionTrialStartDate   DateTime?
   subscriptionTrialEndDate     DateTime?
   isSubscriptionTrialActive    Boolean   @default(false)
@@ -90,6 +90,9 @@ model User {
   
   // ------product relation---
   createdProducts      Product[]
+
+  // garage subscriptions
+  garageSubscriptions GarageSubscription[]
 
   @@map("users")
 }

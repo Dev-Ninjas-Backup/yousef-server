@@ -7,7 +7,11 @@ export class SubscriptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentService: PaymentService,
-  ) {}
+  ) { }
+
+  async getTrialStatus(userId: string) {
+    return "Dynamic trial status";
+  }
 
   // Approve garage and activate 90-day free trial
   async approveGarage(userId: string): Promise<{ message: string }> {
@@ -26,6 +30,17 @@ export class SubscriptionService {
     const now = new Date();
     const trialEnd = new Date(now);
     trialEnd.setDate(trialEnd.getDate() + 90);
+
+    // Create GarageSubscription for trial
+    await this.prisma.garageSubscription.create({
+      data: {
+        userId,
+        type: 'TRIAL',
+        startDate: now,
+        endDate: trialEnd,
+        status: 'ACTIVE',
+      },
+    });
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -62,24 +77,13 @@ export class SubscriptionService {
 
     const now = new Date();
 
-    if (
-      user.isSubscriptionTrialActive &&
-      user.subscriptionTrialEndDate &&
-      user.subscriptionTrialEndDate > now
-    ) {
+    if (user.isSubscriptionTrialActive && user.subscriptionTrialEndDate && user.subscriptionTrialEndDate > now) {
       return {
         status: 'trial_active',
         endsAt: user.subscriptionTrialEndDate,
-        daysRemaining: Math.ceil(
-          (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-            (1000 * 60 * 60 * 24),
-        ),
+        daysRemaining: Math.ceil((user.subscriptionTrialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
       };
-    } else if (
-      user.isSubscribed &&
-      user.subscriptionEndDate &&
-      user.subscriptionEndDate > now
-    ) {
+    } else if (user.isSubscribed && user.subscriptionEndDate && user.subscriptionEndDate > now) {
       return {
         status: 'paid_active',
         endsAt: user.subscriptionEndDate,
@@ -100,9 +104,18 @@ export class SubscriptionService {
   }
 
   // Create monthly subscription session ($100)
-  async createMonthlySubscriptionSession(
-    userId: string,
-  ): Promise<{ url: string }> {
+  async createMonthlySubscriptionSession(userId: string): Promise<{ url: string }> {
     return this.paymentService.createMonthlyPlanSession(userId);
+  }
+
+  // Get garage subscription history for a user
+  async getSubscriptionHistory(userId: string): Promise<any[]> {
+    return this.prisma.garageSubscription.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        payment: true,
+      },
+    });
   }
 }
