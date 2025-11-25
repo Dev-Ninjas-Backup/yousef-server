@@ -1,5 +1,7 @@
 <!-- --------payment -->
 
+ngrok http 5050 --url ruling-kitten-evolved.ngrok-free.app
+
 1 Register Garage owner gets 2-month free trial
 
 2 Cron Job Runs daily to disable expired trials

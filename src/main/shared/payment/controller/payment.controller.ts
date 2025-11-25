@@ -1,12 +1,11 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   Get,
   Headers,
   Param,
   Post,
-  Req,
+  Req
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -15,24 +14,12 @@ import {
   ValidateAuth,
   ValidateSuperAdmin,
 } from 'src/common/jwt/jwt.decorator';
-import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
 
 import { PaymentService } from '../service/payment.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @Post()
-  async create(
-    @Body() payload: CreateCheckoutPlanDto,
-    @GetUser('userId') userId: string,
-  ) {
-    if (!userId) throw new BadRequestException('User not authenticated');
-    return this.paymentService.createCheckoutSession(userId, payload);
-  }
-
+  constructor(private readonly paymentService: PaymentService) { }
   @ApiBearerAuth()
   @ValidateAuth()
   @Get('/my-payments')
