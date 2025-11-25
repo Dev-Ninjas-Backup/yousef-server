@@ -154,7 +154,6 @@ export class PaymentService {
         process.env.STRIPE_WEBHOOK_SECRET!,
       );
       console.log('✅ Webhook signature verified successfully');
-
     } catch (err) {
       console.error('❌ Webhook signature verification failed:', err.message);
       throw new BadRequestException(
@@ -464,9 +463,8 @@ export class PaymentService {
         userId,
         type: 'monthly_subscription',
         amount: '100',
-      }
+      },
     });
-
 
     return { url: session.url! };
   }
