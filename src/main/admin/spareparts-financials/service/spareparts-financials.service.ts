@@ -6,7 +6,7 @@ import { UpdateSparepartsDto } from '../dto/UpdateSpareparts.dto';
 @Injectable()
 export class SparepartsFinancialsService {
   // ------------------------- SparepartsFinancials ------------------------- //
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // Approve / Update spareparts status
   @HandleError('Failed to update spareparts')
@@ -62,12 +62,9 @@ export class SparepartsFinancialsService {
       },
       orderBy: {
         createdAt: 'asc',
-      }
-    })
-
-
+      },
+    });
   }
-
 
   // ---------- revinue transactions charts----
 
@@ -125,7 +122,6 @@ export class SparepartsFinancialsService {
     });
   }
 
-
   // --------------- RECENT TRANSACTIONS ---------------
   @HandleError('Failed to get recent transactions')
   async RecentTransactions() {
@@ -143,7 +139,4 @@ export class SparepartsFinancialsService {
       take: 5,
     });
   }
-
-
-
 }

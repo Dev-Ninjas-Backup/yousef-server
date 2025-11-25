@@ -18,8 +18,6 @@ export class PaymentService {
 
   // ---------------- create payment ----------------
 
-
-
   @HandleError('Failed to fetch user payments')
   async findmyPayment(userId: string) {
     return this.prisma.payment.findMany({
@@ -67,7 +65,6 @@ export class PaymentService {
             email: true,
           },
         },
-     
       },
     });
 
@@ -286,7 +283,6 @@ export class PaymentService {
           status: 'COMPLETED',
           paymentMethod: 'card',
           userId,
-        
         },
       });
 
@@ -313,7 +309,6 @@ export class PaymentService {
           status: 'COMPLETED',
           paymentMethod: 'card',
           userId,
-     
         },
       });
 

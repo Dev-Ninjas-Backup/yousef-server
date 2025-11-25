@@ -8,7 +8,7 @@ import { SparepartsFinancialsService } from '../service/spareparts-financials.se
 export class SparepartsFinancialsController {
   constructor(
     private readonly sparepartsFinancialsService: SparepartsFinancialsService,
-  ) { }
+  ) {}
 
   //  -------------admin approve spareparts --------------
   // Admin approve spareparts (optional dto to change status)
@@ -40,9 +40,7 @@ export class SparepartsFinancialsController {
   @ValidateAdmin()
   @ApiOperation({ summary: 'Track revenue, payments, and transactions' })
   @Get('financial-overview')
-  async FinancialOverview(
-
-  ) {
+  async FinancialOverview() {
     return this.sparepartsFinancialsService.FinancialOverview();
   }
 
@@ -52,9 +50,7 @@ export class SparepartsFinancialsController {
   @ValidateAdmin()
   @ApiOperation({ summary: 'Revenue & Transactions overview chart data' })
   @Get('revenue-transactions')
-  async RevenueTransactions(
-
-  ) {
+  async RevenueTransactions() {
     return this.sparepartsFinancialsService.RevenueTransactions();
   }
   // ----------------------------- RECENT TRANSACTIONS -------------------------
@@ -63,9 +59,7 @@ export class SparepartsFinancialsController {
   @ValidateAdmin()
   @ApiOperation({ summary: 'Recent Transactions' })
   @Get('recent-transactions')
-  async RecentTransactions(
-
-  ) {
+  async RecentTransactions() {
     return this.sparepartsFinancialsService.RecentTransactions();
   }
 }

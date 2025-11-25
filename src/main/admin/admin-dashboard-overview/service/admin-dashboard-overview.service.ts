@@ -53,7 +53,7 @@ export interface DashboardOverview {
 
 @Injectable()
 export class AdminDashboardOverviewService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // ------------------ Helper Methods ------------------
 
@@ -350,8 +350,8 @@ export class AdminDashboardOverviewService {
       percentage:
         totalProducts > 0
           ? parseFloat(
-            ((stat._count.category / totalProducts) * 100).toFixed(2),
-          )
+              ((stat._count.category / totalProducts) * 100).toFixed(2),
+            )
           : 0,
     }));
 

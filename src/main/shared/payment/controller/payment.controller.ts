@@ -5,7 +5,7 @@ import {
   Headers,
   Param,
   Post,
-  Req
+  Req,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -19,7 +19,7 @@ import { PaymentService } from '../service/payment.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) { }
+  constructor(private readonly paymentService: PaymentService) {}
   @ApiBearerAuth()
   @ValidateAuth()
   @Get('/my-payments')
