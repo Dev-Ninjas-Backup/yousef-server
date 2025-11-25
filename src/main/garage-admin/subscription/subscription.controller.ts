@@ -1,11 +1,15 @@
 import { Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { GetUser, ValidateAuth, ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
+import {
+  GetUser,
+  ValidateAuth,
+  ValidateSuperAdmin,
+} from 'src/common/jwt/jwt.decorator';
 import { SubscriptionService } from './subscription.service';
 
 @Controller('subscription')
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) { }
+  constructor(private readonly subscriptionService: SubscriptionService) {}
 
   @Get('trial-status')
   @ApiBearerAuth()

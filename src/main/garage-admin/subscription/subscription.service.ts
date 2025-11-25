@@ -7,10 +7,10 @@ export class SubscriptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentService: PaymentService,
-  ) { }
+  ) {}
 
   async getTrialStatus(userId: string) {
-    return "Dynamic trial status";
+    return 'Dynamic trial status';
   }
 
   // Approve garage and activate 90-day free trial
@@ -77,13 +77,24 @@ export class SubscriptionService {
 
     const now = new Date();
 
-    if (user.isSubscriptionTrialActive && user.subscriptionTrialEndDate && user.subscriptionTrialEndDate > now) {
+    if (
+      user.isSubscriptionTrialActive &&
+      user.subscriptionTrialEndDate &&
+      user.subscriptionTrialEndDate > now
+    ) {
       return {
         status: 'trial_active',
         endsAt: user.subscriptionTrialEndDate,
-        daysRemaining: Math.ceil((user.subscriptionTrialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+        daysRemaining: Math.ceil(
+          (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
       };
-    } else if (user.isSubscribed && user.subscriptionEndDate && user.subscriptionEndDate > now) {
+    } else if (
+      user.isSubscribed &&
+      user.subscriptionEndDate &&
+      user.subscriptionEndDate > now
+    ) {
       return {
         status: 'paid_active',
         endsAt: user.subscriptionEndDate,
@@ -104,7 +115,9 @@ export class SubscriptionService {
   }
 
   // Create monthly subscription session ($100)
-  async createMonthlySubscriptionSession(userId: string): Promise<{ url: string }> {
+  async createMonthlySubscriptionSession(
+    userId: string,
+  ): Promise<{ url: string }> {
     return this.paymentService.createMonthlyPlanSession(userId);
   }
 
