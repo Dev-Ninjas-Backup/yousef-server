@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import {
   GetUser,
@@ -12,7 +12,7 @@ import { SubscriptionService } from './subscription.service';
 export class SubscriptionController {
   constructor(private readonly subscriptionService: SubscriptionService) { }
 
-  @Get('trial-status')
+  @Get('current-plan')
   @ApiBearerAuth()
   @ValidateAuth()
   async getTrialStatus(@GetUser('userId') userId: string) {
@@ -27,20 +27,11 @@ export class SubscriptionController {
     return this.subscriptionService.approveGarage(userId);
   }
 
-  // Get subscription status
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @ValidateGarageOwner()
-  @Get('status')
-  async checkStatus(@GetUser('userId') userId: string) {
-    return this.subscriptionService.checkSubscriptionStatus(userId);
-  }
-
   // Create monthly subscription checkout session
   @ApiBearerAuth()
   @ValidateAuth()
   @ValidateGarageOwner()
-  @Post('subscribe-monthly')
+  @Post('monthly-subscription')
   async subscribeMonthly(@GetUser('userId') userId: string) {
     return this.subscriptionService.createMonthlySubscriptionSession(userId);
   }
@@ -49,8 +40,17 @@ export class SubscriptionController {
   @ApiBearerAuth()
   @ValidateAuth()
   @ValidateGarageOwner()
-  @Get('history')
+  @Get('transaction-history')
   async getHistory(@GetUser('userId') userId: string) {
     return this.subscriptionService.getSubscriptionHistory(userId);
+  }
+
+  // Cancel subscription
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ValidateGarageOwner()
+  @Patch('cancel-subscription')
+  async cancelSubscription(@GetUser('userId') userId: string) {
+    return this.subscriptionService.cancelSubscription(userId);
   }
 }
