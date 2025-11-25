@@ -1,5 +1,9 @@
 import { Controller, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags
+} from '@nestjs/swagger';
 import {
   GetUser,
   ValidateAuth,
@@ -8,48 +12,46 @@ import {
 } from 'src/common/jwt/jwt.decorator';
 import { SubscriptionService } from './subscription.service';
 
+@ApiTags('Subscription')
+@ApiBearerAuth()
 @Controller('subscription')
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) {}
+  constructor(private readonly subscriptionService: SubscriptionService) { }
 
   @Get('current-plan')
-  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current plan & trial status for logged-in garage owner' })
   @ValidateAuth()
   async getTrialStatus(@GetUser('userId') userId: string) {
     return this.subscriptionService.getTrialStatus(userId);
   }
 
-  // Admin only: Approve garage and start trial
-  @ApiBearerAuth()
-  @ValidateSuperAdmin()
   @Post('approve-garage/:userId')
+  @ApiOperation({ summary: '[Super Admin] Approve garage and activate 90-day free trial' })
+  @ValidateSuperAdmin()
   async approveGarage(@Param('userId') userId: string) {
     return this.subscriptionService.approveGarage(userId);
   }
 
-  // Create monthly subscription checkout session
-  @ApiBearerAuth()
+  @Post('monthly-subscription')
+  @ApiOperation({ summary: 'Create Stripe checkout session for monthly subscription ($100)' })
   @ValidateAuth()
   @ValidateGarageOwner()
-  @Post('monthly-subscription')
   async subscribeMonthly(@GetUser('userId') userId: string) {
     return this.subscriptionService.createMonthlySubscriptionSession(userId);
   }
 
-  // Get subscription history
-  @ApiBearerAuth()
+  @Get('transaction-history')
+  @ApiOperation({ summary: 'Get formatted transaction history (Trial + Paid)' })
   @ValidateAuth()
   @ValidateGarageOwner()
-  @Get('transaction-history')
   async getHistory(@GetUser('userId') userId: string) {
     return this.subscriptionService.getSubscriptionHistory(userId);
   }
 
-  // Cancel subscription
-  @ApiBearerAuth()
+  @Patch('cancel-subscription')
+  @ApiOperation({ summary: 'Cancel active paid subscription (immediate or at period end)' })
   @ValidateAuth()
   @ValidateGarageOwner()
-  @Patch('cancel-subscription')
   async cancelSubscription(@GetUser('userId') userId: string) {
     return this.subscriptionService.cancelSubscription(userId);
   }
