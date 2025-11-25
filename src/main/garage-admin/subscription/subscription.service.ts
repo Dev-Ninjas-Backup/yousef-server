@@ -7,7 +7,7 @@ export class SubscriptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentService: PaymentService,
-  ) { }
+  ) {}
 
   async getTrialStatus(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -40,7 +40,7 @@ export class SubscriptionService {
     ) {
       const daysRemaining = Math.ceil(
         (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-        (1000 * 60 * 60 * 24),
+          (1000 * 60 * 60 * 24),
       );
 
       return {
@@ -63,7 +63,7 @@ export class SubscriptionService {
     ) {
       const daysRemaining = Math.ceil(
         (user.subscriptionEndDate.getTime() - now.getTime()) /
-        (1000 * 60 * 60 * 24),
+          (1000 * 60 * 60 * 24),
       );
 
       return {
@@ -161,7 +161,7 @@ export class SubscriptionService {
         endsAt: user.subscriptionTrialEndDate,
         daysRemaining: Math.ceil(
           (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+            (1000 * 60 * 60 * 24),
         ),
       };
     } else if (
