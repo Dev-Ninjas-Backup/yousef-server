@@ -21,7 +21,7 @@ import { PaymentService } from '../service/payment.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) { }
+  constructor(private readonly paymentService: PaymentService) {}
   @ApiBearerAuth()
   @ValidateAuth()
   @Post()

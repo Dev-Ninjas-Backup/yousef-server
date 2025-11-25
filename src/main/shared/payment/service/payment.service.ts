@@ -57,19 +57,6 @@ export class PaymentService {
       metadata: { userId, planId: plan.id },
     });
 
-    // 3. Save initial payment (status PENDING)
-    // await this.prisma.payment.create({
-    //   data: {
-    //     sessionId: session.id,
-    //     amount: plan.Price * 100, // cents
-    //     currency: 'usd',
-    //     status: PaymentStatus.PENDING,
-    //     paymentMethod: 'card',
-    //     userId,
-    //     planId: plan.id,
-    //   },
-    // });
-
     return { url: session.url! };
   }
 
@@ -132,8 +119,6 @@ export class PaymentService {
     });
 
     return payments;
-    // or if you have a successResponse helper:
-    // return successResponse('Payments fetched successfully', payments);
   }
 
   // Check if user can create free product
@@ -169,15 +154,6 @@ export class PaymentService {
         process.env.STRIPE_WEBHOOK_SECRET!,
       );
       console.log('✅ Webhook signature verified successfully');
-      console.log('Event type:', event.type);
-
-      console.log('STRIPE EVENT RECEIVED:', {
-        type: event.type,
-        id: event.id,
-        created: new Date(event.created * 1000).toISOString(),
-        object: event.data.object,
-      });
-
     } catch (err) {
       console.error('❌ Webhook signature verification failed:', err.message);
       throw new BadRequestException(
@@ -185,20 +161,11 @@ export class PaymentService {
       );
     }
 
-
-
-
     switch (event.type) {
       case 'checkout.session.completed':
         console.log('💰 Processing checkout.session.completed');
         await this.handleCheckoutSuccess(
           event.data.object as Stripe.Checkout.Session,
-        );
-        break;
-      case 'payment_intent.succeeded':
-        console.log('✅ Processing payment_intent.succeeded');
-        await this.handlePaymentSuccess(
-          event.data.object as Stripe.PaymentIntent,
         );
         break;
       case 'payment_intent.payment_failed':
@@ -396,11 +363,12 @@ export class PaymentService {
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
     const { userId, type } = paymentIntent.metadata;
+    console.log(userId, type);
 
-    console.log("ken asena event", paymentIntent, type);
+    console.log('ken asena event', paymentIntent, paymentIntent.metadata);
 
     if (type === 'product_creation') {
-      console.log("ami to true na ");
+      console.log('ami to true na ');
 
       // Create payment record
       await this.prisma.payment.create({
@@ -483,13 +451,14 @@ export class PaymentService {
               name: 'Monthly Subscription Plan',
               description: 'Unlimited product listings for 30 days',
             },
-            unit_amount: 10000, // $100 in cents
+            unit_amount: 10000,
           },
           quantity: 1,
         },
       ],
       success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=monthly`,
       cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=monthly`,
+
       metadata: {
         userId,
         type: 'monthly_subscription',

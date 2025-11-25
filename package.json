@@ -27,7 +27,9 @@
     "db:validate": "npx prisma validate",
     "db:format": "npx prisma format",
     "postinstall": "npx prisma generate",
-    "prepare": "husky"
+    "prepare": "husky",
+    "webhook:listen": "stripe listen --forward-to localhost:5050/payment/webhook",
+    "webhook:test": "node test-webhook.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.911.0",
