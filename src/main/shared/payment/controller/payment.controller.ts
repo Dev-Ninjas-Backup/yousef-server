@@ -21,7 +21,7 @@ import { PaymentService } from '../service/payment.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly paymentService: PaymentService) { }
   @ApiBearerAuth()
   @ValidateAuth()
   @Post()
@@ -80,6 +80,7 @@ export class PaymentController {
         req.rawBody,
       );
       console.log('✅ Webhook processed successfully');
+      console.log(result);
       return result;
     } catch (error) {
       console.log('❌ Webhook processing failed:', error.message);

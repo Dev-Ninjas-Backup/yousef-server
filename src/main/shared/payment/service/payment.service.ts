@@ -170,12 +170,23 @@ export class PaymentService {
       );
       console.log('✅ Webhook signature verified successfully');
       console.log('Event type:', event.type);
+
+      console.log('STRIPE EVENT RECEIVED:', {
+        type: event.type,
+        id: event.id,
+        created: new Date(event.created * 1000).toISOString(),
+        object: event.data.object,
+      });
+
     } catch (err) {
       console.error('❌ Webhook signature verification failed:', err.message);
       throw new BadRequestException(
         `Webhook signature verification failed: ${err.message}`,
       );
     }
+
+
+
 
     switch (event.type) {
       case 'checkout.session.completed':
@@ -386,7 +397,11 @@ export class PaymentService {
   ): Promise<void> {
     const { userId, type } = paymentIntent.metadata;
 
+    console.log("ken asena event", paymentIntent, type);
+
     if (type === 'product_creation') {
+      console.log("ami to true na ");
+
       // Create payment record
       await this.prisma.payment.create({
         data: {
