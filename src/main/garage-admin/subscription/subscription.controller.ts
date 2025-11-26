@@ -1,9 +1,5 @@
 import { Controller, Get, Param, Patch, Post } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   GetUser,
   ValidateAuth,
@@ -16,24 +12,30 @@ import { SubscriptionService } from './subscription.service';
 @ApiBearerAuth()
 @Controller('subscription')
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) { }
+  constructor(private readonly subscriptionService: SubscriptionService) {}
 
   @Get('current-plan')
-  @ApiOperation({ summary: 'Get current plan & trial status for logged-in garage owner' })
+  @ApiOperation({
+    summary: 'Get current plan & trial status for logged-in garage owner',
+  })
   @ValidateAuth()
   async getTrialStatus(@GetUser('userId') userId: string) {
     return this.subscriptionService.getTrialStatus(userId);
   }
 
   @Post('approve-garage/:userId')
-  @ApiOperation({ summary: '[Super Admin] Approve garage and activate 90-day free trial' })
+  @ApiOperation({
+    summary: '[Super Admin] Approve garage and activate 90-day free trial',
+  })
   @ValidateSuperAdmin()
   async approveGarage(@Param('userId') userId: string) {
     return this.subscriptionService.approveGarage(userId);
   }
 
   @Post('monthly-subscription')
-  @ApiOperation({ summary: 'Create Stripe checkout session for monthly subscription ($100)' })
+  @ApiOperation({
+    summary: 'Create Stripe checkout session for monthly subscription ($100)',
+  })
   @ValidateAuth()
   @ValidateGarageOwner()
   async subscribeMonthly(@GetUser('userId') userId: string) {
@@ -49,7 +51,9 @@ export class SubscriptionController {
   }
 
   @Patch('cancel-subscription')
-  @ApiOperation({ summary: 'Cancel active paid subscription (immediate or at period end)' })
+  @ApiOperation({
+    summary: 'Cancel active paid subscription (immediate or at period end)',
+  })
   @ValidateAuth()
   @ValidateGarageOwner()
   async cancelSubscription(@GetUser('userId') userId: string) {

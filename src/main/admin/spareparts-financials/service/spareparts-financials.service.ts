@@ -47,4 +47,96 @@ export class SparepartsFinancialsService {
 
     return { message: 'Spareparts deleted successfully' };
   }
+
+  // ---------------------- rack revenue, payments, and transactions-----------
+  @HandleError('Failed to get financial overview')
+  async FinancialOverview() {
+    return this.prisma.payment.findMany({
+      where: {
+        status: 'COMPLETED',
+      },
+      //  --------this month revenue-----------
+      select: {
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  // ---------- revinue transactions charts----
+
+  @HandleError('Failed to get revenue transactions')
+  async RevenueTransactions() {
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        status: 'COMPLETED',
+      },
+      select: {
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    // Month names array
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    const monthlyRevenue: Record<string, number> = {};
+
+    for (const payment of payments) {
+      if (!payment.amount) continue;
+
+      const monthIndex = payment.createdAt.getMonth();
+      const year = payment.createdAt.getFullYear();
+
+      const key = `${year}-${monthIndex}`;
+
+      monthlyRevenue[key] = (monthlyRevenue[key] || 0) + payment.amount;
+    }
+
+    // Convert to array with month names
+    return Object.entries(monthlyRevenue).map(([key, revenue]) => {
+      const [year, monthIndex] = key.split('-');
+      return {
+        month: `${monthNames[parseInt(monthIndex)]} ${year}`,
+        revenue,
+      };
+    });
+  }
+
+  // --------------- RECENT TRANSACTIONS ---------------
+  @HandleError('Failed to get recent transactions')
+  async RecentTransactions() {
+    return this.prisma.payment.findMany({
+      where: {
+        status: 'COMPLETED',
+      },
+      include: {
+        user: true,
+        product: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 5,
+    });
+  }
 }

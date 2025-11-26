@@ -60,7 +60,7 @@ export class AdminDashboardOverviewController {
   async getStatistics() {
     return this.adminDashboardOverviewService.getStatistics();
   }
-  //  ------------------ Revenue trends for monthly
+  //  ------------------ Revenue trends for monthly---------------------
 
   @ApiBearerAuth()
   @ValidateAuth()

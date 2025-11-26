@@ -15,9 +15,9 @@ import {
   ValidateAuth,
   ValidateSuperAdmin,
 } from 'src/common/jwt/jwt.decorator';
-import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
 
 import { PaymentService } from '../service/payment.service';
+import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
 
 @Controller('payment')
 export class PaymentController {

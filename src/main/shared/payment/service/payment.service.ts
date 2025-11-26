@@ -107,14 +107,6 @@ export class PaymentService {
             email: true,
           },
         },
-        plan: {
-          select: {
-            id: true,
-            name: true,
-            Price: true,
-            billingCycle: true,
-          },
-        },
       },
     });
 
@@ -346,9 +338,6 @@ export class PaymentService {
           paymentMethod: 'card',
           paymentType: 'GENERAL',
           userId,
-          planId: productName
-            ? `product-${productName.toLowerCase().replace(/\s+/g, '-')}`
-            : 'general-payment',
         },
       });
 
@@ -381,7 +370,6 @@ export class PaymentService {
           paymentMethod: 'card',
           paymentType: 'PAY_PER_PRODUCT',
           userId,
-          planId: 'product-creation',
         },
       });
 

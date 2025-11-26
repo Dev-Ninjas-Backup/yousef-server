@@ -29,16 +29,11 @@ async function bootstrap() {
     origin: (origin, callback) => {
       const allowedOrigins = [
         'http://localhost:5050',
-        'https://beta.australiancanvas.com',
-        'https://indiansydny.vercel.app',
+
         'http://localhost:5050',
         'http://localhost:5173',
-        'https://api.australiancanvas.com/docs',
-        'https://australiancanvas.com',
-        'https://beta.australiancanvas.com',
-        'https://ai.australiancanvas.com',
-        'https://c039be995102.ngrok-free.app',
-        'https://impracticably-sclerometric-niki.ngrok-free.dev',
+
+        'https://ruling-kitten-evolved.ngrok-free.app',
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {

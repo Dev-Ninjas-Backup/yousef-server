@@ -367,7 +367,7 @@ export class AdminDashboardOverviewService {
   }
 
   // ------------getRevenueTrends for monthly revenue trend---------
-
+  @HandleError('Failed to fetch revenue trends', 'Revenue Trends')
   async getRevenueTrends() {
     const payments = await this.prisma.payment.findMany({
       where: {
