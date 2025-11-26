@@ -19,7 +19,7 @@ export class GarageManagementService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
-  ) {}
+  ) { }
 
   // ---------get all garage----------------
   @HandleError('Failed to get all garage', 'Garage')
@@ -204,12 +204,16 @@ export class GarageManagementService {
     if (dto.garageStatus === 'APPROVE' && !garage.isTrialActive) {
       const trialStart = new Date();
       const trialEnd = new Date();
-      trialEnd.setMonth(trialEnd.getMonth() + 2);
+      trialEnd.setMonth(trialEnd.getMonth() + 3);
 
       trialData = {
         trialStartDate: trialStart,
         trialEndDate: trialEnd,
         isTrialActive: true,
+        isSubscriptionTrialActive: true,
+        subscriptionTrialStart: trialStart,
+        subscriptionTrialEnd: trialEnd
+
       };
     }
 
