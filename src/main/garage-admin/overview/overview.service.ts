@@ -4,7 +4,7 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
 export class OverviewService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async getUserOverview(userId: string) {
     const [
@@ -50,24 +50,39 @@ export class OverviewService {
 
   // Performance summary
   async getPerformanceSummary(userId: string) {
-    // Total views in the products listed by the user
-    const totalViews = await this.prisma.product.aggregate({
-      where: { createdById: userId },
-      _sum: {
-        views: true,
-      },
-    });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    // Inquiries with monthly (Fake data for demonstration)
-    const monthlyInquiries = 'Implement monthly inquiries logic here';
+    const [totalViewsResult, totalReceived, totalRead] = await Promise.all([
+      this.prisma.product.aggregate({
+        where: { createdById: userId },
+        _sum: { views: true },
+      }),
 
-    // conversation rate, avg response time can be added similarly
-    const conversationRate = 'Implement conversation rate logic here';
+      this.prisma.privateMessage.count({
+        where: {
+          conversation: { OR: [{ user1Id: userId }, { user2Id: userId }] },
+          senderId: { not: userId },
+          createdAt: { gte: thirtyDaysAgo },
+        },
+      }),
+
+      this.prisma.privateMessage.count({
+        where: {
+          conversation: { OR: [{ user1Id: userId }, { user2Id: userId }] },
+          senderId: { not: userId },
+          isRead: true,
+          createdAt: { gte: thirtyDaysAgo },
+        },
+      }),
+    ]);
+
+    const conversationRate =
+      totalReceived > 0 ? Math.round((totalRead / totalReceived) * 100) : 0;
 
     return {
-      totalViews,
-      monthlyInquiries,
-      conversationRate,
+      totalViews: totalViewsResult._sum.views || 0,
+      monthlyInquiries: totalReceived,
+      conversationRate: `${conversationRate}%`,
     };
   }
 
