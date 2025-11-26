@@ -33,12 +33,12 @@ export interface DashboardOverview {
     pendingApproval: number;
     percentageChange: number;
   };
-  productStats: {
+  PartsListing: {
     total: number;
     newLast30Days: number;
     percentageChange: number;
   };
-  pendingProductStats: {
+  pendingAllTotal: {
     pendingApprovalCount: number;
   };
   messageStats: {
@@ -61,10 +61,22 @@ export class AdminDashboardOverviewService {
    * Calculates percentage change between current and prior periods
    */
   private calculatePercentageChange(current: number, prior: number): number {
+    // No change: return 0
+    if (current === prior) return 0;
+
+    // Normal calculation when prior > 0
     if (prior > 0) {
-      return parseFloat((((current - prior) / prior) * 100).toFixed(2));
+      const result = ((current - prior) / prior) * 100;
+      return parseFloat(result.toFixed(2));
     }
-    return current > 0 ? 100 : 0;
+
+    // When prior == 0:
+    // If current > 0 ---> 100% growth
+    if (prior === 0 && current > 0) {
+      return 100;
+    }
+
+    return 0;
   }
 
   // ------------------ Recent Activity Method ------------------
@@ -72,8 +84,6 @@ export class AdminDashboardOverviewService {
   @HandleError('Failed to fetch recent activity')
   async getRecentActivity(): Promise<RecentActivityItem[]> {
     const limit = 10;
-
-    // Execute all queries in parallel for better performance
     const [recentProducts, recentUsers, recentGarages] = await Promise.all([
       // ----------- Fetch recent product submissions (those currently pending approval)------------------
       this.prisma.product.findMany({
@@ -160,16 +170,14 @@ export class AdminDashboardOverviewService {
 
   @HandleError('Failed to retrieve dashboard overview data')
   async getDashboardOverview(): Promise<DashboardOverview> {
-    // --- Date Helper Calculations ---
     const today = new Date();
 
-    // Last 30 days (Current Period: CP) start date
     const last30DaysStart = new Date(today);
     last30DaysStart.setDate(today.getDate() - 30);
 
     // Previous 30 days (Prior Period: PP) start date
-    const prior30DaysStart = new Date(today);
-    prior30DaysStart.setDate(today.getDate() - 60);
+    const LastMonth = new Date(today);
+    LastMonth.setDate(today.getDate() - 60);
 
     // Execute all database queries in parallel for optimal performance
     const [
@@ -186,15 +194,14 @@ export class AdminDashboardOverviewService {
       pendingGaragesOwners,
       unreadMessages,
     ] = await Promise.all([
-      // Revenue - Current Period
       this.prisma.payment.aggregate({
         _sum: { amount: true },
         where: { createdAt: { gte: last30DaysStart } },
       }),
-      // Revenue - Prior Period
+
       this.prisma.payment.aggregate({
         _sum: { amount: true },
-        where: { createdAt: { gte: prior30DaysStart, lt: last30DaysStart } },
+        where: { createdAt: { gte: LastMonth, lt: last30DaysStart } },
       }),
       // Products - Total
       this.prisma.product.count(),
@@ -202,17 +209,17 @@ export class AdminDashboardOverviewService {
       this.prisma.product.count({
         where: { createdAt: { gte: last30DaysStart } },
       }),
-      // Products - Prior Period
+
       this.prisma.product.count({
-        where: { createdAt: { gte: prior30DaysStart, lt: last30DaysStart } },
+        where: { createdAt: { gte: LastMonth, lt: last30DaysStart } },
       }),
-      // Products - Pending (Using the string from the schema)
+
       this.prisma.product.count({
         where: { status: 'APPROVED' },
       }),
-      // Users - Total
+
       this.prisma.user.count(),
-      // Users - Current Period
+
       this.prisma.user.count({
         where: { createdAt: { gte: last30DaysStart } },
       }),
@@ -220,25 +227,25 @@ export class AdminDashboardOverviewService {
       this.prisma.user.count({
         where: { role: UserRole.GARAGE_OWNER },
       }),
-      // Garages - Current Period
+
       this.prisma.user.count({
         where: {
           role: UserRole.GARAGE_OWNER,
           createdAt: { gte: last30DaysStart },
         },
       }),
-      // Garages - Pending
+
       this.prisma.user.count({
         where: {
           role: UserRole.GARAGE_OWNER,
           garageStatus: GarageStatus.PENDING,
         },
       }),
-      // Messages - Unread
+
       this.prisma.privateMessage.count({
         where: { isRead: false },
       }),
-      // Recent Activity - CALLS THE METHOD ABOVE
+
       this.getRecentActivity(),
     ]);
 
@@ -271,6 +278,14 @@ export class AdminDashboardOverviewService {
       totalGaragesOwners - lastMonthGaragesOwnersCount,
     );
 
+    //-----------product pending status count--------------
+    const productPendingCount = await this.prisma.product.count({
+      where: { status: 'PENDING' },
+    });
+    // -------------grage pending status count-------------
+    const garagePendingCount = await this.prisma.user.count({
+      where: { garageStatus: 'PENDING' },
+    });
     // --- Final Simplified Return for Frontend Cards ---
     return {
       userStats: {
@@ -284,13 +299,13 @@ export class AdminDashboardOverviewService {
         pendingApproval: pendingGaragesOwners,
         percentageChange: lastMonthGaragesPercentage,
       },
-      productStats: {
+      PartsListing: {
         total: totalProducts,
         newLast30Days: currentMonthProductsCount,
         percentageChange: productPercentageChange,
       },
-      pendingProductStats: {
-        pendingApprovalCount: productPending,
+      pendingAllTotal: {
+        pendingApprovalCount: productPending + pendingGaragesOwners,
       },
       messageStats: {
         unreadCount: unreadMessages,
@@ -303,27 +318,7 @@ export class AdminDashboardOverviewService {
     };
   }
 
-  // --------------------- partsCategory show parts category name & percentage---
-
-  // async getPartsCategory() {
-  //   // 1. Fetch all categories
-  //   const categories = await this.prisma.partsCategory.findMany();
-
-  //   // 2. Total number of categories
-  //   const totalCategories = categories.length;
-
-  //   // 3. Map name and calculate percentage
-  //   const result = categories.map((category) => {
-  //     const percentage = totalCategories ? (1 / totalCategories) * 100 : 0;
-  //     return {
-  //       name: category.name,
-  //       percentage: Number(percentage.toFixed(2)),
-  //     };
-  //   });
-
-  //   return result;
-  // }
-
+  // ------------------------ Parts Category Statistics ------------------------
   @HandleError('Failed to fetch parts category statistics', 'Parts Category')
   async getStatistics(): Promise<TResponse<any>> {
     // Get total product count

@@ -62,4 +62,14 @@ export class SparepartsFinancialsController {
   async RecentTransactions() {
     return this.sparepartsFinancialsService.RecentTransactions();
   }
+
+  // -----------Last 30 all data export-----------
+  @ApiTags('Admin-Financials')
+  @ApiBearerAuth()
+  @ValidateAdmin()
+  @ApiOperation({ summary: 'Last 30 all data export' })
+  @Get('last-30-all-data')
+  async Last30AllDataExport() {
+    return this.sparepartsFinancialsService.Last30AllDataExport();
+  }
 }
