@@ -16,7 +16,7 @@ enum NotificationType {
   contentStatus
   LiveEvent
   Shift
-  UserRolechange
+  UserRolehange
 }
 
 model UserNotification {
