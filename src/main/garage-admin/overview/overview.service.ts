@@ -4,26 +4,41 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
 export class OverviewService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getUserOverview(userId: string) {
-    // Get total listings by the user
-    const totalListings = await this.prisma.product.count({
-      where: { createdById: userId },
-    });
+    const [
+      totalListings,
+      totalActiveListings,
+      totalPendingListings,
+      totalInquiries,
+    ] = await Promise.all([
+      // Total listing
+      this.prisma.product.count({
+        where: { createdById: userId },
+      }),
 
-    // Get total Active listings
-    const totalActiveListings = await this.prisma.product.count({
-      where: { createdById: userId, status: 'APPROVED' },
-    });
+      // Active Listing
+      this.prisma.product.count({
+        where: { createdById: userId, status: 'APPROVED' },
+      }),
 
-    // Get total Pending listings
-    const totalPendingListings = await this.prisma.product.count({
-      where: { createdById: userId, status: 'PENDING' },
-    });
+      // Pending Listing
+      this.prisma.product.count({
+        where: { createdById: userId, status: 'PENDING' },
+      }),
 
-    // Get total inquiries (Fake data for demonstration)
-    const totalInquiries = 'Implement inquiry counting logic here';
+      // Inquiries
+      this.prisma.privateMessage.count({
+        where: {
+          isRead: false,
+          senderId: { not: userId },
+          conversation: {
+            OR: [{ user1Id: userId }, { user2Id: userId }],
+          },
+        },
+      }),
+    ]);
 
     return {
       totalListings,
