@@ -23,7 +23,7 @@ export class SparepartsFinancialsService {
     const updatedSpareparts = await this.prisma.product.update({
       where: { id },
       data: {
-        status: dto.status, // now accepts any valid ProductStatus
+        status: dto.status,
       },
     });
 
@@ -48,22 +48,40 @@ export class SparepartsFinancialsService {
     return { message: 'Spareparts deleted successfully' };
   }
 
-  // ---------------------- rack revenue, payments, and transactions-----------
+  // ---------------------- Track revenue, payments, and transactions-----------
   @HandleError('Failed to get financial overview')
   async FinancialOverview() {
-    return this.prisma.payment.findMany({
-      where: {
-        status: 'COMPLETED',
-      },
-      //  --------this month revenue-----------
-      select: {
-        amount: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+    const startOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1,
+    );
+
+    const [thisMonthRevenue, revenueByType] = await Promise.all([
+      // This month's total revenue
+      this.prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: {
+          status: 'COMPLETED',
+          createdAt: { gte: startOfMonth },
+        },
+      }),
+
+      // Revenue by payment type
+      this.prisma.payment.groupBy({
+        by: ['paymentType'],
+        _sum: { amount: true },
+        where: { status: 'COMPLETED' },
+      }),
+    ]);
+
+    return {
+      thisMonthRevenue: thisMonthRevenue._sum.amount || 0,
+      revenueByType: revenueByType.map((item) => ({
+        type: item.paymentType,
+        amount: item._sum.amount || 0,
+      })),
+    };
   }
 
   // ---------- revinue transactions charts----
@@ -125,18 +143,100 @@ export class SparepartsFinancialsService {
   // --------------- RECENT TRANSACTIONS ---------------
   @HandleError('Failed to get recent transactions')
   async RecentTransactions() {
-    return this.prisma.payment.findMany({
+    const payments = await this.prisma.payment.findMany({
       where: {
         status: 'COMPLETED',
       },
       include: {
-        user: true,
-        product: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            profilePhoto: true,
+            email: true,
+          },
+        },
+        product: {
+          select: {
+            id: true,
+            partName: true,
+            photos: true,
+            price: true,
+            description: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
       take: 5,
     });
+
+    return payments.map((payment) => ({
+      id: payment.id,
+      Type: payment.paymentType,
+      amount: payment.amount,
+      status: payment.status,
+      source: payment.garageSubscriptionId,
+      date: payment.createdAt.toISOString().split('T')[0],
+
+      paymentMethod: payment.paymentMethod,
+      customerName: payment.user?.fullName || 'N/A',
+      customerEmail: payment.user?.email || 'N/A',
+      customerPhoto: payment.user?.profilePhoto || null,
+
+      productPrice: payment.product?.price,
+      productID: payment.product?.id || 'N/A',
+
+      productPhoto: payment.product?.photos?.[0] || null,
+      productDescription: payment.product?.description || 'N/A',
+      userInformation: payment.user?.id || 'N/A',
+
+      updatedAt: payment.updatedAt.toISOString().split('T')[0],
+    }));
+  }
+
+  // ----------------Last30AllDataExport-----------------
+
+  // ----------------Last30AllDataExport-----------------
+  @HandleError('Failed to export last 30 days data')
+  async Last30AllDataExport() {
+    const last30Days = new Date();
+    last30Days.setDate(last30Days.getDate() - 30);
+
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        createdAt: { gte: last30Days },
+      },
+      select: {
+        id: true,
+        amount: true,
+        paymentType: true,
+        paymentMethod: true,
+        status: true,
+        createdAt: true,
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Format for easy frontend table/CSV export
+    return payments.map((payment) => ({
+      id: payment.id,
+      date: payment.createdAt.toISOString().split('T')[0],
+      customerName: payment.user?.fullName || 'N/A',
+      customerEmail: payment.user?.email || 'N/A',
+      amount: payment.amount,
+      type: payment.paymentType,
+      method: payment.paymentMethod,
+      status: payment.status,
+    }));
   }
 }
