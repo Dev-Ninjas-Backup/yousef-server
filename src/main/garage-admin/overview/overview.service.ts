@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { AppError } from 'src/common/error/handle-error.app';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
 export class OverviewService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async getUserOverview(userId: string) {
     // Get total listings by the user
@@ -55,7 +56,6 @@ export class OverviewService {
     };
   }
 
-
   async getRecentActivity(userId: string) {
     const activities = await this.prisma.product.findMany({
       where: {
@@ -96,7 +96,32 @@ export class OverviewService {
 
   // Get available listing
   async getAvailableListing(userId: string) {
-    return "Get available listing API";
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    const totalFreeProducts = 3;
+    const freeProductsUsed = user.freeProductsUsed || 0;
+    const freeProductsRemaining = Math.max(
+      0,
+      totalFreeProducts - freeProductsUsed,
+    );
+    const hasFreeProductsLeft = freeProductsRemaining > 0;
+    const usagePercentage = Math.round(
+      (freeProductsUsed / totalFreeProducts) * 100,
+    );
+    const remainingPercentage = 100 - usagePercentage;
+
+    return {
+      totalFreeProducts,
+      freeProductsUsed,
+      freeProductsRemaining,
+      remainingPercentage,
+      hasFreeProductsLeft,
+    };
   }
 }
-

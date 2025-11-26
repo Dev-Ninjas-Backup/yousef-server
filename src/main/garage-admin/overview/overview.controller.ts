@@ -6,7 +6,7 @@ import { OverviewService } from './overview.service';
 @ApiTags('Garage Admin Overview')
 @Controller('garage-admin-overview')
 export class OverviewController {
-  constructor(private readonly overviewService: OverviewService) { }
+  constructor(private readonly overviewService: OverviewService) {}
 
   @ApiBearerAuth()
   @ValidateGarageOwner()
@@ -42,7 +42,7 @@ export class OverviewController {
 
   @ApiBearerAuth()
   @ValidateGarageOwner()
-  @ApiOperation({ summary: "Get available listing" })
+  @ApiOperation({ summary: 'Get available listing' })
   @Get('available-listing')
   async getAvailableListing(@GetUser('userId') userId: string) {
     return this.overviewService.getAvailableListing(userId);

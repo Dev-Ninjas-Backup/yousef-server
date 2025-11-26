@@ -12,7 +12,7 @@ import { SubscriptionService } from './subscription.service';
 @ApiBearerAuth()
 @Controller('subscription')
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) { }
+  constructor(private readonly subscriptionService: SubscriptionService) {}
 
   @Get('current-plan')
   @ApiOperation({
