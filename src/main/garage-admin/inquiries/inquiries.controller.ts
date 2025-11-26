@@ -6,7 +6,7 @@ import { InquiriesService } from './inquiries.service';
 @Controller('Garage-admin-inquiries')
 @ApiTags('Inquiries')
 export class InquiriesController {
-  constructor(private readonly inquiriesService: InquiriesService) { }
+  constructor(private readonly inquiriesService: InquiriesService) {}
 
   // ------------ GET CUSTOMER INQUIRIES ------------
   @ValidateGarageOwner()
@@ -16,7 +16,4 @@ export class InquiriesController {
   async GetCustomerInquiries(@GetUser('userId') userId: string) {
     return this.inquiriesService.getCustomerInquiries(userId);
   }
-
-
-
 }
