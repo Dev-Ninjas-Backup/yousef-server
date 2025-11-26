@@ -57,3 +57,8 @@
 
 - [x] Completed the **Garage Admin Overview** module with all related features and APIs **(/stats)**,  **/performance-summary**, **/recent-activity**, and **/recent-listings**.
 - [x] Added **/stats** api **Promotional Ad** module for garage admin.
+
+## 25/11/2025
+- [x] Worked on the **Subscription** module for the **Garage** subscription plan.
+- [x] Implement the **Current Running Plan** APPI for the garage owner 
+- [x] Implement the **Transaction** module for handling payments and subscriptions

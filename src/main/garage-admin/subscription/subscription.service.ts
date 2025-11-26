@@ -9,7 +9,7 @@ export class SubscriptionService {
     private readonly paymentService: PaymentService,
   ) {}
 
-  async getTrialStatus(userId: string) {
+  async getCurrentPlan(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
