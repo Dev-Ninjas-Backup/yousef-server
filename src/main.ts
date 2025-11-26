@@ -82,13 +82,13 @@ async function bootstrap() {
 
   // ---------------webhook raw body parser----------------
   // Stripe requires the raw body to construct the event.
-  app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
-  app.use(
-    '/payments/stripe-webhook',
-    bodyParser.raw({ type: 'application/json' }),
-  );
+  // app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
+  // app.use(
+  //   '/payments/stripe-webhook',
+  //   bodyParser.raw({ type: 'application/json' }),
+  // );
   app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
-  app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
+  // app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
   const configService = app.get(ConfigService);
   const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '5000', 10);
   await app.listen(port);

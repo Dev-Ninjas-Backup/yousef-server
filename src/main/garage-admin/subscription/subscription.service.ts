@@ -7,7 +7,85 @@ export class SubscriptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentService: PaymentService,
-  ) {}
+  ) { }
+
+  async getTrialStatus(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        subscriptionTrialStartDate: true,
+        subscriptionTrialEndDate: true,
+        isSubscriptionTrialActive: true,
+
+        isSubscribed: true,
+        subscriptionStartDate: true,
+        subscriptionEndDate: true,
+        nextSubscriptionBillingDate: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const now = new Date();
+
+    // -------------------------------
+    // 1. ACTIVE TRIAL
+    // -------------------------------
+    if (
+      user.isSubscriptionTrialActive &&
+      user.subscriptionTrialEndDate &&
+      user.subscriptionTrialEndDate > now
+    ) {
+      const daysRemaining = Math.ceil(
+        (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24),
+      );
+
+      return {
+        planType: 'TRIAL',
+        status: 'active',
+        startDate: user.subscriptionTrialStartDate,
+        endDate: user.subscriptionTrialEndDate,
+        daysRemaining,
+        message: 'Free trial is currently active',
+      };
+    }
+
+    // -------------------------------
+    // 2. ACTIVE PAID SUBSCRIPTION
+    // -------------------------------
+    if (
+      user.isSubscribed &&
+      user.subscriptionEndDate &&
+      user.subscriptionEndDate > now
+    ) {
+      const daysRemaining = Math.ceil(
+        (user.subscriptionEndDate.getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24),
+      );
+
+      return {
+        planType: 'PAID',
+        status: 'active',
+        startDate: user.subscriptionStartDate,
+        endDate: user.subscriptionEndDate,
+        nextBillingDate: user.nextSubscriptionBillingDate,
+        daysRemaining,
+        message: 'Paid subscription is active',
+      };
+    }
+
+    // -------------------------------
+    // 3. EXPIRED (Trial / Paid)
+    // -------------------------------
+    return {
+      planType: 'NONE',
+      status: 'expired',
+      message: 'No active plan. Subscription required.',
+    };
+  }
 
   // Approve garage and activate 90-day free trial
   async approveGarage(userId: string): Promise<{ message: string }> {
@@ -26,6 +104,17 @@ export class SubscriptionService {
     const now = new Date();
     const trialEnd = new Date(now);
     trialEnd.setDate(trialEnd.getDate() + 90);
+
+    // Create GarageSubscription for trial
+    await this.prisma.garageSubscription.create({
+      data: {
+        userId,
+        type: 'TRIAL',
+        startDate: now,
+        endDate: trialEnd,
+        status: 'ACTIVE',
+      },
+    });
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -72,7 +161,7 @@ export class SubscriptionService {
         endsAt: user.subscriptionTrialEndDate,
         daysRemaining: Math.ceil(
           (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-            (1000 * 60 * 60 * 24),
+          (1000 * 60 * 60 * 24),
         ),
       };
     } else if (
@@ -104,5 +193,16 @@ export class SubscriptionService {
     userId: string,
   ): Promise<{ url: string }> {
     return this.paymentService.createMonthlyPlanSession(userId);
+  }
+
+  // Get garage subscription history for a user
+  async getSubscriptionHistory(userId: string): Promise<any[]> {
+    return this.prisma.garageSubscription.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        payment: true,
+      },
+    });
   }
 }
