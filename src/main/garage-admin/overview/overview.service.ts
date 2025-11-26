@@ -3,7 +3,7 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
 export class OverviewService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getUserOverview(userId: string) {
     // Get total listings by the user
@@ -55,53 +55,6 @@ export class OverviewService {
     };
   }
 
-  // Recent activity only product listings & promotional ads (Pending & Approved)
-  // async getRecentActivity(userId: string) {
-  //     const recentProductRequest = await this.prisma.product.findMany({
-  //         where: { createdById: userId },
-  //         orderBy: { createdAt: 'desc' },
-  //         take: 1,
-  //     });
-
-  //     const recentProductApproved = await this.prisma.product.findMany({
-  //         where: { createdById: userId, status: 'APPROVED' },
-  //         orderBy: { createdAt: 'desc' },
-  //         take: 1,
-  //     });
-
-  //     const recentPromotionalAdRequest = await this.prisma.product.findMany({
-  //         where: { createdById: userId, isPromoted: true },
-  //         select: {
-  //             id: true,
-  //             partName: true,
-  //             status: true,
-  //             promoCost: true,
-  //             createdAt: true,
-  //         },
-  //         orderBy: { createdAt: 'desc' },
-  //         take: 1,
-  //     });
-
-  //     const recentPromotionalAdApproved = await this.prisma.product.findMany({
-  //         where: { createdById: userId, isPromoted: true, status: 'APPROVED' },
-  //         select: {
-  //             id: true,
-  //             partName: true,
-  //             status: true,
-  //             promoCost: true,
-  //             createdAt: true,
-  //         },
-  //         orderBy: { createdAt: 'desc' },
-  //         take: 1,
-  //     });
-
-  //     return {
-  //         recentProductRequest,
-  //         recentProductApproved,
-  //         recentPromotionalAdRequest,
-  //         recentPromotionalAdApproved
-  //     };
-  // }
 
   async getRecentActivity(userId: string) {
     const activities = await this.prisma.product.findMany({
@@ -140,4 +93,10 @@ export class OverviewService {
     });
     return recentListings;
   }
+
+  // Get available listing
+  async getAvailableListing(userId: string) {
+    return "Get available listing API";
+  }
 }
+

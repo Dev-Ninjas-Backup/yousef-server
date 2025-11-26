@@ -7,9 +7,9 @@ export class SubscriptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentService: PaymentService,
-  ) {}
+  ) { }
 
-  async getTrialStatus(userId: string) {
+  async getCurrentPlan(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -40,7 +40,7 @@ export class SubscriptionService {
     ) {
       const daysRemaining = Math.ceil(
         (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+        (1000 * 60 * 60 * 24),
       );
 
       return {
@@ -63,7 +63,7 @@ export class SubscriptionService {
     ) {
       const daysRemaining = Math.ceil(
         (user.subscriptionEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+        (1000 * 60 * 60 * 24),
       );
 
       return {
@@ -163,7 +163,7 @@ export class SubscriptionService {
           : 'Monthly Subscription',
         paymentMethod: payment?.paymentMethod
           ? payment.paymentMethod.charAt(0).toUpperCase() +
-            payment.paymentMethod.slice(1)
+          payment.paymentMethod.slice(1)
           : '-',
         amount: isTrial ? 'Free' : sub.amount! / 100,
         currency: isTrial ? null : sub.currency?.toUpperCase(),
