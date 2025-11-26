@@ -63,7 +63,7 @@ model User {
   Payment            Payment[]
   subscriptionEndsAt DateTime?
 
-  // New columns for garage subscription
+  // for garage subscription
   subscriptionTrialStartDate   DateTime?
   subscriptionTrialEndDate     DateTime?
   isSubscriptionTrialActive    Boolean   @default(false)
@@ -71,6 +71,11 @@ model User {
   subscriptionEndDate          DateTime?
   nextSubscriptionBillingDate  DateTime?
   isSubscribed                 Boolean   @default(false)
+
+  // Product Monthly Subscription fields
+  productMonthlyActive    Boolean   @default(false)
+  productMonthlyStartDate DateTime?
+  productMonthlyEndDate   DateTime?
 
   // ------------------ Relations ------------------------------
   UserNotification     UserNotification[]

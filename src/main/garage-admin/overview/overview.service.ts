@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AppError } from 'src/common/error/handle-error.app';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
@@ -6,23 +7,38 @@ export class OverviewService {
   constructor(private prisma: PrismaService) {}
 
   async getUserOverview(userId: string) {
-    // Get total listings by the user
-    const totalListings = await this.prisma.product.count({
-      where: { createdById: userId },
-    });
+    const [
+      totalListings,
+      totalActiveListings,
+      totalPendingListings,
+      totalInquiries,
+    ] = await Promise.all([
+      // Total listing
+      this.prisma.product.count({
+        where: { createdById: userId },
+      }),
 
-    // Get total Active listings
-    const totalActiveListings = await this.prisma.product.count({
-      where: { createdById: userId, status: 'APPROVED' },
-    });
+      // Active Listing
+      this.prisma.product.count({
+        where: { createdById: userId, status: 'APPROVED' },
+      }),
 
-    // Get total Pending listings
-    const totalPendingListings = await this.prisma.product.count({
-      where: { createdById: userId, status: 'PENDING' },
-    });
+      // Pending Listing
+      this.prisma.product.count({
+        where: { createdById: userId, status: 'PENDING' },
+      }),
 
-    // Get total inquiries (Fake data for demonstration)
-    const totalInquiries = 'Implement inquiry counting logic here';
+      // Inquiries
+      this.prisma.privateMessage.count({
+        where: {
+          isRead: false,
+          senderId: { not: userId },
+          conversation: {
+            OR: [{ user1Id: userId }, { user2Id: userId }],
+          },
+        },
+      }),
+    ]);
 
     return {
       totalListings,
@@ -34,74 +50,41 @@ export class OverviewService {
 
   // Performance summary
   async getPerformanceSummary(userId: string) {
-    // Total views in the products listed by the user
-    const totalViews = await this.prisma.product.aggregate({
-      where: { createdById: userId },
-      _sum: {
-        views: true,
-      },
-    });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    // Inquiries with monthly (Fake data for demonstration)
-    const monthlyInquiries = 'Implement monthly inquiries logic here';
+    const [totalViewsResult, totalReceived, totalRead] = await Promise.all([
+      this.prisma.product.aggregate({
+        where: { createdById: userId },
+        _sum: { views: true },
+      }),
 
-    // conversation rate, avg response time can be added similarly
-    const conversationRate = 'Implement conversation rate logic here';
+      this.prisma.privateMessage.count({
+        where: {
+          conversation: { OR: [{ user1Id: userId }, { user2Id: userId }] },
+          senderId: { not: userId },
+          createdAt: { gte: thirtyDaysAgo },
+        },
+      }),
+
+      this.prisma.privateMessage.count({
+        where: {
+          conversation: { OR: [{ user1Id: userId }, { user2Id: userId }] },
+          senderId: { not: userId },
+          isRead: true,
+          createdAt: { gte: thirtyDaysAgo },
+        },
+      }),
+    ]);
+
+    const conversationRate =
+      totalReceived > 0 ? Math.round((totalRead / totalReceived) * 100) : 0;
 
     return {
-      totalViews,
-      monthlyInquiries,
-      conversationRate,
+      totalViews: totalViewsResult._sum.views || 0,
+      monthlyInquiries: totalReceived,
+      conversationRate: `${conversationRate}%`,
     };
   }
-
-  // Recent activity only product listings & promotional ads (Pending & Approved)
-  // async getRecentActivity(userId: string) {
-  //     const recentProductRequest = await this.prisma.product.findMany({
-  //         where: { createdById: userId },
-  //         orderBy: { createdAt: 'desc' },
-  //         take: 1,
-  //     });
-
-  //     const recentProductApproved = await this.prisma.product.findMany({
-  //         where: { createdById: userId, status: 'APPROVED' },
-  //         orderBy: { createdAt: 'desc' },
-  //         take: 1,
-  //     });
-
-  //     const recentPromotionalAdRequest = await this.prisma.product.findMany({
-  //         where: { createdById: userId, isPromoted: true },
-  //         select: {
-  //             id: true,
-  //             partName: true,
-  //             status: true,
-  //             promoCost: true,
-  //             createdAt: true,
-  //         },
-  //         orderBy: { createdAt: 'desc' },
-  //         take: 1,
-  //     });
-
-  //     const recentPromotionalAdApproved = await this.prisma.product.findMany({
-  //         where: { createdById: userId, isPromoted: true, status: 'APPROVED' },
-  //         select: {
-  //             id: true,
-  //             partName: true,
-  //             status: true,
-  //             promoCost: true,
-  //             createdAt: true,
-  //         },
-  //         orderBy: { createdAt: 'desc' },
-  //         take: 1,
-  //     });
-
-  //     return {
-  //         recentProductRequest,
-  //         recentProductApproved,
-  //         recentPromotionalAdRequest,
-  //         recentPromotionalAdApproved
-  //     };
-  // }
 
   async getRecentActivity(userId: string) {
     const activities = await this.prisma.product.findMany({
@@ -139,5 +122,36 @@ export class OverviewService {
       take: 3,
     });
     return recentListings;
+  }
+
+  // Get available listing
+  async getAvailableListing(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    const totalFreeProducts = 3;
+    const freeProductsUsed = user.freeProductsUsed || 0;
+    const freeProductsRemaining = Math.max(
+      0,
+      totalFreeProducts - freeProductsUsed,
+    );
+    const hasFreeProductsLeft = freeProductsRemaining > 0;
+    const usagePercentage = Math.round(
+      (freeProductsUsed / totalFreeProducts) * 100,
+    );
+    const remainingPercentage = 100 - usagePercentage;
+
+    return {
+      totalFreeProducts,
+      freeProductsUsed,
+      freeProductsRemaining,
+      remainingPercentage,
+      hasFreeProductsLeft,
+    };
   }
 }
