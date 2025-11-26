@@ -15,9 +15,9 @@ import {
   ValidateAuth,
   ValidateSuperAdmin,
 } from 'src/common/jwt/jwt.decorator';
-import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
 
 import { PaymentService } from '../service/payment.service';
+import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
 
 @Controller('payment')
 export class PaymentController {
@@ -80,6 +80,7 @@ export class PaymentController {
         req.rawBody,
       );
       console.log('✅ Webhook processed successfully');
+      console.log(result);
       return result;
     } catch (error) {
       console.log('❌ Webhook processing failed:', error.message);

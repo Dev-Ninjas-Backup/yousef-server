@@ -29,15 +29,11 @@ async function bootstrap() {
     origin: (origin, callback) => {
       const allowedOrigins = [
         'http://localhost:5050',
-        'https://beta.australiancanvas.com',
-        'https://indiansydny.vercel.app',
+
         'http://localhost:5050',
         'http://localhost:5173',
-        'https://api.australiancanvas.com/docs',
-        'https://australiancanvas.com',
-        'https://beta.australiancanvas.com',
-        'https://ai.australiancanvas.com',
-        'https://c039be995102.ngrok-free.app',
+
+        'https://ruling-kitten-evolved.ngrok-free.app',
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
@@ -86,13 +82,13 @@ async function bootstrap() {
 
   // ---------------webhook raw body parser----------------
   // Stripe requires the raw body to construct the event.
-  app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
-  app.use(
-    '/payments/stripe-webhook',
-    bodyParser.raw({ type: 'application/json' }),
-  );
+  // app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
+  // app.use(
+  //   '/payments/stripe-webhook',
+  //   bodyParser.raw({ type: 'application/json' }),
+  // );
   app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
-  app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
+  // app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
   const configService = app.get(ConfigService);
   const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '5000', 10);
   await app.listen(port);

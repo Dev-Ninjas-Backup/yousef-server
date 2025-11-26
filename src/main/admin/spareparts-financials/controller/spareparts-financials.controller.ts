@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ValidateAdmin } from 'src/common/jwt/jwt.decorator';
 import { UpdateSparepartsDto } from '../dto/UpdateSpareparts.dto';
@@ -30,5 +30,36 @@ export class SparepartsFinancialsController {
   @Delete('parts/remove/:id')
   async removeParts(@Param('id') id: string) {
     return this.sparepartsFinancialsService.removeParts(id);
+  }
+
+  // --------------------------financials overview-----------------------------
+
+  // Track revenue, payments, and transactions
+  @ApiTags('Admin-Financials')
+  @ApiBearerAuth()
+  @ValidateAdmin()
+  @ApiOperation({ summary: 'Track revenue, payments, and transactions' })
+  @Get('financial-overview')
+  async FinancialOverview() {
+    return this.sparepartsFinancialsService.FinancialOverview();
+  }
+
+  // -----------------Revenue & Transactions-----------------
+  @ApiTags('Admin-Financials')
+  @ApiBearerAuth()
+  @ValidateAdmin()
+  @ApiOperation({ summary: 'Revenue & Transactions overview chart data' })
+  @Get('revenue-transactions')
+  async RevenueTransactions() {
+    return this.sparepartsFinancialsService.RevenueTransactions();
+  }
+  // ----------------------------- RECENT TRANSACTIONS -------------------------
+  @ApiTags('Admin-Financials')
+  @ApiBearerAuth()
+  @ValidateAdmin()
+  @ApiOperation({ summary: 'Recent Transactions' })
+  @Get('recent-transactions')
+  async RecentTransactions() {
+    return this.sparepartsFinancialsService.RecentTransactions();
   }
 }
