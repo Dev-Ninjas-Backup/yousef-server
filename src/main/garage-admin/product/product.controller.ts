@@ -178,14 +178,10 @@ export class ProductController {
   @ApiBearerAuth()
   @Post('create-monthly-payment')
   @ApiOperation({
-    summary: 'Create checkout session for monthly subscription ($100)',
+    summary: 'Create checkout session for Product Monthly Plan ($100)',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Monthly subscription checkout session created',
-  })
-  async createMonthlyPayment(@GetUser('userId') userId: string) {
-    return this.paymentService.createMonthlyPlanSession(userId);
+  async createProductMonthlyPayment(@GetUser('userId') userId: string) {
+    return this.paymentService.createProductMonthlySession(userId);
   }
 
   // Create checkout session for pay-per product

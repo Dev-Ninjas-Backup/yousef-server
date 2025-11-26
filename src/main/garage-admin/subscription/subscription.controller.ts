@@ -19,8 +19,8 @@ export class SubscriptionController {
     summary: 'Get current plan & trial status for logged-in garage owner',
   })
   @ValidateAuth()
-  async getTrialStatus(@GetUser('userId') userId: string) {
-    return this.subscriptionService.getTrialStatus(userId);
+  async getCurrentPlan(@GetUser('userId') userId: string) {
+    return this.subscriptionService.getCurrentPlan(userId);
   }
 
   @Post('approve-garage/:userId')

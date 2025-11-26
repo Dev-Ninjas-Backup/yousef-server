@@ -22,10 +22,10 @@ import { QueryPartsCategoryDto } from './dto/query-parts-category.dto';
 import { UpdatePartsCategoryDto } from './dto/update-parts-category.dto';
 import { PartsCategoryService } from './parts-category.service';
 
-@ApiTags('Parts Category')
+@ApiTags('Admin  Parts Category -by admin')
 @Controller('parts-category')
 export class PartsCategoryController {
-  constructor(private readonly partsService: PartsCategoryService) {}
+  constructor(private readonly partsService: PartsCategoryService) { }
 
   @ApiBearerAuth()
   @ValidateAuth()

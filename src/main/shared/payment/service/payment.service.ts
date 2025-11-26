@@ -105,6 +105,7 @@ export class PaymentService {
             fullName: true,
             profilePhoto: true,
             email: true,
+            garageName: true,
           },
         },
       },
@@ -264,6 +265,39 @@ export class PaymentService {
         '✅ User updated with credit:',
         updatedUser.freeProductsListing,
       );
+    } else if (type === 'product_monthly_subscription') {
+      console.log('Processing PRODUCT MONTHLY subscription for user:', userId);
+
+      const now = new Date();
+      const endDate = new Date(now);
+      endDate.setMonth(endDate.getMonth() + 1);
+
+      // Payment record
+      await this.prisma.payment.create({
+        data: {
+          sessionId: session.id,
+          transactionId: session.payment_intent as string,
+          amount: parseInt(amount) * 100,
+          currency: 'usd',
+          status: 'COMPLETED',
+          paymentMethod: 'card',
+          paymentType: 'MONTHLY_PEY_PRODUCT',
+          userId,
+        },
+      });
+
+      //  product monthly subscription
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          hasPaid: true,
+          productMonthlyActive: true,
+          productMonthlyStartDate: now,
+          productMonthlyEndDate: endDate,
+        },
+      });
+
+      console.log('Product Monthly Subscription activated for user:', userId);
     } else if (type === 'product_promotion_credit') {
       console.log('🎯 Processing promotion credit for user:', userId);
       // Create payment record for promotion credit
@@ -457,6 +491,40 @@ export class PaymentService {
     return { url: session.url! };
   }
 
+  // Create checkout session for Product Monthly Plan ($100) - ONLY for product listings
+  @HandleError('Failed to create product monthly session')
+  async createProductMonthlySession(userId: string): Promise<{ url: string }> {
+    console.log('Creating PRODUCT MONTHLY session for user:', userId);
+
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Product Monthly Plan',
+              description:
+                'Unlimited product listings for 30 days (Product-only plan)',
+            },
+            unit_amount: 10000, // $100
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=product_monthly`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=product_monthly`,
+      metadata: {
+        userId,
+        type: 'product_monthly_subscription',
+        amount: '100',
+      },
+    });
+
+    return { url: session.url! };
+  }
+
   // Create checkout session for pay-per product ($20)
   @HandleError('Failed to create pay-per session')
   async createPayPerProductSession(userId: string): Promise<{ url: string }> {
@@ -575,5 +643,25 @@ export class PaymentService {
     });
 
     return { url: session.url! };
+  }
+
+  // Check if user has ACTIVE Product Monthly Plan ($100)
+  @HandleError('Failed to check product monthly subscription')
+  async hasActiveProductMonthly(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        productMonthlyActive: true,
+        productMonthlyEndDate: true,
+      },
+    });
+
+    if (!user) return false;
+
+    return (
+      user.productMonthlyActive === true &&
+      user.productMonthlyEndDate !== null &&
+      new Date(user.productMonthlyEndDate) > new Date()
+    );
   }
 }

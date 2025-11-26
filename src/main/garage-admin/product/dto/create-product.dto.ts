@@ -127,6 +127,5 @@ export class CreateProductDto {
     items: { type: 'string', format: 'binary' },
     description: 'Product photos (max 5 files)',
   })
-  @IsOptional()
-  photos?: Express.Multer.File[];
+  photos?: any;
 }

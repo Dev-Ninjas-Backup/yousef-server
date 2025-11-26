@@ -39,4 +39,12 @@ export class OverviewController {
   async getRecentListings(@GetUser('userId') userId: string) {
     return this.overviewService.getRecentListings(userId);
   }
+
+  @ApiBearerAuth()
+  @ValidateGarageOwner()
+  @ApiOperation({ summary: 'Get available listing' })
+  @Get('available-listing')
+  async getAvailableListing(@GetUser('userId') userId: string) {
+    return this.overviewService.getAvailableListing(userId);
+  }
 }
