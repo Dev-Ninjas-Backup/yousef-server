@@ -72,6 +72,11 @@ model User {
   nextSubscriptionBillingDate  DateTime?
   isSubscribed                 Boolean   @default(false)
 
+  // Product Monthly Subscription fields
+  productMonthlyActive    Boolean   @default(false)
+  productMonthlyStartDate DateTime?
+  productMonthlyEndDate   DateTime?
+
   // ------------------ Relations ------------------------------
   UserNotification     UserNotification[]
   notificationToggle   NotificationToggle?
