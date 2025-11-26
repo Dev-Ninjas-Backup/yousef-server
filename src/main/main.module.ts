@@ -38,4 +38,4 @@ import { PrivateMessageModule } from './shared/private-message/private-message.m
   controllers: [],
   providers: [],
 })
-export class MainModule { }
+export class MainModule {}

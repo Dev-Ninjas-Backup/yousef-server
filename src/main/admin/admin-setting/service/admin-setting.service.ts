@@ -7,7 +7,7 @@ import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 
 @Injectable()
 export class AdminSettingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ---------------platform setting create----
   @HandleError('Failed to create or update platform setting')
@@ -86,6 +86,9 @@ export class AdminSettingService {
         updateData.trialStartDate = trialStart;
         updateData.trialEndDate = trialEnd;
         updateData.isTrialActive = true;
+        updateData.isSubscriptionTrialActive = true;
+        updateData.subscriptionTrialStart = trialStart;
+        updateData.subscriptionTrialEnd = trialEnd;
       }
 
       // --------------- Update--------------
