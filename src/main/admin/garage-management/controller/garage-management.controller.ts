@@ -11,12 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ValidateAuth, ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
+import { SearchGarageDto } from '../dto/filter.grage.dto';
 import {
   UpdateGarageDto,
   UpdateGarageStatusDto,
 } from '../dto/garage-management.dto';
 import { GarageManagementService } from '../service/garage-management.service';
-import { SearchGarageDto } from '../dto/filter.grage.dto';
 
 @Controller('garage-management')
 @ApiTags('Admin-Garage-Management')

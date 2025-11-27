@@ -25,7 +25,7 @@ import { PartsCategoryService } from './parts-category.service';
 @ApiTags('Admin  Parts Category -by admin')
 @Controller('parts-category')
 export class PartsCategoryController {
-  constructor(private readonly partsService: PartsCategoryService) { }
+  constructor(private readonly partsService: PartsCategoryService) {}
 
   @ApiBearerAuth()
   @ValidateAuth()

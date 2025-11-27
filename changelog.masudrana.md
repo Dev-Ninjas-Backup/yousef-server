@@ -62,3 +62,10 @@
 - [x] Worked on the **Subscription** module for the **Garage** subscription plan.
 - [x] Implement the **Current Running Plan** APPI for the garage owner 
 - [x] Implement the **Transaction** module for handling payments and subscriptions
+
+
+## 26/11/2025
+- [x] **Garage Admin Overview** module available listing **API** implemented
+- [x] Modify **Performance Summary** API for **Monthly Inquiries** and **Conversions Rate**
+- [x] Added **Notifications** module for garage admin dashboard
+- [x] Some bug fixes with **Payments** related **APIs**

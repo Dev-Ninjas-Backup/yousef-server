@@ -59,3 +59,8 @@
 
 ## 26/11/2025
 - [ ] Testing all **APIs**, Some **APIs** implement & Any remaining parts of the project.
+
+
+## 27/11/2025
+- [ ] Already platform configuration done, now implement the **Dynamic Platform Configuration Value** with whole project.
+- [ ] Final Testing & Bug Fixes
