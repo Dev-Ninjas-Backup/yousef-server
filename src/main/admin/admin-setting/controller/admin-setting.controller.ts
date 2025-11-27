@@ -2,14 +2,13 @@ import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
 import { GeneralSettingDtoPlatform } from '../dto/platform.setting.dto';
-import { UpdateFreePromotionListingDto } from '../dto/update-free-promotion.dto';
 import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 import { AdminSettingService } from '../service/admin-setting.service';
 
 @ApiTags('Admin-Settings => Approval setting, parts category')
 @Controller('admin-setting')
 export class AdminSettingController {
-  constructor(private readonly adminSettingService: AdminSettingService) {}
+  constructor(private readonly adminSettingService: AdminSettingService) { }
 
   // ----------platform fee setting admin -----------
   @ApiBearerAuth()
@@ -70,17 +69,7 @@ export class AdminSettingController {
    */
   //---------------free promotion listing---------
   //
-  @ApiBearerAuth()
-  @ValidateSuperAdmin()
-  @ApiOperation({ summary: 'Update free promotion listing' })
-  @Patch('free-promotion-listing')
-  updateFreePromotionProductListing(
-    @Body() dto: UpdateFreePromotionListingDto,
-  ) {
-    return this.adminSettingService.updateFreePromotionProductListing(
-      dto.value,
-    );
-  }
+
 
   // --------------------- payment configure --
   @ApiBearerAuth()

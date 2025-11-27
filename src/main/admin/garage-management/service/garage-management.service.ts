@@ -19,7 +19,7 @@ export class GarageManagementService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
-  ) {}
+  ) { }
 
   // ---------get all garage----------------
   @HandleError('Failed to get all garage', 'Garage')
@@ -211,8 +211,8 @@ export class GarageManagementService {
         trialEndDate: trialEnd,
         isTrialActive: true,
         isSubscriptionTrialActive: true,
-        subscriptionTrialStart: trialStart,
-        subscriptionTrialEnd: trialEnd,
+        subscriptionTrialStartDate: trialStart,
+        subscriptionTrialEndDate: trialEnd,
       };
     }
 
