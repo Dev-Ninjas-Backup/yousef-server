@@ -30,12 +30,23 @@ export class ProductService {
       sellerPhoneNumber,
       sellerType,
       plan,
+      categoryId,
       ...productData
     } = createProductDto;
 
     // Validate seller email
     if (!sellerEmail) {
       throw new BadRequestException('Seller email is required.');
+    }
+
+    const categoryExists = await this.prisma.partsCategory.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!categoryExists) {
+      throw new BadRequestException(
+        `Category with ID "${categoryId}" not found. Please choose a valid category.`,
+      );
     }
 
     // Handle promotion (requires $20 promotion credit)
@@ -132,6 +143,7 @@ export class ProductService {
         photos: photoUrls,
         views: 0,
         promoCost: productData.isPromoted ? 20 : null,
+        categoryId,
         ...productData,
       },
       include: {

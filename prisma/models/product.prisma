@@ -52,7 +52,9 @@ model Product {
 
   partName    String
   brand       String?
-  category    String
+  // category    String
+  categoryId  String
+  category    PartsCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   condition   String
   price       Decimal @db.Decimal(10, 2)
   quantity    Int     @default(1)
