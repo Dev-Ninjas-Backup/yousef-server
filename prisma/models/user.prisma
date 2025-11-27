@@ -64,13 +64,13 @@ model User {
   subscriptionEndsAt DateTime?
 
   // for garage subscription
-  subscriptionTrialStartDate   DateTime?
-  subscriptionTrialEndDate     DateTime?
-  isSubscriptionTrialActive    Boolean   @default(false)
-  subscriptionStartDate        DateTime?
-  subscriptionEndDate          DateTime?
-  nextSubscriptionBillingDate  DateTime?
-  isSubscribed                 Boolean   @default(false)
+  subscriptionTrialStartDate  DateTime?
+  subscriptionTrialEndDate    DateTime?
+  isSubscriptionTrialActive   Boolean   @default(false)
+  subscriptionStartDate       DateTime?
+  subscriptionEndDate         DateTime?
+  nextSubscriptionBillingDate DateTime?
+  isSubscribed                Boolean   @default(false)
 
   // Product Monthly Subscription fields
   productMonthlyActive    Boolean   @default(false)
@@ -92,9 +92,9 @@ model User {
   privateConversation2 PrivateConversation[]  @relation("User2Conversations")
   privateMessage       PrivateMessage[]
   privateMessageStatus PrivateMessageStatus[]
-  
+
   // ------product relation---
-  createdProducts      Product[]
+  createdProducts Product[]
 
   // garage subscriptions
   garageSubscriptions GarageSubscription[]

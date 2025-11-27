@@ -1,22 +1,22 @@
 model Payment {
-  id            String    @id @default(uuid())
-  sessionId     String    @unique
+  id            String        @id @default(uuid())
+  sessionId     String        @unique
   transactionId String?
-  amount        Int?      // in cents
-  currency      String    @default("usd")
+  amount        Int? // in cents
+  currency      String        @default("usd")
   status        PaymentStatus @default(PENDING) // PENDING, COMPLETED, FAILED
   paymentMethod String?
   paymentType   PaymentType
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // ----------- Common Relations -----------
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  planId               String?             
-  plan                 PaymentPlan?        @relation(fields: [planId], references: [id])
+  planId String?
+  plan   PaymentPlan? @relation(fields: [planId], references: [id])
 
   // ----------- Polymorphic Relations  -----------
   // Garage Subscription Payment
@@ -24,44 +24,44 @@ model Payment {
   garageSubscription   GarageSubscription? @relation(fields: [garageSubscriptionId], references: [id])
 
   // Pay-per-product or promotion credit
-  productId     String?
-  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@map("payments")
 }
 
 model PaymentPlan {
-  id          String    @id @default(cuid())
-  name        String
-  Price       Int
+  id           String    @id @default(cuid())
+  name         String
+  Price        Int
   billingCycle String
-  shortBio    String?
-  features    String[]
-  payments    Payment[]   // relation back
+  shortBio     String?
+  features     String[]
+  payments     Payment[] // relation back
 }
 
 // Garage Subscription History
 model GarageSubscription {
-  id               String   @id @default(uuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  type             SubscriptionType  // TRIAL or PAID
-  amount           Int?      // null for trial
-  currency         String?
-  stripeSessionId  String?   @unique
-  stripePaymentId  String?
+  type            SubscriptionType // TRIAL or PAID
+  amount          Int? // null for trial
+  currency        String?
+  stripeSessionId String?          @unique
+  stripePaymentId String?
 
-  startDate        DateTime
-  endDate          DateTime
-  billingCycle     BillingCycle?
+  startDate    DateTime
+  endDate      DateTime
+  billingCycle BillingCycle?
 
-  status           SubscriptionStatus @default(ACTIVE)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  status    SubscriptionStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 
   // Relation back to Payment (optional, for audit)
-  payment          Payment[]
+  payment Payment[]
 
   @@map("garage_subscriptions")
 }
@@ -76,8 +76,8 @@ enum PaymentType {
 }
 
 enum SubscriptionType {
-  TRIAL     // 90 days free
-  PAID      // $100 monthly
+  TRIAL // 90 days free
+  PAID // $100 monthly
 }
 
 enum SubscriptionStatus {
