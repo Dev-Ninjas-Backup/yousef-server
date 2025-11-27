@@ -2,15 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 
+import * as bcrypt from 'bcrypt';
 import { AppError } from 'src/common/error/handle-error.app';
 import {
   successResponse,
   TResponse,
 } from 'src/common/utilsResponse/response.util';
+import { UpdatePasswordDto } from '../dto/updatepassword.dto';
 
 @Injectable()
 export class AccountSettingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   //----------------- changeEmailNotification----
 
@@ -33,8 +35,7 @@ export class AccountSettingService {
 
     return successResponse(
       updatedUser,
-      `Email Notification has been ${
-        updatedUser.isEmailNotification ? 'true' : 'disabled'
+      `Email Notification has been ${updatedUser.isEmailNotification ? 'true' : 'disabled'
       } successfully.`,
     );
   }
@@ -82,8 +83,7 @@ export class AccountSettingService {
 
     return successResponse(
       updatedUser,
-      `Sms Notification has been ${
-        updatedUser.isSmsNotification ? 'true' : 'false'
+      `Sms Notification has been ${updatedUser.isSmsNotification ? 'true' : 'false'
       } successfully.`,
     );
   }
@@ -108,8 +108,7 @@ export class AccountSettingService {
 
     return successResponse(
       updatedUser,
-      `Email Promotional has been ${
-        updatedUser.isEmailPromotional ? 'true' : 'false'
+      `Email Promotional has been ${updatedUser.isEmailPromotional ? 'true' : 'false'
       } successfully.`,
     );
   }
@@ -132,4 +131,50 @@ export class AccountSettingService {
 
     return successResponse(null, 'User deleted successfully');
   }
+
+  // ------------------changePassword-------------------
+
+
+  @HandleError('Failed to change password', 'Password')
+  async changePassword(
+    userId: string,
+    dto: UpdatePasswordDto,
+  ): Promise<TResponse<any>> {
+    const { currentPassword, newPassword } = dto;
+
+    // Find user
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+
+    if (!user.password) {
+      throw new AppError(400, 'No password set. Please use password reset.');
+    }
+
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      throw new AppError(400, 'Current password is incorrect');
+    }
+
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+      },
+    });
+
+    return successResponse(null, 'Password changed successfully');
+  }
+
+ 
 }

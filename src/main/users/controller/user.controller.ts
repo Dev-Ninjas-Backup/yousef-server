@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Patch,
   Post,
@@ -30,7 +31,7 @@ import { UserService } from '../service/user.service';
 @ApiTags('USER Profile Maintain')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @ApiOperation({ summary: 'Update user profile' })
   @ValidateAuth()
@@ -151,6 +152,15 @@ export class UserController {
   //   return this.userService.createReport(createReportDto, userId);
   // }
 
+
+  // -------------hard delete user account----------------
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ApiOperation({ summary: 'Hard delete user account' })
+  @Delete('hard-delete-user-account')
+  hardDeleteUserAccount(@GetUser('userId') userId: string) {
+    return this.userService.hardDeleteUserAccount(userId);
+  }
   // --------Review Alerts---
 
   @ApiBearerAuth()

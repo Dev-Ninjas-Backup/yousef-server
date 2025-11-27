@@ -6,4 +6,4 @@ import { GarageManagementService } from './service/garage-management.service';
   controllers: [GarageManagementController],
   providers: [GarageManagementService],
 })
-export class GarageManagementModule {}
+export class GarageManagementModule { }

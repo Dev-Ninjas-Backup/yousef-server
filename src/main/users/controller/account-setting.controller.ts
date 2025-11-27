@@ -1,15 +1,16 @@
-import { Controller, Patch } from '@nestjs/common';
+import { Body, Controller, Patch } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { GetUser, ValidateAuth } from 'src/common/jwt/jwt.decorator';
 
+import { UpdatePasswordDto } from '../dto/updatepassword.dto';
 import { AccountSettingService } from '../service/account-setting.service';
 
 @ApiTags('USER Account settings')
 @Controller('account-setting')
 export class UserSettingAccountController {
-  constructor(private readonly UserAccountSettings: AccountSettingService) {}
+  constructor(private readonly UserAccountSettings: AccountSettingService) { }
 
   // --------Review Alerts---
 
@@ -56,4 +57,19 @@ export class UserSettingAccountController {
   deleteUser(@GetUser('userId') userId: string) {
     return this.UserAccountSettings.deleteUser(userId);
   }
+
+  // --------------------change password-----------------
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ApiOperation({ summary: 'Change password' })
+  @Patch('change-password')
+  changePassword(
+    @GetUser('userId') userId: string,
+    @Body() dto: UpdatePasswordDto,
+  ) {
+    return this.UserAccountSettings.changePassword(userId, dto);
+  }
+
+
+
 }

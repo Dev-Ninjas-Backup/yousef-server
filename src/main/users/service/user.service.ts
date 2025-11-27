@@ -18,7 +18,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
-  ) {}
+  ) { }
 
   // ------------------------- Update Password -----------------
   @HandleError('Failed to update password', 'User')
@@ -97,16 +97,12 @@ export class UserService {
         fullName: dto.fullName?.trim() || user.fullName,
         bio: dto.bio?.trim() || user.bio,
         profilePhoto: s3Result?.url || user.profilePhoto,
+        updatedAt: new Date(),
+        phone: dto.phoneNumber?.trim() || user.phone,
+        city: dto.city?.trim() || user.city,
+        emirate: dto.emirate?.trim() || user.emirate,
+
       },
-    });
-
-    return successResponse(updatedUser, 'User profile updated successfully');
-  }
-
-  // ------------------------- Get Profile -----------------
-  async getProfile(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
       select: {
         id: true,
         role: true,
@@ -114,9 +110,28 @@ export class UserService {
         profilePhoto: true,
         bio: true,
         email: true,
+        phone: true,
+        city: true,
+        emirate: true,
         createdAt: true,
         updatedAt: true,
       },
+    });
+
+    return successResponse(updatedUser, 'User profile updated successfully');
+  }
+
+  // ------------------------- Get Profile -----------------
+  @HandleError('Failed to get profile', 'Profile')
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+
+        garages: true,
+      },
+
+
     });
 
     if (!user) throw new AppError(404, 'User not found');
@@ -162,5 +177,23 @@ export class UserService {
       updatedUser,
       `Review Alert has been ${updatedUser.ReviewAlerts ? 'enabled' : 'disabled'} successfully.`,
     );
+  }
+
+   // ------------------hardDeleteUserAccount-------------
+  @HandleError('Failed to delete user account', 'User')
+  async hardDeleteUserAccount(userId: string): Promise<TResponse<any>> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    await this.prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return successResponse(null, 'User account deleted successfully')
   }
 }
