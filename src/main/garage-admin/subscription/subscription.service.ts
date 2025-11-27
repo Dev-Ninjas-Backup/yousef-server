@@ -38,9 +38,12 @@ export class SubscriptionService {
       user.subscriptionTrialEndDate &&
       user.subscriptionTrialEndDate > now
     ) {
-      const daysRemaining = Math.ceil(
-        (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+      const daysRemaining = Math.max(
+        0,
+        Math.ceil(
+          (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
       );
 
       return {
@@ -61,9 +64,12 @@ export class SubscriptionService {
       user.subscriptionEndDate &&
       user.subscriptionEndDate > now
     ) {
-      const daysRemaining = Math.ceil(
-        (user.subscriptionEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+      const daysRemaining = Math.max(
+        0,
+        Math.ceil(
+          (user.subscriptionEndDate.getTime() - now.getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
       );
 
       return {
@@ -85,48 +91,6 @@ export class SubscriptionService {
       status: 'expired',
       message: 'No active plan. Subscription required.',
     };
-  }
-
-  // Approve garage and activate 90-day free trial
-  async approveGarage(userId: string): Promise<{ message: string }> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.garageStatus !== 'PENDING') {
-      throw new NotFoundException('Garage is not in pending status');
-    }
-
-    const now = new Date();
-    const trialEnd = new Date(now);
-    trialEnd.setDate(trialEnd.getDate() + 90);
-
-    // Create GarageSubscription for trial
-    await this.prisma.garageSubscription.create({
-      data: {
-        userId,
-        type: 'TRIAL',
-        startDate: now,
-        endDate: trialEnd,
-        status: 'ACTIVE',
-      },
-    });
-
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        garageStatus: 'APPROVE',
-        subscriptionTrialStartDate: now,
-        subscriptionTrialEndDate: trialEnd,
-        isSubscriptionTrialActive: true,
-      },
-    });
-
-    return { message: 'Garage approved and 90-day trial activated' };
   }
 
   // Create monthly subscription session ($100)

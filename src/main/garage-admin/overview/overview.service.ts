@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AppError } from 'src/common/error/handle-error.app';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 
@@ -134,15 +134,25 @@ export class OverviewService {
       throw new AppError(404, 'User not found');
     }
 
-    const totalFreeProducts = 3;
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const totalFreeProducts = Number(
+      paymentConfig?.freePromotionalListings || 0,
+    );
     const freeProductsUsed = user.freeProductsUsed || 0;
     const freeProductsRemaining = Math.max(
       0,
-      totalFreeProducts - freeProductsUsed,
+      (totalFreeProducts as number) - freeProductsUsed,
     );
     const hasFreeProductsLeft = freeProductsRemaining > 0;
     const usagePercentage = Math.round(
-      (freeProductsUsed / totalFreeProducts) * 100,
+      (freeProductsUsed / (totalFreeProducts as number)) * 100,
     );
     const remainingPercentage = 100 - usagePercentage;
 
