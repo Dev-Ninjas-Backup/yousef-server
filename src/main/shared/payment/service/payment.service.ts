@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -90,6 +91,7 @@ export class PaymentService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
   // ------------------- Admin only -------------------
   @HandleError('Failed to fetch all payments')
   async findAllPayments(): Promise<any[]> {
@@ -124,7 +126,19 @@ export class PaymentService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    return user.freeProductsUsed < 2; // Free limit is 2
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const freePromotionalListings = Number(
+      paymentConfig?.freePromotionalListings || 0,
+    );
+
+    return user.freeProductsUsed < freePromotionalListings;
   }
 
   // Handle webhook events
@@ -496,6 +510,18 @@ export class PaymentService {
   async createProductMonthlySession(userId: string): Promise<{ url: string }> {
     console.log('Creating PRODUCT MONTHLY session for user:', userId);
 
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const sparePartsMonthlySubscription = Number(
+      paymentConfig?.sparePartsMonthly || 0,
+    );
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -508,7 +534,7 @@ export class PaymentService {
               description:
                 'Unlimited product listings for 30 days (Product-only plan)',
             },
-            unit_amount: 10000, // $100
+            unit_amount: sparePartsMonthlySubscription * 100,
           },
           quantity: 1,
         },
@@ -518,7 +544,7 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'product_monthly_subscription',
-        amount: '100',
+        amount: `${sparePartsMonthlySubscription}`,
       },
     });
 
@@ -529,6 +555,16 @@ export class PaymentService {
   @HandleError('Failed to create pay-per session')
   async createPayPerProductSession(userId: string): Promise<{ url: string }> {
     console.log('💳 Creating pay-per session for user:', userId);
+
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const perPerListingPrice = Number(paymentConfig?.perListingPrice || 0);
 
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
@@ -541,7 +577,7 @@ export class PaymentService {
               name: 'Pay Per Product',
               description: 'Single product listing fee',
             },
-            unit_amount: 2000, // $20 in cents
+            unit_amount: perPerListingPrice * 100,
           },
           quantity: 1,
         },
@@ -551,7 +587,7 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'pay_per_product',
-        amount: '20',
+        amount: `${perPerListingPrice}`,
       },
     });
 
@@ -617,6 +653,16 @@ export class PaymentService {
   ): Promise<{ url: string }> {
     console.log('🎯 Creating promotion session for user:', userId);
 
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const promotionalAdPrice = Number(paymentConfig?.promotionalAdPrice || 0);
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -628,7 +674,7 @@ export class PaymentService {
               name: 'Product Promotion',
               description: 'Promote your product listing',
             },
-            unit_amount: 2000, // $20 in cents
+            unit_amount: promotionalAdPrice * 100,
           },
           quantity: 1,
         },
@@ -638,7 +684,7 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'product_promotion_credit',
-        amount: '20',
+        amount: `${promotionalAdPrice}`,
       },
     });
 

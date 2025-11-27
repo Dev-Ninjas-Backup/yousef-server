@@ -178,7 +178,7 @@ export class ProductController {
   @ApiBearerAuth()
   @Post('create-monthly-payment')
   @ApiOperation({
-    summary: 'Create checkout session for Product Monthly Plan ($100)',
+    summary: 'Create checkout session for Product Monthly Plan ',
   })
   async createProductMonthlyPayment(@GetUser('userId') userId: string) {
     return this.paymentService.createProductMonthlySession(userId);
@@ -189,7 +189,7 @@ export class ProductController {
   @ApiBearerAuth()
   @Post('create-payper-payment')
   @ApiOperation({
-    summary: 'Create checkout session for pay-per product ($20)',
+    summary: 'Create checkout session for pay-per product ',
   })
   @ApiResponse({
     status: 200,
@@ -204,7 +204,7 @@ export class ProductController {
   @ApiBearerAuth()
   @Post('create-promotion-payment')
   @ApiOperation({
-    summary: 'Create checkout session for product promotion ($20)',
+    summary: 'Create checkout session for product promotion ',
   })
   @ApiResponse({
     status: 200,
