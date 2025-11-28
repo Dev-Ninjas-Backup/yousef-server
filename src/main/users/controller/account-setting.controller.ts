@@ -10,7 +10,7 @@ import { AccountSettingService } from '../service/account-setting.service';
 @ApiTags('USER Account settings')
 @Controller('account-setting')
 export class UserSettingAccountController {
-  constructor(private readonly UserAccountSettings: AccountSettingService) { }
+  constructor(private readonly UserAccountSettings: AccountSettingService) {}
 
   // --------Review Alerts---
 
@@ -69,7 +69,4 @@ export class UserSettingAccountController {
   ) {
     return this.UserAccountSettings.changePassword(userId, dto);
   }
-
-
-
 }

@@ -18,7 +18,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
-  ) { }
+  ) {}
 
   // ------------------------- Update Password -----------------
   @HandleError('Failed to update password', 'User')
@@ -101,7 +101,6 @@ export class UserService {
         phone: dto.phoneNumber?.trim() || user.phone,
         city: dto.city?.trim() || user.city,
         emirate: dto.emirate?.trim() || user.emirate,
-
       },
       select: {
         id: true,
@@ -127,17 +126,15 @@ export class UserService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
-
         garages: true,
       },
-
-
     });
 
     if (!user) throw new AppError(404, 'User not found');
 
     return successResponse(user, 'User profile retrieved successfully');
   }
+  // ------------------------- Get All Users -----------------
 
   @HandleError('Failed to get all users', 'User')
   async getAllUsers() {
@@ -155,6 +152,7 @@ export class UserService {
     });
     return successResponse(users, 'All users retrieved successfully');
   }
+  // ------------------------- changeReviewAlert -----------------
 
   @HandleError('USER can be chnageReviewAlert user')
   async changeReviewAlert(userId: string) {
@@ -167,7 +165,7 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    // Toggle ReviewAlerts flag
+    // ---------------- Toggle ReviewAlerts flag ---------------------
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: { ReviewAlerts: !user.ReviewAlerts },
@@ -179,7 +177,7 @@ export class UserService {
     );
   }
 
-   // ------------------hardDeleteUserAccount-------------
+  // ------------------hardDeleteUserAccount-------------
   @HandleError('Failed to delete user account', 'User')
   async hardDeleteUserAccount(userId: string): Promise<TResponse<any>> {
     const user = await this.prisma.user.findUnique({
@@ -194,6 +192,6 @@ export class UserService {
       where: { id: userId },
     });
 
-    return successResponse(null, 'User account deleted successfully')
+    return successResponse(null, 'User account deleted successfully');
   }
 }

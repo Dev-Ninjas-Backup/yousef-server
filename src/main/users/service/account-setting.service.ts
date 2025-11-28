@@ -12,7 +12,7 @@ import { UpdatePasswordDto } from '../dto/updatepassword.dto';
 
 @Injectable()
 export class AccountSettingService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   //----------------- changeEmailNotification----
 
@@ -35,7 +35,8 @@ export class AccountSettingService {
 
     return successResponse(
       updatedUser,
-      `Email Notification has been ${updatedUser.isEmailNotification ? 'true' : 'disabled'
+      `Email Notification has been ${
+        updatedUser.isEmailNotification ? 'true' : 'disabled'
       } successfully.`,
     );
   }
@@ -83,7 +84,8 @@ export class AccountSettingService {
 
     return successResponse(
       updatedUser,
-      `Sms Notification has been ${updatedUser.isSmsNotification ? 'true' : 'false'
+      `Sms Notification has been ${
+        updatedUser.isSmsNotification ? 'true' : 'false'
       } successfully.`,
     );
   }
@@ -108,7 +110,8 @@ export class AccountSettingService {
 
     return successResponse(
       updatedUser,
-      `Email Promotional has been ${updatedUser.isEmailPromotional ? 'true' : 'false'
+      `Email Promotional has been ${
+        updatedUser.isEmailPromotional ? 'true' : 'false'
       } successfully.`,
     );
   }
@@ -134,7 +137,6 @@ export class AccountSettingService {
 
   // ------------------changePassword-------------------
 
-
   @HandleError('Failed to change password', 'Password')
   async changePassword(
     userId: string,
@@ -151,20 +153,16 @@ export class AccountSettingService {
       throw new AppError(404, 'User not found');
     }
 
-
     if (!user.password) {
       throw new AppError(400, 'No password set. Please use password reset.');
     }
-
 
     const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) {
       throw new AppError(400, 'Current password is incorrect');
     }
 
-
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -175,6 +173,4 @@ export class AccountSettingService {
 
     return successResponse(null, 'Password changed successfully');
   }
-
- 
 }
