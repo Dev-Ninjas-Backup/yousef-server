@@ -76,4 +76,90 @@ export class MailService {
 
     return this.transporter.sendMail(mailOptions);
   }
+
+  // Universal payment confirmation email
+  async sendPaymentConfirmationEmail(
+    email: string,
+    data: {
+      userName: string;
+      paymentType:
+        | 'promotional'
+        | 'pay_per_product'
+        | 'product_monthly'
+        | 'garage_monthly';
+      amount: number;
+      transactionId: string;
+      productName?: string;
+      garageName?: string;
+      startDate?: Date;
+      endDate?: Date;
+    },
+  ): Promise<nodemailer.SentMessageInfo> {
+    const config = {
+      promotional: {
+        emoji: '🎉',
+        title: 'Payment Successful!',
+        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        message: 'Your promotional payment has been successfully processed.',
+      },
+      pay_per_product: {
+        emoji: '✅',
+        title: 'Payment Confirmed!',
+        gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+        message: 'Your product listing credit has been added to your account.',
+      },
+      product_monthly: {
+        emoji: '🎊',
+        title: 'Subscription Activated!',
+        gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        message:
+          'Your Product Monthly Subscription has been successfully activated.',
+      },
+      garage_monthly: {
+        emoji: '🏆',
+        title: 'Garage Subscription Activated!',
+        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        message: `Your Garage Monthly Subscription has been successfully activated.${data.garageName ? ` <strong>${data.garageName}</strong> is now premium!` : ''}`,
+      },
+    }[data.paymentType];
+
+    const content = `
+      <div style="background: ${config.gradient}; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
+        <h2 style="color: white; margin: 0; font-size: 28px;">${config.emoji} ${config.title}</h2>
+      </div>
+      
+      <p style="font-size: 16px; color: #333;">Hi <strong>${data.userName}</strong>,</p>
+      <p style="font-size: 15px; color: #555; line-height: 1.6;">${config.message}</p>
+
+      <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0;">
+        <h3 style="margin-top: 0; color: #333; font-size: 18px;">📋 Payment Details</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          ${data.productName ? `<tr><td style="padding: 8px 0; color: #666;"><strong>Product:</strong></td><td style="padding: 8px 0; color: #333; text-align: right;">${data.productName}</td></tr>` : ''}
+          ${data.garageName ? `<tr><td style="padding: 8px 0; color: #666;"><strong>Garage:</strong></td><td style="padding: 8px 0; color: #333; text-align: right;">${data.garageName}</td></tr>` : ''}
+          <tr><td style="padding: 8px 0; color: #666;"><strong>Amount:</strong></td><td style="padding: 8px 0; color: #28a745; font-weight: bold; text-align: right;">$${(data.amount / 100).toFixed(2)} USD</td></tr>
+          ${data.startDate ? `<tr><td style="padding: 8px 0; color: #666;"><strong>Start Date:</strong></td><td style="padding: 8px 0; color: #333; text-align: right;">${new Date(data.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td></tr>` : ''}
+          ${data.endDate ? `<tr><td style="padding: 8px 0; color: #666;"><strong>End Date:</strong></td><td style="padding: 8px 0; color: #333; text-align: right;">${new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td></tr>` : ''}
+          <tr><td style="padding: 8px 0; color: #666;"><strong>Transaction ID:</strong></td><td style="padding: 8px 0; color: #666; text-align: right; font-family: monospace; font-size: 12px;">${data.transactionId}</td></tr>
+        </table>
+      </div>
+
+      <p style="font-size: 15px; color: #333; margin-top: 20px;">Best regards,<br/><strong>SAYARA HUB Team</strong></p>
+    `;
+
+    const subjects = {
+      promotional: '🎉 Payment Confirmed - Product Promoted!',
+      pay_per_product: '✅ Payment Confirmed - Credit Added!',
+      product_monthly: '🎊 Product Subscription Activated!',
+      garage_monthly: '🏆 Garage Subscription Activated!',
+    };
+
+    const mailOptions = {
+      from: `"SAYARA HUB" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
+      to: email,
+      subject: subjects[data.paymentType],
+      html: this.getEmailTemplate(content),
+    };
+
+    return this.transporter.sendMail(mailOptions);
+  }
 }
