@@ -69,3 +69,9 @@
 - [x] Modify **Performance Summary** API for **Monthly Inquiries** and **Conversions Rate**
 - [x] Added **Notifications** module for garage admin dashboard
 - [x] Some bug fixes with **Payments** related **APIs**
+
+
+## 27/11/2025
+- [x] Updated the **Products** module for dynamic features and **Fix Some Bugs**.
+- [x] Updated **Subscription** module for dynamic features.
+- [x] After successful **Payment**, notify the user via email system.
