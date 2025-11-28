@@ -3,6 +3,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
@@ -33,6 +34,7 @@ export class ProductService {
       categoryId,
       ...productData
     } = createProductDto;
+    console.log('create', createProductDto);
 
     // Validate seller email
     if (!sellerEmail) {
@@ -43,23 +45,40 @@ export class ProductService {
       where: { id: categoryId },
     });
 
-    if (!categoryExists) {
-      throw new BadRequestException(
-        `Category with ID "${categoryId}" not found. Please choose a valid category.`,
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
       );
     }
 
-    // Handle promotion (requires $20 promotion credit)
+    const promotionalAdPrice = Number(paymentConfig?.promotionalAdPrice || 0);
+    const perPerListingPrice = Number(paymentConfig?.perListingPrice || 0);
+    const sparePartsMonthlySubscription = Number(
+      paymentConfig?.sparePartsMonthly || 0,
+    );
+    const freePromotionalListings = Number(
+      paymentConfig?.freePromotionalListings || 0,
+    );
+    // console.log(promotionalAdPrice, perListingPrice, freePromotionalListings, sparePartsMonthlySubscription);
+
+    if (!categoryExists) {
+      throw new BadRequestException(
+        `Category with ID "${categoryId}" not found.Please choose a valid category.`,
+      );
+    }
+
+    // Check promotion credit availability (but don't consume yet)
     if (productData.isPromoted) {
       const hasCredit = await this.paymentService.hasPromotionCredits(userId);
       if (!hasCredit) {
         throw new BadRequestException({
-          message: 'Payment required for product promotion',
+          message: `${promotionalAdPrice}$ Payment required for product promotion`,
           code: 'PROMOTION_PAYMENT_REQUIRED',
-          amount: 20,
+          amount: promotionalAdPrice,
         });
       }
-      await this.paymentService.usePromotionCredit(userId);
     }
 
     // Check if user can create product without new payment
@@ -73,23 +92,31 @@ export class ProductService {
     const canCreateWithoutPayment =
       canUseFreeSlot || hasPayPerCredit || hasProductMonthlyPlan;
 
+    // Validate plan selection against user's subscription status
+    if (hasProductMonthlyPlan && plan === 'PAY_PER') {
+      throw new BadRequestException({
+        message:
+          'You have an active Product Monthly subscription. Cannot use PAY_PER plan.',
+        code: 'INVALID_PLAN_SELECTION',
+      });
+    }
+
     // If no free slot, no credit, no active Product Monthly → force payment
     if (!canCreateWithoutPayment) {
       if (plan === 'PAY_PER') {
         throw new BadRequestException({
-          message: 'Payment required to create this product',
+          message: `${perPerListingPrice}$ Pay-Per payment required to create this product`,
           code: 'PAY_PER_PAYMENT_REQUIRED',
-          amount: 20,
+          amount: perPerListingPrice,
           plan: 'PAY_PER',
         });
       }
 
       if (plan === 'MONTHLY') {
         throw new BadRequestException({
-          message:
-            'Product Monthly subscription required for unlimited listings',
-          code: 'PRODUCT_MONTHLY_REQUIRED',
-          amount: 100,
+          message: `${sparePartsMonthlySubscription}$ Product Monthly subscription required for unlimited listings`,
+          code: 'PRODUCT_MONTHLY_SUBSCRIPTION_REQUIRED',
+          amount: sparePartsMonthlySubscription,
           plan: 'MONTHLY',
         });
       }
@@ -135,14 +162,14 @@ export class ProductService {
     }
 
     // Create product
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
         sellerId: seller.id,
         createdById: userId,
         status: 'PENDING',
         photos: photoUrls,
         views: 0,
-        promoCost: productData.isPromoted ? 20 : null,
+        promoCost: productData.isPromoted ? promotionalAdPrice : null,
         categoryId,
         ...productData,
       },
@@ -151,6 +178,13 @@ export class ProductService {
         createdBy: { select: { id: true, email: true, fullName: true } },
       },
     });
+
+    // Only consume promotion credit AFTER successful product creation
+    if (productData.isPromoted) {
+      await this.paymentService.usePromotionCredit(userId);
+    }
+
+    return product;
   }
 
   async findAll() {
@@ -216,7 +250,7 @@ export class ProductService {
           const { url } = await this.s3FileService.processUploadedFile(file);
           photoUrls.push(url);
         } catch (error) {
-          throw new Error(`Failed to upload photo: ${error.message}`);
+          throw new Error(`Failed to upload photo: ${error.message} `);
         }
       }
     }
@@ -286,6 +320,11 @@ export class ProductService {
 
   // User limit status (now shows both Garage & Product Monthly plans)
   async getUserProductLimit(userId: string) {
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+    const freePromotionalListings = Number(
+      paymentConfig?.freePromotionalListings,
+    );
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -302,7 +341,7 @@ export class ProductService {
     if (!user) {
       return {
         freeProductsUsed: 0,
-        freeProductsRemaining: 2,
+        freeProductsRemaining: freePromotionalListings,
         productCredits: 0,
         hasGarageMonthly: false,
         hasProductMonthly: false,
@@ -328,8 +367,8 @@ export class ProductService {
       userId,
       userEmail: user.email,
       freeProductsUsed: freeUsed,
-      freeProductsRemaining: Math.max(0, 2 - freeUsed),
-      canAddFreeProduct: freeUsed < 2,
+      freeProductsRemaining: Math.max(0, freePromotionalListings - freeUsed),
+      canAddFreeProduct: freeUsed < freePromotionalListings,
       productCredits: credits,
       hasGarageMonthly,
       hasProductMonthly,
