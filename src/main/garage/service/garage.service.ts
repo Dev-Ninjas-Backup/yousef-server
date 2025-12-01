@@ -19,7 +19,7 @@ export class GarageService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   @HandleError('Failed to create garage', 'Garage')
   async create(

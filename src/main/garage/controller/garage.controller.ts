@@ -35,7 +35,7 @@ import { GarageService } from '../service/garage.service';
 @ApiTags('Garages')
 @Controller('garages')
 export class GarageController {
-  constructor(private readonly garageService: GarageService) { }
+  constructor(private readonly garageService: GarageService) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -118,7 +118,7 @@ export class GarageController {
   @ApiResponse({ status: 200, description: 'The garage details.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
   findOne(@Param('id') id: string) {
-    console.log("single garage");
+    console.log('single garage');
     return this.garageService.findOne(id);
   }
 
@@ -154,7 +154,6 @@ export class GarageController {
     description: 'Not authorized to update this garage.',
   })
   @ApiResponse({ status: 409, description: 'Garage name already exists.' })
-
   async update(
     @GetUser('userId') userId: string,
     @Param('id') id: string,
