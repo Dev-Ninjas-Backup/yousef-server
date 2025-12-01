@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
-import { ENVEnum } from 'src/common/enum/env.enum';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import {
@@ -20,7 +19,7 @@ export class GarageService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   @HandleError('Failed to create garage', 'Garage')
   async create(
@@ -109,106 +108,6 @@ export class GarageService {
     });
 
     return successResponse(garage, 'Garage created successfully');
-  }
-
-  @HandleError('Failed to update garage', 'Garage')
-  async update(
-    userId: string,
-    id: string,
-    updateGarageDto: UpdateGarageDto,
-    files: {
-      coverPhoto?: Express.Multer.File;
-      profileImage?: Express.Multer.File;
-    } = {},
-  ): Promise<TResponse<any>> {
-    const garage = await this.prisma.garage.findUnique({ where: { id } });
-    if (!garage) throw new AppError(404, 'Garage not found');
-
-    const isUser = await this.prisma.user.findUnique({ where: { id: userId } });
-
-    if (userId !== garage.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
-      throw new AppError(403, 'You are not authorized to update this garage');
-    }
-
-    // Check if garage name already exists (excluding current garage)
-    if (updateGarageDto.name) {
-      const duplicateGarage = await this.prisma.garage.findFirst({
-        where: {
-          name: {
-            equals: updateGarageDto.name.trim(),
-            mode: 'insensitive',
-          },
-          NOT: { id },
-        },
-      });
-
-      if (duplicateGarage) {
-        throw new AppError(409, 'Garage with this name already exists');
-      }
-    }
-
-    let coverPhotoUrl: string | undefined;
-    let profileImageUrl: string | undefined;
-
-    // Process coverPhoto
-    if (files.coverPhoto) {
-      try {
-        const { url } = await this.s3FileService.processUploadedFile(
-          files.coverPhoto,
-        );
-        coverPhotoUrl = url;
-      } catch (error) {
-        throw new Error(`Failed to upload coverPhoto to S3: ${error.message}`);
-      }
-    }
-
-    // Process profileImage
-    if (files.profileImage) {
-      try {
-        const { url } = await this.s3FileService.processUploadedFile(
-          files.profileImage,
-        );
-        profileImageUrl = url;
-      } catch (error) {
-        throw new Error(
-          `Failed to upload profileImage to S3: ${error.message}`,
-        );
-      }
-    }
-
-    // Process brand expertise
-    const brandArray = updateGarageDto.brandExpertise
-      ? updateGarageDto.brandExpertise.split(',').map((b) => b.trim())
-      : undefined;
-
-    // Process certifications
-    const certificationsArray = updateGarageDto.certifications
-      ? updateGarageDto.certifications.split(',').map((b) => b.trim())
-      : [];
-
-    // Create update data object for Prisma
-    const updateData: any = {
-      ...updateGarageDto,
-      name: updateGarageDto.name?.trim(),
-      garagePhone: updateGarageDto.phone,
-    };
-    if (coverPhotoUrl) updateData.coverPhoto = coverPhotoUrl;
-    if (profileImageUrl) updateData.profileImage = profileImageUrl;
-    if (brandArray) updateData.brandExpertise = brandArray;
-    if (certificationsArray) updateData.certifications = certificationsArray;
-
-    // Remove undefined fields
-    Object.keys(updateData).forEach(
-      (key) => updateData[key] === undefined && delete updateData[key],
-    );
-
-    // Update database
-    const updatedGarage = await this.prisma.garage.update({
-      where: { id },
-      data: updateData,
-    });
-
-    return successResponse(updatedGarage, 'Garage updated successfully');
   }
 
   @HandleError('Failed to fetch garages', 'Garage')
@@ -346,6 +245,110 @@ export class GarageService {
 
     return successResponse(transformedGarage, 'Garage retrieved successfully');
   }
+
+  @HandleError('Failed to update garage', 'Garage')
+  async update(
+    userId: string,
+    id: string,
+    updateGarageDto: UpdateGarageDto,
+    files: {
+      coverPhoto?: Express.Multer.File;
+      profileImage?: Express.Multer.File;
+    } = {},
+  ): Promise<TResponse<any>> {
+    const garage = await this.prisma.garage.findUnique({ where: { id } });
+    if (!garage) throw new AppError(404, 'Garage not found');
+
+    const isUser = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (userId !== garage.userId && isUser?.role !== UserRole.SUPER_ADMIN) {
+      throw new AppError(403, 'You are not authorized to update this garage');
+    }
+
+    // Check if garage name already exists (excluding current garage)
+    if (updateGarageDto.name) {
+      const duplicateGarage = await this.prisma.garage.findFirst({
+        where: {
+          name: {
+            equals: updateGarageDto.name.trim(),
+            mode: 'insensitive',
+          },
+          NOT: { id },
+        },
+      });
+
+      if (duplicateGarage) {
+        throw new AppError(409, 'Garage with this name already exists');
+      }
+    }
+
+    let coverPhotoUrl: string | undefined;
+    let profileImageUrl: string | undefined;
+
+    // Process coverPhoto
+    if (files.coverPhoto) {
+      try {
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.coverPhoto,
+        );
+        coverPhotoUrl = url;
+      } catch (error) {
+        throw new Error(`Failed to upload coverPhoto to S3: ${error.message}`);
+      }
+    }
+
+    // Process profileImage
+    if (files.profileImage) {
+      try {
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.profileImage,
+        );
+        profileImageUrl = url;
+      } catch (error) {
+        throw new Error(
+          `Failed to upload profileImage to S3: ${error.message}`,
+        );
+      }
+    }
+
+    // Process brand expertise
+    const brandArray = updateGarageDto.brandExpertise
+      ? updateGarageDto.brandExpertise.split(',').map((b) => b.trim())
+      : undefined;
+
+    // Process certifications
+    const certificationsArray = updateGarageDto.certifications
+      ? updateGarageDto.certifications.split(',').map((b) => b.trim())
+      : [];
+
+    // Create update data object for Prisma
+    const updateData: any = {
+      ...updateGarageDto,
+      name: updateGarageDto.name?.trim(),
+      garagePhone: updateGarageDto.phone,
+    };
+    if (coverPhotoUrl) updateData.coverPhoto = coverPhotoUrl;
+    if (profileImageUrl) updateData.profileImage = profileImageUrl;
+    if (brandArray) updateData.brandExpertise = brandArray;
+    if (certificationsArray) updateData.certifications = certificationsArray;
+
+    // Remove phone field (it's mapped to garagePhone)
+    delete updateData.phone;
+
+    // Remove undefined fields
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key],
+    );
+
+    // Update database
+    const updatedGarage = await this.prisma.garage.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return successResponse(updatedGarage, 'Garage updated successfully');
+  }
+
   @HandleError('Failed to delete garage', 'Garage')
   async remove(userId: string, id: string): Promise<TResponse<any>> {
     const garage = await this.prisma.garage.findUnique({ where: { id } });
