@@ -279,11 +279,11 @@ export class AdminDashboardOverviewService {
     );
 
     //-----------product pending status count--------------
-    const productPendingCount = await this.prisma.product.count({
+    await this.prisma.product.count({
       where: { status: 'PENDING' },
     });
     // -------------grage pending status count-------------
-    const garagePendingCount = await this.prisma.user.count({
+    await this.prisma.user.count({
       where: { garageStatus: 'PENDING' },
     });
     // --- Final Simplified Return for Frontend Cards ---
