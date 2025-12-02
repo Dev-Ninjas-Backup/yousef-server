@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AppError } from 'src/common/error/handle-error.app';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { PaymentService } from 'src/main/shared/payment/service/payment.service';
 
@@ -172,13 +173,33 @@ export class SubscriptionService {
   }
 
   // Cancel subscription for user model with isSubscribed & isSubscriptionTrialActive set to false
+
   async cancelSubscription(userId: string): Promise<any> {
-    return this.prisma.user.update({
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    // user not subscription
+    if (!user.isSubscribed && !user.isSubscriptionTrialActive) {
+      throw new AppError(400, 'No active subscription found');
+    }
+
+    // Subscription Status Update
+    await this.prisma.user.update({
       where: { id: userId },
       data: {
         isSubscribed: false,
         isSubscriptionTrialActive: false,
       },
     });
+
+    return {
+      message: 'Subscription cancelled successfully',
+      data: null,
+    };
   }
 }
