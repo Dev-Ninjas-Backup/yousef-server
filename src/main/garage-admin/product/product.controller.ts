@@ -141,12 +141,12 @@ export class ProductController {
   @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a product by ID' })
-  @ApiResponse({ status: 204, description: 'Product deleted successfully.' })
+  @ApiResponse({ status: 200, description: 'Product deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
     try {
-      await this.productService.remove(id);
+      return await this.productService.remove(id);
     } catch (error) {
       if (
         error instanceof NotFoundException ||

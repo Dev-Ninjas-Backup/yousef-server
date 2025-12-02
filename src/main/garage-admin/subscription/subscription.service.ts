@@ -101,39 +101,74 @@ export class SubscriptionService {
   }
 
   // Get garage subscription history for a user
-  async getSubscriptionHistory(userId: string): Promise<any[]> {
-    const subscriptions = await this.prisma.garageSubscription.findMany({
+  async getSubscriptionHistory(userId: string) {
+    const subscriptions = await this.prisma.payment.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: { payment: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phone: true,
+            profilePhoto: true,
+          },
+        },
+      },
+      omit: {
+        id: true,
+        updatedAt: true,
+        planId: true,
+        garageSubscriptionId: true,
+        productId: true,
+      },
     });
 
-    return subscriptions.map((sub, index) => {
-      const isTrial = sub.type === 'TRIAL';
-      const payment = sub.payment[0];
+    return subscriptions;
 
-      // const transactionId = `TXN${String(subscriptions.length - index).padStart(3, '0')}`;
-      const transactionId = payment?.transactionId ? payment.transactionId : '';
+    // {
+    //   id: 'eeb5f64b-a2d9-4bd7-9a08-2b7a35333df4',
+    //     sessionId: 'cs_test_a1dzxibYUeir9qfQ4aeNNFqpUWXyVEQhBU1KGdBPTmUlVYjCn4LLK6sZCt',
+    //       transactionId: 'pi_3SZgqQP3Cjs6shL61Bh9IYw8',
+    //         amount: 10000,
+    //           currency: 'usd',
+    //             status: 'COMPLETED',
+    //               paymentMethod: 'card',
+    //                 paymentType: 'GARAGE_SUBSCRIPTION',
+    //                   createdAt: 2025 - 12-01T23: 49: 26.268Z,
+    //                     updatedAt: 2025 - 12-01T23: 49: 26.268Z,
+    //                       userId: 'a733dc9b-4916-4047-9492-2366c93857c7',
+    //                         planId: null,
+    //                           garageSubscriptionId: 'b900ba90-84b8-4c2c-8265-34b63fe500fc',
+    //                             productId: null
+    // },
 
-      return {
-        transactionId,
-        date: new Date(sub.startDate).toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        }),
-        description: isTrial
-          ? '3-Month Free Trial Started'
-          : 'Monthly Subscription',
-        paymentMethod: payment?.paymentMethod
-          ? payment.paymentMethod.charAt(0).toUpperCase() +
-            payment.paymentMethod.slice(1)
-          : '-',
-        amount: isTrial ? 'Free' : sub.amount! / 100,
-        currency: isTrial ? null : sub.currency?.toUpperCase(),
-        status: 'Paid',
-      };
-    });
+    // return subscriptions.map((sub, index) => {
+    //   const isTrial = sub.type === 'TRIAL';
+    //   const payment = sub.payment[0];
+
+    //   const transactionId = payment?.transactionId ? payment.transactionId : '';
+
+    //   return {
+    //     transactionId,
+    //     date: new Date(sub.createdAt).toLocaleDateString('en-GB', {
+    //       day: 'numeric',
+    //       month: 'long',
+    //       year: 'numeric',
+    //     }),
+    //     description: isTrial
+    //       ? '3-Month Free Trial Started'
+    //       : 'Monthly Subscription',
+    //     paymentMethod: payment?.paymentMethod
+    //       ? payment.paymentMethod.charAt(0).toUpperCase() +
+    //       payment.paymentMethod.slice(1)
+    //       : '-',
+    //     amount: isTrial ? 'Free' : sub.amount! / 100,
+    //     currency: isTrial ? null : sub.currency?.toUpperCase(),
+    //     status: 'Paid',
+    //   };
+    // });
   }
 
   // Cancel subscription for user model with isSubscribed & isSubscriptionTrialActive set to false

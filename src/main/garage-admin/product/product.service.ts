@@ -58,9 +58,9 @@ export class ProductService {
     const sparePartsMonthlySubscription = Number(
       paymentConfig?.sparePartsMonthly || 0,
     );
-    const freePromotionalListings = Number(
-      paymentConfig?.freePromotionalListings || 0,
-    );
+    // const freePromotionalListings = Number(
+    //   paymentConfig?.freePromotionalListings || 0,
+    // );
     // console.log(promotionalAdPrice, perListingPrice, freePromotionalListings, sparePartsMonthlySubscription);
 
     if (!categoryExists) {
@@ -297,13 +297,12 @@ export class ProductService {
     const product = await this.prisma.product.findUnique({
       where: { id },
     });
-    console.log('Product', product);
 
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    return this.prisma.product.delete({
+    const deletedProduct = await this.prisma.product.delete({
       where: { id },
       include: {
         seller: true,
@@ -316,6 +315,11 @@ export class ProductService {
         },
       },
     });
+
+    return {
+      message: 'Product deleted successfully',
+      product: deletedProduct,
+    };
   }
 
   // User limit status (now shows both Garage & Product Monthly plans)
