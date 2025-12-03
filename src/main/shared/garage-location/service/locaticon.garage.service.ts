@@ -20,9 +20,11 @@ export interface GarageWithDistance {
   street: string | null;
   city: string | null;
   emirate: string | null;
-  address: string | null;
-  garageLat: number | null;
-  garageLng: number | null;
+  address: string;
+  formattedAddress: string | null;
+  placeId: string | null;
+  garageLat: number;
+  garageLng: number;
   description: string | null;
   certifications: string[];
   weekdaysHours: string | null;
@@ -158,8 +160,12 @@ export class LocationgarageService {
     // Fetch all garages with coordinates
     const garages = await this.prisma.garage.findMany({
       where: {
-        garageLat: { not: null },
-        garageLng: { not: null },
+        NOT: {
+          OR: [
+            { garageLat: 0 },
+            { garageLng: 0 },
+          ],
+        },
         user: {
           isActive: true,
           isDeleted: false,

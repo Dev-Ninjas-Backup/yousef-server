@@ -18,7 +18,7 @@ export class ProductService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
-  ) { }
+  ) {}
 
   async create(
     userId: string,
@@ -369,14 +369,14 @@ export class ProductService {
 
     const hasGarageMonthly = Boolean(
       user.isMembership &&
-      user.subscriptionEndsAt &&
-      new Date(user.subscriptionEndsAt) > new Date(),
+        user.subscriptionEndsAt &&
+        new Date(user.subscriptionEndsAt) > new Date(),
     );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&
-      user.productMonthlyEndDate &&
-      new Date(user.productMonthlyEndDate) > new Date(),
+        user.productMonthlyEndDate &&
+        new Date(user.productMonthlyEndDate) > new Date(),
     );
 
     return {

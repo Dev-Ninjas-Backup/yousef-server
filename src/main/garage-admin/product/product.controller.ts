@@ -37,7 +37,7 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly paymentService: PaymentService,
-  ) { }
+  ) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
