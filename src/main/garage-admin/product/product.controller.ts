@@ -37,7 +37,7 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly paymentService: PaymentService,
-  ) {}
+  ) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -88,6 +88,17 @@ export class ProductController {
   @ApiResponse({ status: 200, description: 'List of all products.' })
   async findAll() {
     return this.productService.findAll();
+  }
+
+  // My products
+
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @Get('my-products')
+  @ApiOperation({ summary: 'Get my products' })
+  @ApiResponse({ status: 200, description: 'List of my products.' })
+  async findMyProducts(@GetUser('userId') userId: string) {
+    return this.productService.findMyProducts(userId);
   }
 
   @Get(':id')

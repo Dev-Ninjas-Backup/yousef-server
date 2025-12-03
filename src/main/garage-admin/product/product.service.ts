@@ -18,7 +18,7 @@ export class ProductService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
-  ) {}
+  ) { }
 
   async create(
     userId: string,
@@ -192,6 +192,7 @@ export class ProductService {
       include: {
         seller: true,
         createdBy: { select: { id: true, email: true, fullName: true } },
+        category: true,
       },
     });
   }
@@ -209,6 +210,17 @@ export class ProductService {
       throw new NotFoundException(`Product with ID ${id} not found`);
 
     return product;
+  }
+
+  // my products
+  async findMyProducts(userId: string) {
+    return this.prisma.product.findMany({
+      where: { createdById: userId },
+      include: {
+        seller: true,
+        createdBy: { select: { id: true, email: true, fullName: true } },
+      },
+    });
   }
 
   async update(
@@ -357,14 +369,14 @@ export class ProductService {
 
     const hasGarageMonthly = Boolean(
       user.isMembership &&
-        user.subscriptionEndsAt &&
-        new Date(user.subscriptionEndsAt) > new Date(),
+      user.subscriptionEndsAt &&
+      new Date(user.subscriptionEndsAt) > new Date(),
     );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&
-        user.productMonthlyEndDate &&
-        new Date(user.productMonthlyEndDate) > new Date(),
+      user.productMonthlyEndDate &&
+      new Date(user.productMonthlyEndDate) > new Date(),
     );
 
     return {
