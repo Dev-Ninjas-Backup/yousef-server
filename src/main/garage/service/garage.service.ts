@@ -19,7 +19,7 @@ export class GarageService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   @HandleError('Failed to create garage', 'Garage')
   async create(
@@ -68,7 +68,6 @@ export class GarageService {
     const certificationsArray = createGarageDto.certifications
       ? createGarageDto.certifications.split(',').map((b) => b.trim())
       : [];
-
 
     // Create garage data object for Prisma
     const garageData = {
@@ -167,6 +166,15 @@ export class GarageService {
               updatedAt: true,
             },
           },
+          reviews: {
+            where: { isVisible: true },
+            select: {
+              overallExperience: true,
+              serviceQuality: true,
+              timeliness: true,
+              valueForMoney: true,
+            },
+          },
         },
         skip,
         take: limit,
@@ -175,11 +183,34 @@ export class GarageService {
       this.prisma.garage.count({ where }),
     ]);
 
-    // Transform the response to simplify the services array
-    const transformedGarages = garages.map((garage) => ({
-      ...garage,
-      services: garage.services.map((gs) => gs.service),
-    }));
+    // Transform the response with average rating
+    const transformedGarages = garages.map((garage) => {
+      const averageRating =
+        garage.reviews.length > 0
+          ? parseFloat(
+              (
+                garage.reviews.reduce(
+                  (sum, review) =>
+                    sum +
+                    (review.overallExperience +
+                      review.serviceQuality +
+                      review.timeliness +
+                      review.valueForMoney) /
+                      4,
+                  0,
+                ) / garage.reviews.length
+              ).toFixed(1),
+            )
+          : 0;
+
+      return {
+        ...garage,
+        services: garage.services.map((gs) => gs.service),
+        averageRating,
+        totalReviews: garage.reviews.length,
+        reviews: undefined,
+      };
+    });
 
     const result = {
       data: transformedGarages,
@@ -223,15 +254,46 @@ export class GarageService {
             updatedAt: true,
           },
         },
+        reviews: {
+          where: { isVisible: true },
+          select: {
+            overallExperience: true,
+            serviceQuality: true,
+            timeliness: true,
+            valueForMoney: true,
+          },
+        },
       },
     });
 
     if (!garage) throw new AppError(404, 'Garage not found');
 
-    // Transform the response to simplify the services array
+    // Calculate average rating from all 4 fields
+    const averageRating =
+      garage.reviews.length > 0
+        ? parseFloat(
+            (
+              garage.reviews.reduce(
+                (sum, review) =>
+                  sum +
+                  (review.overallExperience +
+                    review.serviceQuality +
+                    review.timeliness +
+                    review.valueForMoney) /
+                    4,
+                0,
+              ) / garage.reviews.length
+            ).toFixed(1),
+          )
+        : 0;
+
+    // Transform the response
     const transformedGarage = {
       ...garage,
       services: garage.services.map((gs) => gs.service),
+      averageRating,
+      totalReviews: garage.reviews.length,
+      reviews: undefined,
     };
 
     return successResponse(transformedGarage, 'Garage retrieved successfully');
