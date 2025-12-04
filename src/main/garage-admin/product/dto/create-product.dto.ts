@@ -17,12 +17,12 @@ enum SellerType {
   VERIFIED_SUPPLIER = 'VERIFIED_SUPPLIER',
 }
 
-enum ProductStatus {
-  DRAFT = 'DRAFT',
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-}
+// enum ProductStatus {
+//   DRAFT = 'DRAFT',
+//   PENDING = 'PENDING',
+//   APPROVED = 'APPROVED',
+//   REJECTED = 'REJECTED',
+// }
 
 enum PlanType {
   MONTHLY = 'MONTHLY',
@@ -46,10 +46,13 @@ export class CreateProductDto {
   @IsString()
   brand?: string;
 
-  @ApiProperty({ description: 'Category of the product', example: 'Brakes' })
+  @ApiProperty({
+    description: 'Unique identifier of the parts category',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
   @IsString()
   @IsNotEmpty()
-  category: string;
+  categoryId: string;
 
   @ApiProperty({ description: 'Condition of the product', example: 'New' })
   @IsString()

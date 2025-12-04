@@ -1,0 +1,9 @@
+
+model garageAdminNotification {
+    id                          String  @default(uuid())
+    emailNotification           Boolean @default(false)
+    customerInquiryNotification Boolean @default(false)
+    productApprovalNotification Boolean @default(false)
+
+    @@unique([id])
+}

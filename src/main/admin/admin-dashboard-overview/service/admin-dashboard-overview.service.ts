@@ -279,11 +279,11 @@ export class AdminDashboardOverviewService {
     );
 
     //-----------product pending status count--------------
-    const productPendingCount = await this.prisma.product.count({
+    await this.prisma.product.count({
       where: { status: 'PENDING' },
     });
     // -------------grage pending status count-------------
-    const garagePendingCount = await this.prisma.user.count({
+    await this.prisma.user.count({
       where: { garageStatus: 'PENDING' },
     });
     // --- Final Simplified Return for Frontend Cards ---
@@ -326,13 +326,13 @@ export class AdminDashboardOverviewService {
 
     // Get product count by category
     const categoryStats = await this.prisma.product.groupBy({
-      by: ['category'],
+      by: ['categoryId'],
       _count: {
-        category: true,
+        categoryId: true,
       },
       orderBy: {
         _count: {
-          category: 'asc',
+          categoryId: 'asc',
         },
       },
     });
@@ -340,12 +340,14 @@ export class AdminDashboardOverviewService {
 
     // Calculate percentages and format data
     const statistics = categoryStats.map((stat) => ({
-      category: stat.category,
-      productCount: stat._count.category,
+      category: stat.categoryId,
+      productCount: stat._count.categoryId || 0,
       percentage:
         totalProducts > 0
           ? parseFloat(
-              ((stat._count.category / totalProducts) * 100).toFixed(2),
+              (((stat._count.categoryId || 0) / totalProducts) * 100).toFixed(
+                2,
+              ),
             )
           : 0,
     }));

@@ -211,8 +211,8 @@ export class GarageManagementService {
         trialEndDate: trialEnd,
         isTrialActive: true,
         isSubscriptionTrialActive: true,
-        subscriptionTrialStart: trialStart,
-        subscriptionTrialEnd: trialEnd,
+        subscriptionTrialStartDate: trialStart,
+        subscriptionTrialEndDate: trialEnd,
       };
     }
 

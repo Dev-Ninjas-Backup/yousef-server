@@ -11,6 +11,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -21,6 +22,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -30,7 +32,6 @@ import { PaymentService } from '../../shared/payment/service/payment.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductService } from './product.service';
-
 @ApiTags('Products')
 @Controller('products')
 export class ProductController {
@@ -81,13 +82,73 @@ export class ProductController {
     }
   }
 
-  // --- Public Get Routes Added ---
+  // --- Public Get Routes ---
 
   @Get()
-  @ApiOperation({ summary: 'Get all products' })
-  @ApiResponse({ status: 200, description: 'List of all products.' })
-  async findAll() {
-    return this.productService.findAll();
+  @ApiOperation({
+    summary: 'Get all products with search, filter and pagination',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    example: 1,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    example: 10,
+    description: 'Items per page (default: 10)',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    example: 'Brake Pads Front Set',
+    description: 'Search in name/description',
+  })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    type: String,
+    example: 'Engine Parts',
+    description: 'Filter by category name',
+  })
+  @ApiQuery({
+    name: 'condition',
+    required: false,
+    type: String,
+    example: 'New',
+    description: 'Filter by condition ',
+  })
+  @ApiResponse({ status: 200, description: 'List of products with pagination' })
+  async findAll(
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+    @Query('search') search?: string,
+    @Query('category') category?: string,
+    @Query('condition') condition?: string,
+  ) {
+    return this.productService.findAll({
+      page,
+      limit,
+      search,
+      category,
+      condition,
+    });
+  }
+
+  // My products
+
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @Get('my-products')
+  @ApiOperation({ summary: 'Get my products' })
+  @ApiResponse({ status: 200, description: 'List of my products.' })
+  async findMyProducts(@GetUser('userId') userId: string) {
+    return this.productService.findMyProducts(userId);
   }
 
   @Get(':id')
@@ -141,12 +202,12 @@ export class ProductController {
   @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a product by ID' })
-  @ApiResponse({ status: 204, description: 'Product deleted successfully.' })
+  @ApiResponse({ status: 200, description: 'Product deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Product not found.' })
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
     try {
-      await this.productService.remove(id);
+      return await this.productService.remove(id);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -178,7 +239,7 @@ export class ProductController {
   @ApiBearerAuth()
   @Post('create-monthly-payment')
   @ApiOperation({
-    summary: 'Create checkout session for Product Monthly Plan ($100)',
+    summary: 'Create checkout session for Product Monthly Plan ',
   })
   async createProductMonthlyPayment(@GetUser('userId') userId: string) {
     return this.paymentService.createProductMonthlySession(userId);
@@ -189,7 +250,7 @@ export class ProductController {
   @ApiBearerAuth()
   @Post('create-payper-payment')
   @ApiOperation({
-    summary: 'Create checkout session for pay-per product ($20)',
+    summary: 'Create checkout session for pay-per product ',
   })
   @ApiResponse({
     status: 200,
@@ -204,7 +265,7 @@ export class ProductController {
   @ApiBearerAuth()
   @Post('create-promotion-payment')
   @ApiOperation({
-    summary: 'Create checkout session for product promotion ($20)',
+    summary: 'Create checkout session for product promotion ',
   })
   @ApiResponse({
     status: 200,

@@ -1,11 +1,13 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 
 import { PaymentStatus } from '@prisma/client';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import Stripe from 'stripe';
 import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
@@ -13,7 +15,10 @@ import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
 export class PaymentService {
   private stripe: Stripe;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
   }
 
@@ -90,6 +95,7 @@ export class PaymentService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
   // ------------------- Admin only -------------------
   @HandleError('Failed to fetch all payments')
   async findAllPayments(): Promise<any[]> {
@@ -124,7 +130,19 @@ export class PaymentService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    return user.freeProductsUsed < 2; // Free limit is 2
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const freePromotionalListings = Number(
+      paymentConfig?.freePromotionalListings || 0,
+    );
+
+    return user.freeProductsUsed < freePromotionalListings;
   }
 
   // Handle webhook events
@@ -234,6 +252,21 @@ export class PaymentService {
         updatedUser.isSubscribed,
         updatedUser.subscriptionEndDate,
       );
+
+      // Send email notification
+      try {
+        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
+          userName: updatedUser.fullName || 'Valued Customer',
+          paymentType: 'garage_monthly',
+          amount: parseInt(amount) * 100,
+          transactionId: session.payment_intent as string,
+          garageName: updatedUser.garageName as string,
+          startDate: now,
+          endDate: subscriptionEndDate,
+        });
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+      }
     } else if (type === 'pay_per_product') {
       console.log('💳 Processing pay-per product for user:', userId);
       // Create payment record for pay-per product
@@ -265,6 +298,18 @@ export class PaymentService {
         '✅ User updated with credit:',
         updatedUser.freeProductsListing,
       );
+
+      // Send email notification
+      try {
+        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
+          userName: updatedUser.fullName || 'Valued Customer',
+          paymentType: 'pay_per_product',
+          amount: parseInt(amount) * 100,
+          transactionId: session.payment_intent as string,
+        });
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+      }
     } else if (type === 'product_monthly_subscription') {
       console.log('Processing PRODUCT MONTHLY subscription for user:', userId);
 
@@ -287,7 +332,7 @@ export class PaymentService {
       });
 
       //  product monthly subscription
-      await this.prisma.user.update({
+      const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: {
           hasPaid: true,
@@ -298,6 +343,20 @@ export class PaymentService {
       });
 
       console.log('Product Monthly Subscription activated for user:', userId);
+
+      // Send email notification
+      try {
+        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
+          userName: updatedUser.fullName || 'Valued Customer',
+          paymentType: 'product_monthly',
+          amount: parseInt(amount) * 100,
+          transactionId: session.payment_intent as string,
+          startDate: now,
+          endDate: endDate,
+        });
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+      }
     } else if (type === 'product_promotion_credit') {
       console.log('🎯 Processing promotion credit for user:', userId);
       // Create payment record for promotion credit
@@ -329,6 +388,18 @@ export class PaymentService {
         '✅ User updated with promotion credit:',
         updatedUser.promotionCredits,
       );
+
+      // Send email notification
+      try {
+        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
+          userName: updatedUser.fullName || 'Valued Customer',
+          paymentType: 'promotional',
+          amount: parseInt(amount) * 100,
+          transactionId: session.payment_intent as string,
+        });
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+      }
     } else if (type === 'product_promotion' && productId) {
       // Create payment record
       await this.prisma.payment.create({
@@ -347,7 +418,7 @@ export class PaymentService {
       });
 
       // Update product status to APPROVED and set promoted
-      await this.prisma.product.update({
+      const product = await this.prisma.product.update({
         where: { id: productId },
         data: {
           status: 'APPROVED',
@@ -356,10 +427,23 @@ export class PaymentService {
       });
 
       // Update user's payment status
-      await this.prisma.user.update({
+      const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: { hasPaid: true },
       });
+
+      // Send email notification
+      try {
+        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
+          userName: updatedUser.fullName || 'Valued Customer',
+          paymentType: 'promotional',
+          amount: parseInt(amount) * 100,
+          transactionId: session.payment_intent as string,
+          productName: product.partName || productName || 'Your Product',
+        });
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+      }
     } else if (type === 'product_purchase') {
       // Generic product purchase (backward compatibility)
       await this.prisma.payment.create({
@@ -496,6 +580,18 @@ export class PaymentService {
   async createProductMonthlySession(userId: string): Promise<{ url: string }> {
     console.log('Creating PRODUCT MONTHLY session for user:', userId);
 
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const sparePartsMonthlySubscription = Number(
+      paymentConfig?.sparePartsMonthly || 0,
+    );
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -508,7 +604,7 @@ export class PaymentService {
               description:
                 'Unlimited product listings for 30 days (Product-only plan)',
             },
-            unit_amount: 10000, // $100
+            unit_amount: sparePartsMonthlySubscription * 100,
           },
           quantity: 1,
         },
@@ -518,7 +614,7 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'product_monthly_subscription',
-        amount: '100',
+        amount: `${sparePartsMonthlySubscription}`,
       },
     });
 
@@ -529,6 +625,16 @@ export class PaymentService {
   @HandleError('Failed to create pay-per session')
   async createPayPerProductSession(userId: string): Promise<{ url: string }> {
     console.log('💳 Creating pay-per session for user:', userId);
+
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const perPerListingPrice = Number(paymentConfig?.perListingPrice || 0);
 
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
@@ -541,7 +647,7 @@ export class PaymentService {
               name: 'Pay Per Product',
               description: 'Single product listing fee',
             },
-            unit_amount: 2000, // $20 in cents
+            unit_amount: perPerListingPrice * 100,
           },
           quantity: 1,
         },
@@ -551,7 +657,7 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'pay_per_product',
-        amount: '20',
+        amount: `${perPerListingPrice}`,
       },
     });
 
@@ -617,6 +723,16 @@ export class PaymentService {
   ): Promise<{ url: string }> {
     console.log('🎯 Creating promotion session for user:', userId);
 
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+
+    if (!paymentConfig) {
+      throw new InternalServerErrorException(
+        'Platform payment configuration missing!',
+      );
+    }
+
+    const promotionalAdPrice = Number(paymentConfig?.promotionalAdPrice || 0);
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -628,7 +744,7 @@ export class PaymentService {
               name: 'Product Promotion',
               description: 'Promote your product listing',
             },
-            unit_amount: 2000, // $20 in cents
+            unit_amount: promotionalAdPrice * 100,
           },
           quantity: 1,
         },
@@ -638,7 +754,7 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'product_promotion_credit',
-        amount: '20',
+        amount: `${promotionalAdPrice}`,
       },
     });
 

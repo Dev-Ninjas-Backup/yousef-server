@@ -42,8 +42,9 @@ model Ads {
 }
 
 model PartsCategory {
-  id   String @id @default(uuid())
-  name String @unique
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
 }
 
 enum AdsPostion {

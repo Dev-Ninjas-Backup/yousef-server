@@ -7,7 +7,7 @@ import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 
 @Injectable()
 export class AdminSettingService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // ---------------platform setting create----
   @HandleError('Failed to create or update platform setting')
@@ -82,13 +82,18 @@ export class AdminSettingService {
         const trialStart = new Date();
         const trialEnd = new Date();
         trialEnd.setMonth(trialEnd.getMonth() + 2);
-
+        // trialStartDate: trialStart,
+        //         trialEndDate: trialEnd,
+        //         isTrialActive: true,
+        //         isSubscriptionTrialActive: true,
+        //         subscriptionTrialStartDate: trialStart,
+        //         subscriptionTrialEndDate: trialEnd,
         updateData.trialStartDate = trialStart;
         updateData.trialEndDate = trialEnd;
         updateData.isTrialActive = true;
         updateData.isSubscriptionTrialActive = true;
-        updateData.subscriptionTrialStart = trialStart;
-        updateData.subscriptionTrialEnd = trialEnd;
+        updateData.subscriptionTrialStartDate = trialStart;
+        updateData.subscriptionTrialEndDate = trialEnd;
       }
 
       // --------------- Update--------------
@@ -152,19 +157,6 @@ export class AdminSettingService {
   }
 
   // ------------updateFreePromotionProductListing------------
-  @HandleError('Failed to update free promotion product listing')
-  async updateFreePromotionProductListing(value: number) {
-    const updated = await this.prisma.seller.updateMany({
-      data: {
-        freeProductsUsed: value,
-      },
-    });
-
-    return successResponse(
-      updated,
-      'Free promotion product listing updated successfully',
-    );
-  }
 
   // -----------------getPaymentConfig ----------------
   @HandleError('Failed to get payment config')
