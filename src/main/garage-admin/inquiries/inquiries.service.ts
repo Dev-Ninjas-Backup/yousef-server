@@ -4,7 +4,7 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
 export class InquiriesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Get all UNREAD private messages sent TO the garage owner
@@ -95,12 +95,10 @@ export class InquiriesService {
           select: {
             content: true,
             isFromAdmin: true,
-            createdAt: true
-          }
-        }
-      }
+            createdAt: true,
+          },
+        },
+      },
     });
   }
-
-
 }

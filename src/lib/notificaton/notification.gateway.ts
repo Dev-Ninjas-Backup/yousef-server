@@ -21,7 +21,8 @@ import { PrismaService } from '../prisma/prisma.service';
 })
 @Injectable()
 export class NotificationGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(NotificationGateway.name);
   private readonly clients = new Map<string, Set<Socket>>();
 
@@ -29,7 +30,7 @@ export class NotificationGateway
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   @WebSocketServer()
   server: Server;
@@ -74,14 +75,14 @@ export class NotificationGateway
         sub: user.id,
         email: user.email || '',
         emailToggle: Boolean(user.notificationToggle?.email) || false,
-        CustomerInquiryAlert: Boolean(user.notificationToggle?.CustomerInquiryAlert) || false,
+        CustomerInquiryAlert:
+          Boolean(user.notificationToggle?.CustomerInquiryAlert) || false,
         NewMessage: Boolean(user.notificationToggle?.NewMessage) || false,
         ProductApproveUpdate:
           Boolean(user.notificationToggle?.ProductApproveUpdate) || false,
         userRegistration:
           Boolean(user.notificationToggle?.userRegistration) || false,
         Message: Boolean(user.notificationToggle?.Message) || false,
-
       };
 
       client.data = { user: payloadForSocketClient };
@@ -116,8 +117,7 @@ export class NotificationGateway
   // Extracts the JWT token from the socket client's handshake.
   private extractTokenFromSocket(client: Socket): string | null {
     const authHeader =
-      client.handshake.headers.authorization ||
-      client.handshake.auth?.token;
+      client.handshake.headers.authorization || client.handshake.auth?.token;
 
     // Header token
     if (authHeader) {
@@ -130,24 +130,20 @@ export class NotificationGateway
     const cookieHeader = client.handshake.headers.cookie;
     if (cookieHeader) {
       const cookies = Object.fromEntries(
-        cookieHeader.split(';').map(c => {
+        cookieHeader.split(';').map((c) => {
           const [k, v] = c.trim().split('=');
           return [k, decodeURIComponent(v)];
-        })
+        }),
       );
 
       const token = cookies['authToken'] || cookies['token'];
       if (token) {
-        return token.startsWith('Bearer ')
-          ? token.substring(7)
-          : token;
+        return token.startsWith('Bearer ') ? token.substring(7) : token;
       }
     }
 
     return null;
   }
-
-
 
   /**
    * Subscribes a client to a user's notification room.

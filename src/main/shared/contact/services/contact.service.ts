@@ -52,8 +52,4 @@ export class ContactService {
 
     return successResponse(contact, 'Contact message created successfully');
   }
-
-
-
- 
 }

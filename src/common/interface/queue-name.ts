@@ -5,5 +5,3 @@ export enum QueueName {
   UserRegistration = 'user-registration',
   Message = 'message',
 }
-
-

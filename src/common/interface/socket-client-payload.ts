@@ -7,6 +7,4 @@ export type PayloadForSocketClient = {
   NewMessage: boolean;
   ProductApproveUpdate: boolean;
   Message: boolean;
-
-
 };

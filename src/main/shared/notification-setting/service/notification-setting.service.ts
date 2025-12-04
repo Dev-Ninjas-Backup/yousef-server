@@ -22,8 +22,6 @@ export class NotificationSettingService {
       },
     });
 
-
-
     return successResponse(result, 'Notification setting found successfully');
   }
 
@@ -42,7 +40,7 @@ export class NotificationSettingService {
         NewMessage: dto.NewMessage,
         CustomerInquiryAlert: dto.CustomerInquiryAlert,
         ProductApproveUpdate: dto.ProductApproveUpdate,
- 
+
         message: dto.message,
         userRegistration: dto.userRegistration,
       },
@@ -53,8 +51,6 @@ export class NotificationSettingService {
         CustomerInquiryAlert: dto.CustomerInquiryAlert,
         ProductApproveUpdate: dto.ProductApproveUpdate,
 
-
-   
         message: dto.message,
         userRegistration: dto.userRegistration,
       },
