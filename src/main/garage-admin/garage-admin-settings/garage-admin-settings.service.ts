@@ -3,7 +3,7 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
 export class GarageAdminSettingsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   // update email notifications
   async emailNotification() {
@@ -18,3 +18,4 @@ export class GarageAdminSettingsService {
     return 'Product Approval Update API is working...';
   }
 }
+
