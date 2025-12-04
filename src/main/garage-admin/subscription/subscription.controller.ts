@@ -1,10 +1,9 @@
-import { Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   GetUser,
   ValidateAuth,
   ValidateGarageOwner,
-  ValidateSuperAdmin,
 } from 'src/common/jwt/jwt.decorator';
 import { SubscriptionService } from './subscription.service';
 
@@ -21,15 +20,6 @@ export class SubscriptionController {
   @ValidateAuth()
   async getCurrentPlan(@GetUser('userId') userId: string) {
     return this.subscriptionService.getCurrentPlan(userId);
-  }
-
-  @Post('approve-garage/:userId')
-  @ApiOperation({
-    summary: '[Super Admin] Approve garage and activate 90-day free trial',
-  })
-  @ValidateSuperAdmin()
-  async approveGarage(@Param('userId') userId: string) {
-    return this.subscriptionService.approveGarage(userId);
   }
 
   @Post('monthly-subscription')

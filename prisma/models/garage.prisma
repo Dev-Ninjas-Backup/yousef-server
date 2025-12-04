@@ -4,7 +4,7 @@
 
 model Garage {
   id           String  @id @default(uuid())
-  name         String  @unique
+  name         String 
   coverPhoto   String?
   profileImage String?
   garagePhone  String?
@@ -13,9 +13,11 @@ model Garage {
   city         String?
   emirate      String?
   // ---------- Garage Location (auto from address) ----------
-  address      String?
-  garageLat    Float?
-  garageLng    Float?
+  address          String
+  formattedAddress String?
+  placeId          String?
+  garageLat        Float
+  garageLng        Float
 
   description    String?
   certifications String[]
@@ -32,6 +34,11 @@ model Garage {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([garageLat, garageLng])
+  @@index([placeId])
+  @@index([status])
+  @@index([userId])
 }
 
 // ======================

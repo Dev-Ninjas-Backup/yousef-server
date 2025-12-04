@@ -17,12 +17,12 @@ enum SellerType {
   VERIFIED_SUPPLIER = 'VERIFIED_SUPPLIER',
 }
 
-enum ProductStatus {
-  DRAFT = 'DRAFT',
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-}
+// enum ProductStatus {
+//   DRAFT = 'DRAFT',
+//   PENDING = 'PENDING',
+//   APPROVED = 'APPROVED',
+//   REJECTED = 'REJECTED',
+// }
 
 enum PlanType {
   MONTHLY = 'MONTHLY',

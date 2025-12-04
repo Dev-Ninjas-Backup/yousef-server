@@ -8,20 +8,20 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GoogleLoginDto } from '../dto/google-login.dto';
-import { LoginDto } from '../dto/login.dto';
-import { RegisterDto } from '../dto/register.dto';
-import { AuthGoogleService } from '../services/auth-google.service';
-import { AuthService } from '../services/auth.service';
-import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { unlink } from 'fs/promises';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
 import { ForgetPasswordAuthDto } from '../dto/forgot-password.dto';
+import { GoogleLoginDto } from '../dto/google-login.dto';
+import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
 import { ResetPasswordAuthDto } from '../dto/reset-password';
+import { VerifyOtpAuthDto } from '../dto/varify-otp.dto';
+import { AuthGoogleService } from '../services/auth-google.service';
+import { AuthService } from '../services/auth.service';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -67,7 +67,9 @@ export class AuthController {
 
         try {
           await unlink(file.path);
-        } catch (e) {}
+        } catch (err) {
+          console.log(err);
+        }
       }
 
       // Upload tradeLicense if present
@@ -91,7 +93,9 @@ export class AuthController {
           for (const f of farr) {
             try {
               await unlink(f.path);
-            } catch (e) {}
+            } catch (err) {
+              console.log(err);
+            }
           }
         }
       }

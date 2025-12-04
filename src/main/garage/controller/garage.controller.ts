@@ -108,7 +108,7 @@ export class GarageController {
     return this.garageService.findAll(query);
   }
 
-  @Get(':id')
+  @Get('single-garage/:id')
   @ApiOperation({ summary: 'Retrieve a garage by ID' })
   @ApiParam({
     name: 'id',
@@ -118,13 +118,14 @@ export class GarageController {
   @ApiResponse({ status: 200, description: 'The garage details.' })
   @ApiResponse({ status: 404, description: 'Garage not found.' })
   findOne(@Param('id') id: string) {
+    console.log('single garage');
     return this.garageService.findOne(id);
   }
 
   @ValidateAuth()
   @ApiBearerAuth()
   @ValidateGarageOwner()
-  @Patch(':id')
+  @Patch('update-garage/:id')
   @ApiOperation({ summary: 'Update a garage by ID' })
   @ApiParam({
     name: 'id',
@@ -173,7 +174,7 @@ export class GarageController {
   @ValidateAuth()
   @ApiBearerAuth()
   @ValidateGarageOwner()
-  @Delete(':id')
+  @Delete('delete-garage/:id')
   @ApiOperation({ summary: 'Delete a garage by ID' })
   @ApiParam({
     name: 'id',

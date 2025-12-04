@@ -22,13 +22,13 @@ export const GarageAcceptEmailTemplate = (data: {
       </p>
 
       <p style="font-size:15px; color:#475569;">
-        You now have full access to your dashboard. Your <strong>2-month free trial</strong> starts today.
+        You now have full access to your dashboard. Your <strong>3-month free trial</strong> starts today.
       </p>
 
       <div style="margin:25px 0; padding:18px; background:#f0fdf4; 
                   border-radius:8px; border-left:5px solid #16a34a;">
         <strong>Trial Period:</strong><br />
-        2 Months Free Access<br />
+        3 Months Free Access<br />
         Full Garage Owner Features Enabled
       </div>
 

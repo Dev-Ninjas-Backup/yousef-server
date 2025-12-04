@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateGarageDto {
   @ApiProperty({
-    description: 'Unique name of the garage (optional for update)',
+    description: 'Name of the garage (optional for update)',
     example: 'Elite Auto Repair',
     required: false,
   })
@@ -82,6 +82,42 @@ export class UpdateGarageDto {
   @IsString()
   @IsOptional()
   address?: string;
+
+  @ApiProperty({
+    description: 'Formatted address (optional for update)',
+    example: '123 Sheikh Zayed Road, Dubai, UAE',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  formattedAddress?: string;
+
+  @ApiProperty({
+    description: 'Place ID (optional for update)',
+    example: 'ChIJS5Y3s7V2t4kRr9n2Tt6t6t6',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  placeId?: string;
+
+  @ApiProperty({
+    description: 'Garage latitude (optional for update)',
+    example: '25.2048',
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  garageLat?: number;
+
+  @ApiProperty({
+    description: 'Garage longitude (optional for update)',
+    example: '55.6579',
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  garageLng?: number;
 
   @ApiProperty({
     description: 'Description (optional for update)',

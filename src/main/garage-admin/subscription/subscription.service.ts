@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AppError } from 'src/common/error/handle-error.app';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { PaymentService } from 'src/main/shared/payment/service/payment.service';
 
@@ -38,9 +39,12 @@ export class SubscriptionService {
       user.subscriptionTrialEndDate &&
       user.subscriptionTrialEndDate > now
     ) {
-      const daysRemaining = Math.ceil(
-        (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+      const daysRemaining = Math.max(
+        0,
+        Math.ceil(
+          (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
       );
 
       return {
@@ -61,9 +65,12 @@ export class SubscriptionService {
       user.subscriptionEndDate &&
       user.subscriptionEndDate > now
     ) {
-      const daysRemaining = Math.ceil(
-        (user.subscriptionEndDate.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+      const daysRemaining = Math.max(
+        0,
+        Math.ceil(
+          (user.subscriptionEndDate.getTime() - now.getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
       );
 
       return {
@@ -87,48 +94,6 @@ export class SubscriptionService {
     };
   }
 
-  // Approve garage and activate 90-day free trial
-  async approveGarage(userId: string): Promise<{ message: string }> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.garageStatus !== 'PENDING') {
-      throw new NotFoundException('Garage is not in pending status');
-    }
-
-    const now = new Date();
-    const trialEnd = new Date(now);
-    trialEnd.setDate(trialEnd.getDate() + 90);
-
-    // Create GarageSubscription for trial
-    await this.prisma.garageSubscription.create({
-      data: {
-        userId,
-        type: 'TRIAL',
-        startDate: now,
-        endDate: trialEnd,
-        status: 'ACTIVE',
-      },
-    });
-
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        garageStatus: 'APPROVE',
-        subscriptionTrialStartDate: now,
-        subscriptionTrialEndDate: trialEnd,
-        isSubscriptionTrialActive: true,
-      },
-    });
-
-    return { message: 'Garage approved and 90-day trial activated' };
-  }
-
   // Create monthly subscription session ($100)
   async createMonthlySubscriptionSession(
     userId: string,
@@ -137,49 +102,104 @@ export class SubscriptionService {
   }
 
   // Get garage subscription history for a user
-  async getSubscriptionHistory(userId: string): Promise<any[]> {
-    const subscriptions = await this.prisma.garageSubscription.findMany({
+  async getSubscriptionHistory(userId: string) {
+    const subscriptions = await this.prisma.payment.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: { payment: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phone: true,
+            profilePhoto: true,
+          },
+        },
+      },
+      omit: {
+        id: true,
+        updatedAt: true,
+        planId: true,
+        garageSubscriptionId: true,
+        productId: true,
+      },
     });
 
-    return subscriptions.map((sub, index) => {
-      const isTrial = sub.type === 'TRIAL';
-      const payment = sub.payment[0];
+    return subscriptions;
 
-      // const transactionId = `TXN${String(subscriptions.length - index).padStart(3, '0')}`;
-      const transactionId = payment?.transactionId ? payment.transactionId : '';
+    // {
+    //   id: 'eeb5f64b-a2d9-4bd7-9a08-2b7a35333df4',
+    //     sessionId: 'cs_test_a1dzxibYUeir9qfQ4aeNNFqpUWXyVEQhBU1KGdBPTmUlVYjCn4LLK6sZCt',
+    //       transactionId: 'pi_3SZgqQP3Cjs6shL61Bh9IYw8',
+    //         amount: 10000,
+    //           currency: 'usd',
+    //             status: 'COMPLETED',
+    //               paymentMethod: 'card',
+    //                 paymentType: 'GARAGE_SUBSCRIPTION',
+    //                   createdAt: 2025 - 12-01T23: 49: 26.268Z,
+    //                     updatedAt: 2025 - 12-01T23: 49: 26.268Z,
+    //                       userId: 'a733dc9b-4916-4047-9492-2366c93857c7',
+    //                         planId: null,
+    //                           garageSubscriptionId: 'b900ba90-84b8-4c2c-8265-34b63fe500fc',
+    //                             productId: null
+    // },
 
-      return {
-        transactionId,
-        date: new Date(sub.startDate).toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        }),
-        description: isTrial
-          ? '3-Month Free Trial Started'
-          : 'Monthly Subscription',
-        paymentMethod: payment?.paymentMethod
-          ? payment.paymentMethod.charAt(0).toUpperCase() +
-            payment.paymentMethod.slice(1)
-          : '-',
-        amount: isTrial ? 'Free' : sub.amount! / 100,
-        currency: isTrial ? null : sub.currency?.toUpperCase(),
-        status: 'Paid',
-      };
-    });
+    // return subscriptions.map((sub, index) => {
+    //   const isTrial = sub.type === 'TRIAL';
+    //   const payment = sub.payment[0];
+
+    //   const transactionId = payment?.transactionId ? payment.transactionId : '';
+
+    //   return {
+    //     transactionId,
+    //     date: new Date(sub.createdAt).toLocaleDateString('en-GB', {
+    //       day: 'numeric',
+    //       month: 'long',
+    //       year: 'numeric',
+    //     }),
+    //     description: isTrial
+    //       ? '3-Month Free Trial Started'
+    //       : 'Monthly Subscription',
+    //     paymentMethod: payment?.paymentMethod
+    //       ? payment.paymentMethod.charAt(0).toUpperCase() +
+    //       payment.paymentMethod.slice(1)
+    //       : '-',
+    //     amount: isTrial ? 'Free' : sub.amount! / 100,
+    //     currency: isTrial ? null : sub.currency?.toUpperCase(),
+    //     status: 'Paid',
+    //   };
+    // });
   }
 
   // Cancel subscription for user model with isSubscribed & isSubscriptionTrialActive set to false
+
   async cancelSubscription(userId: string): Promise<any> {
-    return this.prisma.user.update({
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    // user not subscription
+    if (!user.isSubscribed && !user.isSubscriptionTrialActive) {
+      throw new AppError(400, 'No active subscription found');
+    }
+
+    // Subscription Status Update
+    await this.prisma.user.update({
       where: { id: userId },
       data: {
         isSubscribed: false,
         isSubscriptionTrialActive: false,
       },
     });
+
+    return {
+      message: 'Subscription cancelled successfully',
+      data: null,
+    };
   }
 }

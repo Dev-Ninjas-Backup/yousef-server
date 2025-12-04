@@ -20,9 +20,11 @@ export interface GarageWithDistance {
   street: string | null;
   city: string | null;
   emirate: string | null;
-  address: string | null;
-  garageLat: number | null;
-  garageLng: number | null;
+  address: string;
+  formattedAddress: string | null;
+  placeId: string | null;
+  garageLat: number;
+  garageLng: number;
   description: string | null;
   certifications: string[];
   weekdaysHours: string | null;
@@ -42,8 +44,8 @@ export interface GarageWithDistance {
   }[];
   reviews: {
     id: string;
-    rating: number;
-    comment: string | null;
+    overallExperience: number;
+    comment: string;
   }[];
   averageRating: number;
   totalReviews: number;
@@ -158,8 +160,9 @@ export class LocationgarageService {
     // Fetch all garages with coordinates
     const garages = await this.prisma.garage.findMany({
       where: {
-        garageLat: { not: null },
-        garageLng: { not: null },
+        NOT: {
+          OR: [{ garageLat: 0 }, { garageLng: 0 }],
+        },
         user: {
           isActive: true,
           isDeleted: false,
@@ -187,7 +190,7 @@ export class LocationgarageService {
         reviews: {
           select: {
             id: true,
-            rating: true,
+            overallExperience: true,
             comment: true,
           },
         },
@@ -206,7 +209,7 @@ export class LocationgarageService {
 
         // Calculate average rating
         const totalRating = garage.reviews.reduce(
-          (sum, review) => sum + review.rating,
+          (sum, review) => sum + review.overallExperience,
           0,
         );
         const averageRating =
@@ -301,7 +304,7 @@ export class LocationgarageService {
     }
 
     const totalRating = garage.reviews.reduce(
-      (sum, review) => sum + review.rating,
+      (sum, review) => sum + review.overallExperience,
       0,
     );
     const averageRating =

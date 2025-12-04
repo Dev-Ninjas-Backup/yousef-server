@@ -1,9 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateGarageDto {
   @ApiProperty({
-    description: 'Unique name of the garage',
+    description: 'Name of the garage',
     example: 'Elite Auto Repair',
   })
   @IsString()
@@ -65,13 +72,48 @@ export class CreateGarageDto {
   emirate?: string;
 
   @ApiProperty({
-    description: 'Full address',
-    example: '123 Sheikh Zayed Road, Dubai, UAE',
+    description: 'Full address shown to user (from Google Places)',
+    example: 'Al Quoz Industrial Area 3 - Dubai',
+  })
+  @IsString()
+  @IsNotEmpty()
+  address: string;
+
+  @ApiProperty({
+    description: 'Clean formatted address from Google',
+    example: 'Warehouse 12, Al Quoz 3, Dubai, United Arab Emirates',
     required: false,
   })
   @IsString()
   @IsOptional()
-  address?: string;
+  formattedAddress?: string;
+
+  @ApiProperty({
+    description: 'Google Place ID - Auto filled by Google Places',
+    example: 'ChIJx9pbk1oX9D4R9W7f12345678',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  placeId?: string;
+
+  @ApiProperty({
+    description: 'Latitude - auto filled by Google Places',
+    example: 25.123456,
+  })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  garageLat: number;
+
+  @ApiProperty({
+    description: 'Longitude - auto filled by Google Places',
+    example: 55.234567,
+  })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  garageLng: number;
 
   @ApiProperty({
     description: 'Description',

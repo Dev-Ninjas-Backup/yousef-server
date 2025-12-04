@@ -1,9 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString, Min, Max, IsNotEmpty } from 'class-validator';
+import {
+  IsInt,
+  IsString,
+  Min,
+  Max,
+  IsNotEmpty,
+  IsBoolean,
+  IsOptional,
+  IsArray,
+} from 'class-validator';
 
 export class CreateReviewDto {
   @ApiProperty({
-    description: 'Rating for the garage (1-5)',
+    description: 'Overall experience rating (1-5)',
     example: 5,
     minimum: 1,
     maximum: 5,
@@ -11,14 +20,65 @@ export class CreateReviewDto {
   @IsInt()
   @Min(1)
   @Max(5)
-  rating: number;
+  overallExperience: number;
+
+  @ApiProperty({
+    description: 'Service quality rating (1-5)',
+    example: 5,
+    minimum: 1,
+    maximum: 5,
+  })
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  serviceQuality: number;
+
+  @ApiProperty({
+    description: 'Timeliness rating (1-5)',
+    example: 4,
+    minimum: 1,
+    maximum: 5,
+  })
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  timeliness: number;
+
+  @ApiProperty({
+    description: 'Value for money rating (1-5)',
+    example: 5,
+    minimum: 1,
+    maximum: 5,
+  })
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  valueForMoney: number;
 
   @ApiProperty({
     description: 'Your comment about the garage service',
-    example:
-      'This garage service is awesome! Great customer service and quality work.',
+    example: 'Excellent service! Highly recommended.',
   })
   @IsString()
   @IsNotEmpty()
   comment: string;
+
+  @ApiProperty({
+    description: 'Would you recommend this garage?',
+    example: true,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  recommendation?: boolean;
+
+  @ApiProperty({
+    description: 'Photo URLs',
+    example: ['https://example.com/photo1.jpg'],
+    required: false,
+    type: [String],
+  })
+  @IsArray()
+  @IsOptional()
+  photos?: string[];
 }
