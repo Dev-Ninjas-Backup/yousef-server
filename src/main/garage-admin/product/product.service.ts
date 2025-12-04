@@ -187,14 +187,64 @@ export class ProductService {
     return product;
   }
 
-  async findAll() {
-    return this.prisma.product.findMany({
-      include: {
-        seller: true,
-        createdBy: { select: { id: true, email: true, fullName: true } },
-        category: true,
+  async findAll(query?: {
+    page?: string;
+    limit?: string;
+    search?: string;
+    category?: string;
+    condition?: string;
+  }) {
+    const page = parseInt(query?.page || '1');
+    const limit = parseInt(query?.limit || '20');
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    // Searching: partName, description, brand
+    if (query?.search) {
+      where.OR = [
+        { partName: { contains: query.search, mode: 'insensitive' } },
+        { description: { contains: query.search, mode: 'insensitive' } },
+        { brand: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Filtering: category by name from partsCategory table
+    if (query?.category) {
+      where.category = {
+        name: { contains: query.category, mode: 'insensitive' },
+      };
+    }
+
+    // Filtering: condition
+    if (query?.condition) {
+      where.condition = { contains: query.condition, mode: 'insensitive' };
+    }
+
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          seller: true,
+          createdBy: { select: { id: true, email: true, fullName: true } },
+          category: true,
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return {
+      data: products,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   async findOne(id: string) {
