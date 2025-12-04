@@ -16,6 +16,8 @@ import { UsersModule } from './users/users.module';
 import { GarageAdminModule } from './garage-admin/garage-admin.module';
 import { ReviewModule } from './review/review.module';
 import { GarageLocationModule } from './shared/garage-location/garage-location.module';
+
+import { NotificationSettingModule } from './shared/notification-setting/notification-setting.module';
 import { PrivateMessageModule } from './shared/private-message/private-message.module';
 import { PromotionalAndFeaturedModule } from './promotional-and-featured/promotional-and-featured.module';
 
@@ -36,6 +38,7 @@ import { PromotionalAndFeaturedModule } from './promotional-and-featured/promoti
     ReviewModule,
     GarageLocationModule,
     PromotionalAndFeaturedModule,
+    NotificationSettingModule,
   ],
   controllers: [],
   providers: [],
