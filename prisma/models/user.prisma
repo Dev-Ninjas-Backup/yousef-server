@@ -97,7 +97,8 @@ model User {
   createdProducts Product[]
 
   // garage subscriptions
-  garageSubscriptions GarageSubscription[]
+  garageSubscriptions      GarageSubscription[]
+  garageAdminNotifications garageAdminNotification[]
 
   @@map("users")
 }
