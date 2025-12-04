@@ -1,11 +1,12 @@
 import { Global, Module } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { NotificationListener } from './ NotificationListener';
 import { NotificationGateway } from './notification.gateway';
 
 @Global()
 @Module({
-  providers: [NotificationGateway, JwtService],
+  providers: [NotificationGateway, JwtService, NotificationListener],
   controllers: [],
-  exports: [NotificationGateway],
+  exports: [NotificationGateway, NotificationListener],
 })
-export class NotificationModule {}
+export class NotificationModule { }

@@ -12,6 +12,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { LibModule } from './lib/lib.module';
 import { NotificationModule } from './lib/notificaton/notification.module';
 import { MainModule } from './main/main.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { MainModule } from './main/main.module';
     CacheModule.register({
       isGlobal: true,
     }),
-
+ EventEmitterModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/files',

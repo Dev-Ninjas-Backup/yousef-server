@@ -215,7 +215,7 @@ export class NotificationGateway
   public async notifySingleUser(
     userId: string,
     event: string,
-    data: Notification,
+    data: any,
   ): Promise<void> {
     const clients = this.getClientsForUser(userId);
     if (clients.size === 0) {
@@ -232,7 +232,7 @@ export class NotificationGateway
   public async notifyMultipleUsers(
     userIds: string[],
     event: string,
-    data: Notification,
+    data: any,
   ): Promise<void> {
     if (userIds.length === 0) {
       this.logger.warn('No user IDs provided for notification');
@@ -246,7 +246,7 @@ export class NotificationGateway
 
   public async notifyAllUsers(
     event: string,
-    data: Notification,
+    data: any,
   ): Promise<void> {
     this.clients.forEach((clients, userId) => {
       clients.forEach((client) => {

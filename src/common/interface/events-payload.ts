@@ -35,9 +35,10 @@ export interface UserRegistrationEvent extends BaseEvent<UserRegistrationMeta> {
 export interface CustomerInquiryAlertEvent
   extends BaseEvent<CustomerInquiryAlertMeta> {
   info: {
-    customerId: string;
+    Id: string;
     subject: string;
     message: string;
+    date: string;
     recipients: { id: string; email: string }[];
   };
 }

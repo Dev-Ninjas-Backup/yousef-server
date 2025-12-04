@@ -1,9 +1,9 @@
 // Event payload interfaces (aligned with NotificationToggle schema)
 
 export interface CustomerInquiryAlertMeta {
-  contetId: string;
-  userId: string;
-  status: 'APPROVED' | 'Declined' | 'PENDING';
+  title: string;
+  message: string;
+  senderEmail: string;
   date: string;
 }
 
