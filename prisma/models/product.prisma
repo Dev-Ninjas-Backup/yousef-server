@@ -56,8 +56,8 @@ model Product {
   categoryId  String
   category    PartsCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   condition   String
-  price       Decimal @db.Decimal(10, 2)
-  quantity    Int     @default(1)
+  price       Decimal       @db.Decimal(10, 2)
+  quantity    Int           @default(1)
   description String?
 
   photos String[] @default([])

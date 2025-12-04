@@ -1,4 +1,4 @@
-// prisma/schema.prisma
+
 model Contact {
   id           String         @id @default(uuid())
   FirstName    String
@@ -9,7 +9,7 @@ model Contact {
   othersubject String?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-
+  garageOwnerId String?
   messages Message[]
 }
 
@@ -20,6 +20,7 @@ model Message {
 
   // true → admin, false → user
   isFromAdmin Boolean @default(false)
+  isForGrageAdmin Boolean @default(false)
 
   content   String
   createdAt DateTime @default(now())
