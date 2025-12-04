@@ -1,17 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { MailService } from 'src/lib/mail/mail.service';
-import { HandleError } from 'src/common/error/handle-error.decorator';
 import { AppError } from 'src/common/error/handle-error.app';
+import { HandleError } from 'src/common/error/handle-error.decorator';
 import {
   successResponse,
   TResponse,
 } from 'src/common/utilsResponse/response.util';
-import { PaginationDto } from 'src/common/dto/pagination';
-import { CreateContactDto } from '../dto/create-subscribe.dto';
-import { ENVEnum } from 'src/common/enum/env.enum';
+import { MailService } from 'src/lib/mail/mail.service';
+import { PrismaService } from 'src/lib/prisma/prisma.service';
+
 import { ConfigService } from '@nestjs/config';
 import { ContactEmailTemplate } from 'src/common/email/contact';
+import { ENVEnum } from 'src/common/enum/env.enum';
+import { CreateContactDto } from '../dto/create-subscribe.dto';
 
 @Injectable()
 export class ContactService {
@@ -21,7 +21,7 @@ export class ContactService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @HandleError('Failed to create contact message', 'Contact')
   async create(payload: CreateContactDto): Promise<TResponse<any>> {

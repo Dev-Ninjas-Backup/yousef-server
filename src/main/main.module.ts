@@ -36,10 +36,9 @@ import { PrivateMessageModule } from './shared/private-message/private-message.m
     PrivateMessageModule,
     ReviewModule,
     GarageLocationModule,
-    NotificationSettingModule
-
+    NotificationSettingModule,
   ],
   controllers: [],
   providers: [],
 })
-export class MainModule { }
+export class MainModule {}

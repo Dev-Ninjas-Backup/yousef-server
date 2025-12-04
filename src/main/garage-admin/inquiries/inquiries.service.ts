@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2 } from "@nestjs/event-emitter";
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContactEmailTemplate } from 'src/common/email/contact';
 import { UserEnum } from 'src/common/enum/user.enum';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { CustomerInquiryAlertEvent } from 'src/common/interface/events-payload';
 import { EVENT_TYPES } from 'src/common/interface/events.name';
-import { successResponse, TResponse } from 'src/common/utilsResponse/response.util';
+import {
+  successResponse,
+  TResponse,
+} from 'src/common/utilsResponse/response.util';
 import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
@@ -17,7 +20,7 @@ export class InquiriesService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   @HandleError('Failed to fetch custom inquiries', 'INQUIRIES')
   async getCustomInquiries(userId: string) {
@@ -52,12 +55,14 @@ export class InquiriesService {
   }
 
   @HandleError('Failed to create contact message', 'Contact')
-  async createCustomInquiriesMessages(payload: CreateInquiryDto): Promise<TResponse<any>> {
+  async createCustomInquiriesMessages(
+    payload: CreateInquiryDto,
+  ): Promise<TResponse<any>> {
     // Save inquiry to database
     const contact = await this.prisma.contact.create({
       data: {
         ...payload,
-        garageOwnerId: payload.garageOwnerId
+        garageOwnerId: payload.garageOwnerId,
       },
     });
 
@@ -113,15 +118,15 @@ export class InquiriesService {
         user: {
           role: UserEnum.GARAGE_OWNER,
           id: payload.garageOwnerId,
-        }
+        },
       },
       select: {
         user: {
           select: {
             id: true,
             email: true,
-          }
-        }
+          },
+        },
       },
     });
 
@@ -131,12 +136,14 @@ export class InquiriesService {
     // ✅ FIX: Fallback if no recipients found
     // -----------------------------------------
     if (recipients.length === 0) {
-      console.warn('⚠️ No recipients with CustomerInquiryAlert enabled. Adding garage owner as fallback.');
+      console.warn(
+        '⚠️ No recipients with CustomerInquiryAlert enabled. Adding garage owner as fallback.',
+      );
       recipients.push({
         user: {
           id: payload.garageOwnerId,
           email: garageOwner.email,
-        }
+        },
       });
     }
 
@@ -176,17 +183,17 @@ export class InquiriesService {
     // Emit Event for Real-time Notification
     // -----------------------------------------
     const eventPayload: CustomerInquiryAlertEvent = {
-      action: "CREATE",
+      action: 'CREATE',
       meta: {
         title: payload.subject,
-        message: payload.message || "",
+        message: payload.message || '',
         senderEmail: payload.email,
         date: new Date().toISOString(),
       },
       info: {
         Id: payload.garageOwnerId,
-        subject: payload.subject || "",
-        message: payload.message || "",
+        subject: payload.subject || '',
+        message: payload.message || '',
         date: new Date().toISOString(),
         recipients: recipients.map((r) => ({
           id: r.user.id,
@@ -195,7 +202,10 @@ export class InquiriesService {
       },
     };
 
-    this.eventEmitter.emit(EVENT_TYPES.CustomerInquiryAlert_CREATE, eventPayload);
+    this.eventEmitter.emit(
+      EVENT_TYPES.CustomerInquiryAlert_CREATE,
+      eventPayload,
+    );
 
     console.log('✅ Event emitted with', recipients.length, 'recipients');
 

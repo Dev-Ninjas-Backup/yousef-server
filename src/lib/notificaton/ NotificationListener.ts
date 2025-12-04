@@ -10,7 +10,6 @@ import type {
 } from 'src/common/interface/events-payload';
 import { NotificationGateway } from './notification.gateway';
 
-
 @Injectable()
 export class NotificationListener {
   private readonly logger = new Logger(NotificationListener.name);

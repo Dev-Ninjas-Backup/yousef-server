@@ -244,10 +244,7 @@ export class NotificationGateway
     });
   }
 
-  public async notifyAllUsers(
-    event: string,
-    data: any,
-  ): Promise<void> {
+  public async notifyAllUsers(event: string, data: any): Promise<void> {
     this.clients.forEach((clients, userId) => {
       clients.forEach((client) => {
         client.emit(event, data);

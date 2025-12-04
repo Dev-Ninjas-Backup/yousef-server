@@ -23,7 +23,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     CacheModule.register({
       isGlobal: true,
     }),
- EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/files',
