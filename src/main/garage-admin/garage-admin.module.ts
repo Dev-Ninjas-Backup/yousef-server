@@ -5,6 +5,7 @@ import { ProductModule } from './product/product.module';
 import { PromotionalAdModule } from './promotional-ad/promotional-ad.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { NotificationModule } from './notification/notification.module';
+import { GarageAdminSettingsModule } from './garage-admin-settings/garage-admin-settings.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { NotificationModule } from './notification/notification.module';
     SubscriptionModule,
     InquiriesModule,
     NotificationModule,
+    GarageAdminSettingsModule,
   ],
 })
 export class GarageAdminModule {}

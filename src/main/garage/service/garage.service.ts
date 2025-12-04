@@ -69,20 +69,6 @@ export class GarageService {
       ? createGarageDto.certifications.split(',').map((b) => b.trim())
       : [];
 
-    // Check if garage name already exists
-    const existingGarage = await this.prisma.garage.findFirst({
-      where: {
-        name: {
-          equals: createGarageDto.name.trim(),
-          mode: 'insensitive',
-        },
-      },
-    });
-
-    if (existingGarage) {
-      throw new AppError(409, 'Garage with this name already exists');
-    }
-
     // Create garage data object for Prisma
     const garageData = {
       name: createGarageDto.name.trim(),
@@ -94,6 +80,10 @@ export class GarageService {
       city: createGarageDto.city,
       emirate: createGarageDto.emirate,
       address: createGarageDto.address,
+      formattedAddress: createGarageDto.formattedAddress,
+      placeId: createGarageDto.placeId,
+      garageLat: createGarageDto.garageLat,
+      garageLng: createGarageDto.garageLng,
       description: createGarageDto.description,
       certifications: certificationsArray,
       weekdaysHours: createGarageDto.weekdaysHours,
@@ -176,6 +166,15 @@ export class GarageService {
               updatedAt: true,
             },
           },
+          reviews: {
+            where: { isVisible: true },
+            select: {
+              overallExperience: true,
+              serviceQuality: true,
+              timeliness: true,
+              valueForMoney: true,
+            },
+          },
         },
         skip,
         take: limit,
@@ -184,11 +183,34 @@ export class GarageService {
       this.prisma.garage.count({ where }),
     ]);
 
-    // Transform the response to simplify the services array
-    const transformedGarages = garages.map((garage) => ({
-      ...garage,
-      services: garage.services.map((gs) => gs.service),
-    }));
+    // Transform the response with average rating
+    const transformedGarages = garages.map((garage) => {
+      const averageRating =
+        garage.reviews.length > 0
+          ? parseFloat(
+              (
+                garage.reviews.reduce(
+                  (sum, review) =>
+                    sum +
+                    (review.overallExperience +
+                      review.serviceQuality +
+                      review.timeliness +
+                      review.valueForMoney) /
+                      4,
+                  0,
+                ) / garage.reviews.length
+              ).toFixed(1),
+            )
+          : 0;
+
+      return {
+        ...garage,
+        services: garage.services.map((gs) => gs.service),
+        averageRating,
+        totalReviews: garage.reviews.length,
+        reviews: undefined,
+      };
+    });
 
     const result = {
       data: transformedGarages,
@@ -232,15 +254,46 @@ export class GarageService {
             updatedAt: true,
           },
         },
+        reviews: {
+          where: { isVisible: true },
+          select: {
+            overallExperience: true,
+            serviceQuality: true,
+            timeliness: true,
+            valueForMoney: true,
+          },
+        },
       },
     });
 
     if (!garage) throw new AppError(404, 'Garage not found');
 
-    // Transform the response to simplify the services array
+    // Calculate average rating from all 4 fields
+    const averageRating =
+      garage.reviews.length > 0
+        ? parseFloat(
+            (
+              garage.reviews.reduce(
+                (sum, review) =>
+                  sum +
+                  (review.overallExperience +
+                    review.serviceQuality +
+                    review.timeliness +
+                    review.valueForMoney) /
+                    4,
+                0,
+              ) / garage.reviews.length
+            ).toFixed(1),
+          )
+        : 0;
+
+    // Transform the response
     const transformedGarage = {
       ...garage,
       services: garage.services.map((gs) => gs.service),
+      averageRating,
+      totalReviews: garage.reviews.length,
+      reviews: undefined,
     };
 
     return successResponse(transformedGarage, 'Garage retrieved successfully');
@@ -319,34 +372,72 @@ export class GarageService {
     // Process certifications
     const certificationsArray = updateGarageDto.certifications
       ? updateGarageDto.certifications.split(',').map((b) => b.trim())
-      : [];
+      : undefined;
 
-    // Create update data object for Prisma
-    const updateData: any = {
-      ...updateGarageDto,
-      name: updateGarageDto.name?.trim(),
-      garagePhone: updateGarageDto.phone,
-    };
+    const updateData: any = {};
+
+    if (updateGarageDto.name) updateData.name = updateGarageDto.name.trim();
     if (coverPhotoUrl) updateData.coverPhoto = coverPhotoUrl;
     if (profileImageUrl) updateData.profileImage = profileImageUrl;
-    if (brandArray) updateData.brandExpertise = brandArray;
+    if (updateGarageDto.phone) updateData.garagePhone = updateGarageDto.phone;
+    if (updateGarageDto.email) updateData.email = updateGarageDto.email;
+    if (updateGarageDto.street) updateData.street = updateGarageDto.street;
+    if (updateGarageDto.city) updateData.city = updateGarageDto.city;
+    if (updateGarageDto.emirate) updateData.emirate = updateGarageDto.emirate;
+    if (updateGarageDto.address) updateData.address = updateGarageDto.address;
+    if (updateGarageDto.formattedAddress)
+      updateData.formattedAddress = updateGarageDto.formattedAddress;
+    if (updateGarageDto.placeId) updateData.placeId = updateGarageDto.placeId;
+    if (updateGarageDto.garageLat !== undefined)
+      updateData.garageLat = updateGarageDto.garageLat;
+    if (updateGarageDto.garageLng !== undefined)
+      updateData.garageLng = updateGarageDto.garageLng;
+    if (updateGarageDto.description)
+      updateData.description = updateGarageDto.description;
     if (certificationsArray) updateData.certifications = certificationsArray;
+    if (updateGarageDto.weekdaysHours)
+      updateData.weekdaysHours = updateGarageDto.weekdaysHours;
+    if (updateGarageDto.weekendsHours)
+      updateData.weekendsHours = updateGarageDto.weekendsHours;
+    if (brandArray) updateData.brandExpertise = brandArray;
 
-    // Remove phone field (it's mapped to garagePhone)
-    delete updateData.phone;
-
-    // Remove undefined fields
-    Object.keys(updateData).forEach(
-      (key) => updateData[key] === undefined && delete updateData[key],
-    );
-
-    // Update database
     const updatedGarage = await this.prisma.garage.update({
       where: { id },
       data: updateData,
+      include: {
+        services: {
+          select: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              },
+            },
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            bio: true,
+            phone: true,
+            profilePhoto: true,
+            city: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
     });
 
-    return successResponse(updatedGarage, 'Garage updated successfully');
+    const transformedGarage = {
+      ...updatedGarage,
+      services: updatedGarage.services.map((gs) => gs.service),
+    };
+
+    return successResponse(transformedGarage, 'Garage updated successfully');
   }
 
   @HandleError('Failed to delete garage', 'Garage')
@@ -361,107 +452,7 @@ export class GarageService {
     }
 
     await this.prisma.garage.delete({ where: { id } });
+
     return successResponse(null, 'Garage deleted successfully');
   }
-
-  // ---------------- Garage Management --------------
-  // @HandleError('Failed to create garage', 'Garage')
-  // async locationcreate(
-  //   userId: string,
-  //   createGarageDto: CreateGarageDto,
-  //   files: {
-  //     coverPhoto?: Express.Multer.File;
-  //     profileImage?: Express.Multer.File;
-  //   } = {},
-  // ): Promise<TResponse<any>> {
-  //   let coverPhotoUrl: string | undefined;
-  //   let profileImageUrl: string | undefined;
-
-  //   // Upload coverPhoto
-  //   if (files.coverPhoto) {
-  //     const { url } = await this.s3FileService.processUploadedFile(files.coverPhoto);
-  //     coverPhotoUrl = url;
-  //   }
-
-  //   // Upload profileImage
-  //   if (files.profileImage) {
-  //     const { url } = await this.s3FileService.processUploadedFile(files.profileImage);
-  //     profileImageUrl = url;
-  //   }
-
-  //   // Brand Expertise
-  //   const brandArray = createGarageDto.brandExpertise
-  //     ? createGarageDto.brandExpertise.split(',').map((b) => b.trim())
-  //     : [];
-
-  //   // Certifications
-  //   const certificationsArray = createGarageDto.certifications
-  //     ? createGarageDto.certifications.split(',').map((b) => b.trim())
-  //     : [];
-
-  //   // Check for duplicate name
-  //   const existingGarage = await this.prisma.garage.findFirst({
-  //     where: {
-  //       name: { equals: createGarageDto.name.trim(), mode: 'insensitive' },
-  //     },
-  //   });
-
-  //   if (existingGarage) {
-  //     throw new AppError(409, 'Garage with this name already exists');
-  //   }
-
-  //   // ===============================
-  //   // AUTO GENERATE LAT & LNG
-  //   // ===============================
-  //   const fullAddress = `${createGarageDto.street ?? ''}, ${createGarageDto.city ?? ''}, ${createGarageDto.emirate ?? ''}`
-  //     .replace(/, ,/g, ',')
-  //     .trim();
-
-  //   let lat: number | null = null;
-  //   let lng: number | null = null;
-
-  //   if (fullAddress.length > 3) {
-  //     const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-  //       fullAddress,
-  //     )}&key=${this.configService.get<string>(ENVEnum.GOOGLE_MAPS_API_KEY)}`;
-
-  //     const response = await fetch(geoUrl);
-  //     const data = await response.json();
-
-  //     if (data.status === 'OK' && data.results.length > 0) {
-  //       lat = data.results[0].geometry.location.lat;
-  //       lng = data.results[0].geometry.location.lng;
-  //     }
-  //   }
-
-  //   // ===============================
-  //   // Prepare database data
-  //   // ===============================
-  //   const garageData = {
-  //     name: createGarageDto.name.trim(),
-  //     coverPhoto: coverPhotoUrl,
-  //     profileImage: profileImageUrl,
-  //     garagePhone: createGarageDto.phone,
-  //     email: createGarageDto.email,
-  //     street: createGarageDto.street,
-  //     city: createGarageDto.city,
-  //     emirate: createGarageDto.emirate,
-  //     address: createGarageDto.address,
-  //     description: createGarageDto.description,
-  //     certifications: certificationsArray,
-  //     weekdaysHours: createGarageDto.weekdaysHours,
-  //     weekendsHours: createGarageDto.weekendsHours,
-  //     brandExpertise: brandArray,
-  //     userId: userId,
-
-  //     // === Auto generated ===
-  //     garageLat: lat ?? undefined,
-  //     garageLng: lng ?? undefined,
-  //   };
-
-  //   // Save
-  //   const garage = await this.prisma.garage.create({ data: garageData });
-
-  //   return successResponse(garage, 'Garage created successfully');
-  // }
 }

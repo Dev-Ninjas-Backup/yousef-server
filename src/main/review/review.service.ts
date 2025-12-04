@@ -66,9 +66,9 @@ export class ReviewService {
     const { page = 1, limit = 10, rating, search } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = { garageId };
+    const where: any = { garageId, isVisible: true };
     if (rating) {
-      where.rating = rating;
+      where.overallExperience = parseInt(rating);
     }
     if (search) {
       where.comment = {
@@ -111,7 +111,7 @@ export class ReviewService {
 
     const where: any = { userId };
     if (rating) {
-      where.rating = rating;
+      where.overallExperience = parseInt(rating);
     }
     if (search) {
       where.comment = {
@@ -214,17 +214,22 @@ export class ReviewService {
     }
 
     const [totalReviews, ratingStats] = await Promise.all([
-      this.prisma.review.count({ where: { garageId } }),
+      this.prisma.review.count({ where: { garageId, isVisible: true } }),
       this.prisma.review.groupBy({
-        by: ['rating'],
-        where: { garageId },
-        _count: { rating: true },
+        by: ['overallExperience'],
+        where: { garageId, isVisible: true },
+        _count: { overallExperience: true },
       }),
     ]);
 
-    const averageRating = await this.prisma.review.aggregate({
-      where: { garageId },
-      _avg: { rating: true },
+    const averageRatings = await this.prisma.review.aggregate({
+      where: { garageId, isVisible: true },
+      _avg: {
+        overallExperience: true,
+        serviceQuality: true,
+        timeliness: true,
+        valueForMoney: true,
+      },
     });
 
     const ratingDistribution = {
@@ -236,13 +241,19 @@ export class ReviewService {
     };
 
     ratingStats.forEach((stat) => {
-      ratingDistribution[stat.rating] = stat._count.rating;
+      ratingDistribution[stat.overallExperience] =
+        stat._count.overallExperience;
     });
 
     return successResponse(
       {
         totalReviews,
-        averageRating: averageRating._avg.rating || 0,
+        averageRatings: {
+          overall: averageRatings._avg.overallExperience || 0,
+          serviceQuality: averageRatings._avg.serviceQuality || 0,
+          timeliness: averageRatings._avg.timeliness || 0,
+          valueForMoney: averageRatings._avg.valueForMoney || 0,
+        },
         ratingDistribution,
       },
       'Garage statistics fetched successfully',
