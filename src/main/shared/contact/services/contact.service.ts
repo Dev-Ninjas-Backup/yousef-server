@@ -53,44 +53,7 @@ export class ContactService {
     return successResponse(contact, 'Contact message created successfully');
   }
 
-  @HandleError('Failed to fetch contacts', 'Contact')
-  async findAll(query: PaginationDto): Promise<TResponse<any>> {
-    const page = query.page || 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 10;
 
-    const contacts = await this.prisma.contact.findMany({
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
 
-    return successResponse(contacts, 'Contacts fetched successfully');
-  }
-
-  @HandleError('Failed to fetch contact', 'Contact')
-  async findOne(id: string): Promise<TResponse<any>> {
-    const contact = await this.prisma.contact.findUnique({ where: { id } });
-
-    if (!contact) {
-      throw new AppError(404, `No contact found with ID: ${id}`);
-    }
-
-    return successResponse(contact, 'Contact fetched successfully');
-  }
-
-  @HandleError('Failed to delete contact', 'Contact')
-  async remove(id: string): Promise<TResponse<any>> {
-    await this.ensureExists(id);
-
-    const deleted = await this.prisma.contact.delete({ where: { id } });
-
-    return successResponse(deleted, 'Contact deleted successfully');
-  }
-
-  private async ensureExists(id: string) {
-    const exists = await this.prisma.contact.findUnique({ where: { id } });
-    if (!exists) {
-      throw new AppError(404, `Contact with ID ${id} does not exist`);
-    }
-  }
+ 
 }

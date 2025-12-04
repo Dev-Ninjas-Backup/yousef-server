@@ -1,4 +1,9 @@
 export enum QueueName {
-  CONTENTS = 'content',
-  ANNOUNCEMENT = 'announcement',
+  CustomerInquiryAlert = 'customer-inquiry-alert',
+  NewMessage = 'new-message',
+  ProductApproveUpdate = 'product-approve-update',
+  UserRegistration = 'user-registration',
+  Message = 'message',
 }
+
+

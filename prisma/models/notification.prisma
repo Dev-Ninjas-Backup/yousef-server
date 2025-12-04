@@ -13,10 +13,9 @@ model Notification {
 }
 
 enum NotificationType {
-  contentStatus
-  LiveEvent
-  Shift
-  UserRolehange
+  CustomerInquiryAlert
+  NewMessage
+  ProductApproveUpdate
 }
 
 model UserNotification {

@@ -10,19 +10,18 @@ import {
 } from '@nestjs/websockets';
 
 import { Server, Socket } from 'socket.io';
-import { PrismaService } from '../prisma/prisma.service';
-import { JWTPayload } from 'src/common/jwt/jwt.interface';
 import { ENVEnum } from 'src/common/enum/env.enum';
 import { PayloadForSocketClient } from 'src/common/interface/socket-client-payload';
+import { JWTPayload } from 'src/common/jwt/jwt.interface';
+import { PrismaService } from '../prisma/prisma.service';
 
 @WebSocketGateway({
   cors: { origin: '*' },
-  namespace: '/js/notification',
+  namespace: '/notification',
 })
 @Injectable()
 export class NotificationGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(NotificationGateway.name);
   private readonly clients = new Map<string, Set<Socket>>();
 
@@ -30,7 +29,7 @@ export class NotificationGateway
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   @WebSocketServer()
   server: Server;
@@ -39,20 +38,7 @@ export class NotificationGateway
     this.logger.log('Socket.IO server initialized', server.adapter.name);
   }
 
-  /**
-   * Called when a client is connected to the server.
-   * @param client - The client that connected.
-   *
-   * Extracts the JWT token from the client's headers or query, verifies it,
-   * and if valid, subscribes the client to the corresponding user's
-   * notification room.
-   *
-   * If the token is invalid or missing, the client is disconnected.
-   *
-   * If the user is not found, the client is disconnected.
-   *
-   * If the user's notification toggle is invalid, the client is disconnected.
-   */
+  // Handles the connection of a client to the server.
   async handleConnection(client: Socket) {
     try {
       const token = this.extractTokenFromSocket(client);
@@ -88,11 +74,14 @@ export class NotificationGateway
         sub: user.id,
         email: user.email || '',
         emailToggle: Boolean(user.notificationToggle?.email) || false,
-        userUpdates: Boolean(user.notificationToggle?.userUpdates) || false,
-        scheduling: Boolean(user.notificationToggle?.scheduling) || false,
+        CustomerInquiryAlert: Boolean(user.notificationToggle?.CustomerInquiryAlert) || false,
+        NewMessage: Boolean(user.notificationToggle?.NewMessage) || false,
+        ProductApproveUpdate:
+          Boolean(user.notificationToggle?.ProductApproveUpdate) || false,
         userRegistration:
           Boolean(user.notificationToggle?.userRegistration) || false,
-        contentStatus: Boolean(user.notificationToggle?.contentStatus) || false,
+        Message: Boolean(user.notificationToggle?.Message) || false,
+
       };
 
       client.data = { user: payloadForSocketClient };
@@ -111,8 +100,7 @@ export class NotificationGateway
    * If a user ID is associated with the client, it unsubscribes the client from
    * the user's notification room and logs the disconnection with the user ID.
    * If no user ID is associated, logs the disconnection for an unknown user.
-   *
-   * @param client - The socket client that has disconnected.
+
    */
 
   handleDisconnect(client: Socket) {
@@ -125,33 +113,41 @@ export class NotificationGateway
     }
   }
 
-  /**
-   * Extracts the JWT token from the client's headers or query.
-   *
-   * If the token is present in the Authorization header, it is extracted.
-   * If the token is not present in the Authorization header, the query
-   * parameter 'token' is checked for the token. If the token is present in
-   * the query parameter, it is extracted.
-   *
-   * If the token is not present in either the Authorization header or the
-   * query parameter, null is returned.
-   *
-   * If the token is present in the Authorization header but is not a Bearer
-   * token, the raw token is returned.
-   *
-   * @param client - The socket client.
-   * @returns The extracted JWT token or null if not present.
-   */
+  // Extracts the JWT token from the socket client's handshake.
   private extractTokenFromSocket(client: Socket): string | null {
     const authHeader =
-      client.handshake.headers.authorization || client.handshake.auth?.token;
+      client.handshake.headers.authorization ||
+      client.handshake.auth?.token;
 
-    if (!authHeader) return null;
+    // Header token
+    if (authHeader) {
+      return authHeader.startsWith('Bearer ')
+        ? authHeader.substring(7)
+        : authHeader;
+    }
 
-    return authHeader.startsWith('Bearer ')
-      ? authHeader.split(' ')[1]
-      : authHeader;
+    // Cookie tokens
+    const cookieHeader = client.handshake.headers.cookie;
+    if (cookieHeader) {
+      const cookies = Object.fromEntries(
+        cookieHeader.split(';').map(c => {
+          const [k, v] = c.trim().split('=');
+          return [k, decodeURIComponent(v)];
+        })
+      );
+
+      const token = cookies['authToken'] || cookies['token'];
+      if (token) {
+        return token.startsWith('Bearer ')
+          ? token.substring(7)
+          : token;
+      }
+    }
+
+    return null;
   }
+
+
 
   /**
    * Subscribes a client to a user's notification room.

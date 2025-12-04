@@ -4,7 +4,7 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
 export class InquiriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Get all UNREAD private messages sent TO the garage owner
@@ -68,4 +68,39 @@ export class InquiriesService {
       customerId: msg.sender.id,
     }));
   }
+
+  // ------------------------ get custom inquiries messages ----------------
+  @HandleError('Failed to fetch custom inquiries', 'INQUIRIES')
+  async getCustomInquiries(userId: string) {
+    return this.prisma.contact.findMany({
+      where: {
+        garageOwnerId: userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        FirstName: true,
+        LastName: true,
+        email: true,
+        subject: true,
+        message: true,
+        createdAt: true,
+        messages: {
+          where: {
+            isForGrageAdmin: true,
+          },
+          orderBy: { createdAt: 'asc' },
+          select: {
+            content: true,
+            isFromAdmin: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+  }
+
+
 }

@@ -16,26 +16,26 @@ export class NotificationToggleDto {
   })
   @IsOptional()
   @IsBoolean()
-  communication?: boolean = false;
+  ProductApproveUpdate?: boolean = false;
 
   @ApiPropertyOptional({
-    description: 'Receive tasks and projects content status notifications',
+    description: 'Receive productApproveUpdate status notifications',
     default: false,
   })
   @IsOptional()
   @IsBoolean()
-  contentStatus?: boolean = false;
+  CustomerInquiryAlert?: boolean = false;
 
   @ApiPropertyOptional({
-    description: 'Receive scheduling notifications',
+    description: 'Receive CustomerInquiryAlert notifications',
     default: false,
   })
   @IsOptional()
   @IsBoolean()
-  scheduling?: boolean = false;
+  NewMessage?: boolean = false;
 
   @ApiPropertyOptional({
-    description: 'Receive message notifications',
+    description: 'Receive  new message notifications',
     default: false,
   })
   @IsOptional()
