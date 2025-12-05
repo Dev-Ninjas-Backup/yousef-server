@@ -1,32 +1,45 @@
-import { Controller, Patch } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
-import { ValidateGarageOwner } from 'src/common/jwt/jwt.decorator';
+import { Controller, Get, Patch } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { GetUser, ValidateGarageOwner } from 'src/common/jwt/jwt.decorator';
 import { GarageAdminSettingsService } from './garage-admin-settings.service';
 
+@ApiTags('Garage Admin Settings')
+@ApiBearerAuth()
 @Controller('garage-admin-settings')
 export class GarageAdminSettingsController {
-  constructor(
-    private readonly garageAdminSettingsService: GarageAdminSettingsService,
-  ) {}
+  constructor(private readonly service: GarageAdminSettingsService) {}
 
-  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get notification settings for garage admin' })
+  @ApiResponse({ status: 200, description: 'Notification settings retrieved' })
+  @ValidateGarageOwner()
+  @Get('notifications')
+  async getNotifications(@GetUser('userId') userId: string) {
+    return this.service.getNotificationSettings(userId);
+  }
+
+  @ApiOperation({ summary: 'Toggle email notification preference' })
   @ValidateGarageOwner()
   @Patch('email-notification')
-  async emailNotification() {
-    return await this.garageAdminSettingsService.emailNotification();
+  async toggleEmailNotification(@GetUser('userId') userId: string) {
+    return this.service.updateEmailNotification(userId);
   }
 
-  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle customer inquiry alert preference' })
   @ValidateGarageOwner()
   @Patch('customer-inquiry-alert')
-  async customerInquiryAlert() {
-    return await this.garageAdminSettingsService.customerInquiryAlert();
+  async toggleCustomerInquiry(@GetUser('userId') userId: string) {
+    return this.service.updateCustomerInquiryAlert(userId);
   }
 
-  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle product approval notification preference' })
   @ValidateGarageOwner()
   @Patch('product-approval-update')
-  async productApprovalUpdate() {
-    return await this.garageAdminSettingsService.productApprovalUpdate();
+  async toggleProductApproval(@GetUser('userId') userId: string) {
+    return this.service.updateProductApprovalUpdate(userId);
   }
 }

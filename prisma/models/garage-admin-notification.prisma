@@ -1,9 +1,11 @@
-
 model garageAdminNotification {
-    id                          String  @default(uuid())
+    id                          String  @id @default(uuid())
+    userId                      String  @unique
     emailNotification           Boolean @default(false)
     customerInquiryNotification Boolean @default(false)
     productApprovalNotification Boolean @default(false)
 
-    @@unique([id])
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("garage_admin_notifications")
 }
