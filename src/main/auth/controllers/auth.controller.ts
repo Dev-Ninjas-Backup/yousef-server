@@ -29,7 +29,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly authGoogleService: AuthGoogleService,
-  ) { }
+  ) {}
 
   //  -------------- User Registration --------------
   @Post('register')
@@ -131,7 +131,10 @@ export class AuthController {
     return this.authGoogleService.googleLogin(body);
   }
 
-  @ApiOperation({ summary: 'User Registration signup-verify-otp or reset-verify-otp or resend otp verification' })
+  @ApiOperation({
+    summary:
+      'User Registration signup-verify-otp or reset-verify-otp or resend otp verification',
+  })
   @Post('signup-verify-otp')
   async verifyOtp(@Body() payload: VerifyOtpAuthDto) {
     const result = await this.authService.verifyOtp(payload);
