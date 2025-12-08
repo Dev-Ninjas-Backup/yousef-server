@@ -22,19 +22,6 @@ export class NotificationSettingService {
       },
     });
 
-    // --- If no setting found, create default setting ---
-    // if (!result) {
-    //   const notificationToggle = await this.prisma.notificationToggle.create({
-    //     data: {
-    //       userId: userId,
-    //     },
-    //   });
-    //   return successResponse(
-    //     notificationToggle,
-    //     'Notification setting created successfully',
-    //   );
-    // }
-
     return successResponse(result, 'Notification setting found successfully');
   }
 
@@ -50,17 +37,20 @@ export class NotificationSettingService {
       },
       update: {
         email: dto.email,
-        communication: dto.communication,
-        scheduling: dto.scheduling,
+        NewMessage: dto.NewMessage,
+        CustomerInquiryAlert: dto.CustomerInquiryAlert,
+        ProductApproveUpdate: dto.ProductApproveUpdate,
+
         message: dto.message,
         userRegistration: dto.userRegistration,
       },
       create: {
         userId: userId,
         email: dto.email,
-        communication: dto.communication,
+        NewMessage: dto.NewMessage,
+        CustomerInquiryAlert: dto.CustomerInquiryAlert,
+        ProductApproveUpdate: dto.ProductApproveUpdate,
 
-        scheduling: dto.scheduling,
         message: dto.message,
         userRegistration: dto.userRegistration,
       },
