@@ -221,9 +221,17 @@ export class ProductService {
       where.condition = { contains: query.condition, mode: 'insensitive' };
     }
 
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
-        where,
+        where: {
+          createdAt: {
+            gte: thirtyDaysAgo,
+          },
+        },
         include: {
           seller: true,
           createdBy: { select: { id: true, email: true, fullName: true } },
@@ -233,7 +241,13 @@ export class ProductService {
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.product.count({ where }),
+      this.prisma.product.count({
+        where: {
+          createdAt: {
+            gte: thirtyDaysAgo,
+          },
+        },
+      }),
     ]);
 
     return {
