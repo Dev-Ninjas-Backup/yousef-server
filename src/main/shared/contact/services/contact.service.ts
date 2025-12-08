@@ -21,7 +21,7 @@ export class ContactService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @HandleError('Failed to create contact message', 'Contact')
   async create(payload: CreateContactDto): Promise<TResponse<any>> {
