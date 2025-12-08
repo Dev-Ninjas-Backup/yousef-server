@@ -27,6 +27,7 @@ export class GarageManagementService {
     const users = await this.prisma.user.findMany({
       where: {
         isDeleted: false,
+        role: 'GARAGE_OWNER',
       },
       select: {
         id: true,
