@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateGarageDto {
@@ -106,6 +107,7 @@ export class UpdateGarageDto {
     example: '25.2048',
     required: false,
   })
+  @Transform(({ value }) => parseFloat(value))
   @IsNumber()
   @IsOptional()
   garageLat?: number;
@@ -115,6 +117,7 @@ export class UpdateGarageDto {
     example: '55.6579',
     required: false,
   })
+  @Transform(({ value }) => parseFloat(value))
   @IsNumber()
   @IsOptional()
   garageLng?: number;
