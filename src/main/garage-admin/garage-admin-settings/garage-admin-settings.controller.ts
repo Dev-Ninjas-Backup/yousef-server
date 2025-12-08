@@ -33,7 +33,7 @@ export class GarageAdminSettingsController {
   @ValidateGarageOwner()
   @Patch('customer-inquiry-alert')
   async toggleCustomerInquiry(@GetUser('userId') userId: string) {
-    return this.service.updateCustomerInquiryAlert(userId);
+    return this.service.toggleCustomerInquiryAlert(userId);
   }
 
   @ApiOperation({ summary: 'Toggle product approval notification preference' })
