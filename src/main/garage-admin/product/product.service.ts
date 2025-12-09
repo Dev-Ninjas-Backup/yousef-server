@@ -6,6 +6,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { AppError } from 'src/common/error/handle-error.app';
+import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
 import { PaymentService } from '../../shared/payment/service/payment.service';
@@ -18,7 +20,8 @@ export class ProductService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
-  ) {}
+    private mailService: MailService
+  ) { }
 
   async create(
     userId: string,
@@ -182,6 +185,30 @@ export class ProductService {
     // Only consume promotion credit AFTER successful product creation
     if (productData.isPromoted) {
       await this.paymentService.usePromotionCredit(userId);
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    })
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    const productNotification = await this.prisma.garageAdminNotification.findUnique({
+      where: {
+        userId: userId
+      },
+      select: { emailNotification: true }
+    });
+    console.log("Product Email Notification", productNotification?.emailNotification);
+
+    if (productNotification?.emailNotification) {
+      console.log("Product Email Notification");
+      await this.mailService.sendProductUpdateEmail(user.email as string, {
+        userName: user?.fullName as string,
+        productName: product?.partName as string,
+        status: "PENDING",
+      });
     }
 
     return product;
@@ -433,14 +460,14 @@ export class ProductService {
 
     const hasGarageMonthly = Boolean(
       user.isMembership &&
-        user.subscriptionEndsAt &&
-        new Date(user.subscriptionEndsAt) > new Date(),
+      user.subscriptionEndsAt &&
+      new Date(user.subscriptionEndsAt) > new Date(),
     );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&
-        user.productMonthlyEndDate &&
-        new Date(user.productMonthlyEndDate) > new Date(),
+      user.productMonthlyEndDate &&
+      new Date(user.productMonthlyEndDate) > new Date(),
     );
 
     return {
