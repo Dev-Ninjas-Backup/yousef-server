@@ -17,7 +17,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     volumes:
-      - yousef-file_data:/app/Uploads
+      - yousef-file_data:/app/uploads
     networks:
       - yousef-network
 
