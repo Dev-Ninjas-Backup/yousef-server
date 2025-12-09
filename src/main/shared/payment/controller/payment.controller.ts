@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   Get,
   Headers,
@@ -17,21 +16,21 @@ import {
 } from 'src/common/jwt/jwt.decorator';
 
 import { PaymentService } from '../service/payment.service';
-import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
 
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
-  @ApiBearerAuth()
-  @ValidateAuth()
-  @Post()
-  async create(
-    @Body() payload: CreateCheckoutPlanDto,
-    @GetUser('userId') userId: string,
-  ) {
-    if (!userId) throw new BadRequestException('User not authenticated');
-    return this.paymentService.createCheckoutSession(userId, payload);
-  }
+
+  // @ApiBearerAuth()
+  // @ValidateAuth()
+  // @Post()
+  // async create(
+  //   @Body() payload: CreateCheckoutPlanDto,
+  //   @GetUser('userId') userId: string,
+  // ) {
+  //   if (!userId) throw new BadRequestException('User not authenticated');
+  //   return this.paymentService.createCheckoutSession(userId, payload);
+  // }
 
   @ApiBearerAuth()
   @ValidateAuth()

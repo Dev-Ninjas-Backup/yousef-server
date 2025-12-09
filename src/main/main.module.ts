@@ -10,16 +10,15 @@ import { AdminModule } from './admin/admin.module';
 import { GarageModule } from './garage/garage.module';
 import { ServiceTypeModule } from './service-type/service-type.module';
 import { ContactModule } from './shared/contact/contact.module';
-import { TestawsModule } from './testaws/testaws.module';
 import { UsersModule } from './users/users.module';
 
 import { GarageAdminModule } from './garage-admin/garage-admin.module';
 import { ReviewModule } from './review/review.module';
 import { GarageLocationModule } from './shared/garage-location/garage-location.module';
 
+import { PromotionalAndFeaturedModule } from './promotional-and-featured/promotional-and-featured.module';
 import { NotificationSettingModule } from './shared/notification-setting/notification-setting.module';
 import { PrivateMessageModule } from './shared/private-message/private-message.module';
-import { PromotionalAndFeaturedModule } from './promotional-and-featured/promotional-and-featured.module';
 
 @Module({
   imports: [
@@ -28,7 +27,6 @@ import { PromotionalAndFeaturedModule } from './promotional-and-featured/promoti
     ContactModule,
     PaymentModule,
     awsModule,
-    TestawsModule,
     UsersModule,
     AdminModule,
     GarageModule,

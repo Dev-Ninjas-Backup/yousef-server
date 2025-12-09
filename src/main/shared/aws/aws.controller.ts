@@ -1,19 +1,19 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { awsService } from './aws.service';
 
 @Controller('s3')
 export class awsController {
   constructor(private readonly s3Service: awsService) {}
 
-  @Get('aws-upload-url')
-  async getUploadURL(@Query('fileType') fileType: string) {
-    if (!fileType) {
-      throw new BadRequestException('fileType query param is required');
-    }
+  // @Get('aws-upload-url')
+  // async getUploadURL(@Query('fileType') fileType: string) {
+  //   if (!fileType) {
+  //     throw new BadRequestException('fileType query param is required');
+  //   }
 
-    const { uploadURL, key } = await this.s3Service.generateUploadURL(fileType);
-    return { uploadURL, key };
-  }
+  //   const { uploadURL, key } = await this.s3Service.generateUploadURL(fileType);
+  //   return { uploadURL, key };
+  // }
 
   // @ApiOperation({ summary: 'Upload any file directly to S3' })
   // @Post('s3-upload-url')

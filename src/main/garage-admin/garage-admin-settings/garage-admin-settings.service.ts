@@ -4,7 +4,7 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 type NotificationField =
   | 'emailNotification'
-  | 'customerInquiryNotification'
+  // | 'customerInquiryNotification'
   | 'productApprovalNotification';
 
 @Injectable()
@@ -19,18 +19,26 @@ export class GarageAdminSettingsService {
     const settings = await this.prisma.garageAdminNotification.findUnique({
       where: { userId },
     });
+    console.log(settings);
+
+    const inquiryNotification = await this.prisma.notificationToggle.findUnique(
+      {
+        where: { userId },
+      },
+    );
+    // console.log(inquiryNotification?.CustomerInquiryAlert);
 
     if (!settings) {
       return {
         emailNotification: false,
-        customerInquiryNotification: false,
+        customerInquiryNotification: inquiryNotification?.CustomerInquiryAlert,
         productApprovalNotification: false,
       };
     }
 
     return {
       emailNotification: settings.emailNotification,
-      customerInquiryNotification: settings.customerInquiryNotification,
+      customerInquiryNotification: inquiryNotification?.CustomerInquiryAlert,
       productApprovalNotification: settings.productApprovalNotification,
     };
   }
@@ -44,36 +52,33 @@ export class GarageAdminSettingsService {
       throw new AppError(404, 'User not found');
     }
 
-    let current = await this.prisma.garageAdminNotification.findUnique({
+    const current = await this.prisma.garageAdminNotification.findUnique({
       where: { userId },
     });
 
+    // ------------------ If exists -> toggle ------------------
     if (current) {
-      const result = await this.prisma.garageAdminNotification.update({
+      const updated = await this.prisma.garageAdminNotification.update({
         where: { userId },
         data: { [field]: !current[field] },
       });
+
+      // Return only the field you toggled
       return {
-        emailNotification: result.emailNotification,
-        customerInquiryNotification: result.customerInquiryNotification,
-        productApprovalNotification: result.productApprovalNotification,
+        [field]: updated[field],
       };
     }
 
-    // Create if not exists
-    current = await this.prisma.garageAdminNotification.create({
+    // ------------------ If not exists -> create ------------------
+    const created = await this.prisma.garageAdminNotification.create({
       data: {
         user: { connect: { id: userId } },
-        emailNotification: field === 'emailNotification',
-        customerInquiryNotification: field === 'customerInquiryNotification',
-        productApprovalNotification: field === 'productApprovalNotification',
+        [field]: true,
       },
     });
 
     return {
-      emailNotification: current.emailNotification,
-      customerInquiryNotification: current.customerInquiryNotification,
-      productApprovalNotification: current.productApprovalNotification,
+      [field]: created[field],
     };
   }
 
@@ -82,11 +87,34 @@ export class GarageAdminSettingsService {
     return this.toggleNotification(userId, 'emailNotification');
   }
 
-  async updateCustomerInquiryAlert(userId: string) {
-    return this.toggleNotification(userId, 'customerInquiryNotification');
-  }
+  // async updateCustomerInquiryAlert(userId: string) {
+  //   return this.toggleNotification(userId, 'customerInquiryNotification');
+  // }
 
   async updateProductApprovalUpdate(userId: string) {
     return this.toggleNotification(userId, 'productApprovalNotification');
+  }
+  async toggleCustomerInquiryAlert(userId: string) {
+    // 1. Get current notification setting
+    const setting = await this.prisma.notificationToggle.findUnique({
+      where: { userId },
+    });
+
+    if (!setting) {
+      throw new Error('Notification setting not found');
+    }
+
+    // 2. Toggle the value (true -> false, false -> true)
+    const newValue = !setting.CustomerInquiryAlert;
+
+    // 3. Update with toggled value
+    const updated = await this.prisma.notificationToggle.update({
+      where: { userId },
+      data: {
+        CustomerInquiryAlert: newValue,
+      },
+    });
+
+    return { CustomerInquiryAlert: updated.CustomerInquiryAlert };
   }
 }
