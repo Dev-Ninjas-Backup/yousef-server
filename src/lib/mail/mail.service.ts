@@ -83,10 +83,10 @@ export class MailService {
     data: {
       userName: string;
       paymentType:
-      | 'promotional'
-      | 'pay_per_product'
-      | 'product_monthly'
-      | 'garage_monthly';
+        | 'promotional'
+        | 'pay_per_product'
+        | 'product_monthly'
+        | 'garage_monthly';
       amount: number;
       transactionId: string;
       productName?: string;
@@ -173,7 +173,6 @@ export class MailService {
       reason?: string; // will be used if rejected
     },
   ): Promise<nodemailer.SentMessageInfo> {
-
     const config = {
       PENDING: {
         emoji: '',
@@ -194,7 +193,6 @@ export class MailService {
         message: `Unfortunately, your product <strong>${data.productName}</strong> did not meet our publishing requirements.`,
       },
     }[data.status];
-
 
     const reasonBlock =
       data.status === 'REJECTED' && data.reason
@@ -220,13 +218,14 @@ export class MailService {
           <td style="padding: 8px 0; color: #333; text-align: right;">${data.productName}</td>
         </tr>
 
-        ${data.productId
-        ? `<tr>
+        ${
+          data.productId
+            ? `<tr>
                 <td style="padding: 8px 0; color: #666;"><strong>Product ID:</strong></td>
                 <td style="padding: 8px 0; color: #333; text-align: right;">${data.productId}</td>
               </tr>`
-        : ''
-      }
+            : ''
+        }
 
         <tr>
           <td style="padding: 8px 0; color: #666;"><strong>Status:</strong></td>
@@ -257,5 +256,4 @@ export class MailService {
 
     return this.transporter.sendMail(mailOptions);
   }
-
 }

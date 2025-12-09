@@ -20,8 +20,8 @@ export class ProductService {
     private prisma: PrismaService,
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
-    private mailService: MailService
-  ) { }
+    private mailService: MailService,
+  ) {}
 
   async create(
     userId: string,
@@ -189,25 +189,29 @@ export class ProductService {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-    })
+    });
     if (!user) {
       throw new AppError(404, 'User not found');
     }
 
-    const productNotification = await this.prisma.garageAdminNotification.findUnique({
-      where: {
-        userId: userId
-      },
-      select: { emailNotification: true }
-    });
-    console.log("Product Email Notification", productNotification?.emailNotification);
+    const productNotification =
+      await this.prisma.garageAdminNotification.findUnique({
+        where: {
+          userId: userId,
+        },
+        select: { emailNotification: true },
+      });
+    console.log(
+      'Product Email Notification',
+      productNotification?.emailNotification,
+    );
 
     if (productNotification?.emailNotification) {
-      console.log("Product Email Notification");
+      console.log('Product Email Notification');
       await this.mailService.sendProductUpdateEmail(user.email as string, {
         userName: user?.fullName as string,
         productName: product?.partName as string,
-        status: "PENDING",
+        status: 'PENDING',
       });
     }
 
@@ -460,14 +464,14 @@ export class ProductService {
 
     const hasGarageMonthly = Boolean(
       user.isMembership &&
-      user.subscriptionEndsAt &&
-      new Date(user.subscriptionEndsAt) > new Date(),
+        user.subscriptionEndsAt &&
+        new Date(user.subscriptionEndsAt) > new Date(),
     );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&
-      user.productMonthlyEndDate &&
-      new Date(user.productMonthlyEndDate) > new Date(),
+        user.productMonthlyEndDate &&
+        new Date(user.productMonthlyEndDate) > new Date(),
     );
 
     return {

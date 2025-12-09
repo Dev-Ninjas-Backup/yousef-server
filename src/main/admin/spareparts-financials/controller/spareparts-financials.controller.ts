@@ -8,7 +8,7 @@ import { SparepartsFinancialsService } from '../service/spareparts-financials.se
 export class SparepartsFinancialsController {
   constructor(
     private readonly sparepartsFinancialsService: SparepartsFinancialsService,
-  ) { }
+  ) {}
 
   //  -------------admin approve spareparts --------------
   // Admin approve spareparts (optional dto to change status)

@@ -10,8 +10,8 @@ export class SparepartsFinancialsService {
   // ------------------------- SparepartsFinancials ------------------------- //
   constructor(
     private readonly prisma: PrismaService,
-    private readonly mailService: MailService
-  ) { }
+    private readonly mailService: MailService,
+  ) {}
 
   // Approve / Update spareparts status
   @HandleError('Failed to update spareparts')
@@ -26,24 +26,25 @@ export class SparepartsFinancialsService {
 
     const user = await this.prisma.user.findUnique({
       where: { id: spareparts.createdById },
-    })
+    });
     if (!user) {
       throw new AppError(404, 'User not found');
     }
 
-    const productNotification = await this.prisma.garageAdminNotification.findUnique({
-      where: {
-        userId: spareparts.createdById
-      },
-      select: { productApprovalNotification: true }
-    });
+    const productNotification =
+      await this.prisma.garageAdminNotification.findUnique({
+        where: {
+          userId: spareparts.createdById,
+        },
+        select: { productApprovalNotification: true },
+      });
 
     if (productNotification?.productApprovalNotification) {
-      console.log("Product Notification");
+      console.log('Product Notification');
       await this.mailService.sendProductUpdateEmail(user.email as string, {
         userName: user?.fullName as string,
         productName: spareparts?.partName as string,
-        status: dto.status as "PENDING" | "APPROVED" | "REJECTED",
+        status: dto.status as 'PENDING' | 'APPROVED' | 'REJECTED',
       });
     }
 
