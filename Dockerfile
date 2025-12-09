@@ -1,29 +1,41 @@
-# Use Node.js 22-slim image
-FROM node:22-slim
+# Stage 1: Build
+FROM node:20 AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y openssl
-
-# Copy package files AND prisma schema folder
+# Copy package files
 COPY package*.json ./
+
+# Install deps
+RUN npm i -g pnpm@latest && pnpm i 
+
+# Copy prisma folder
 COPY prisma ./prisma
 
-# Install Node.js dependencies
-RUN npm install --ignore-scripts
+# Copy source code
+COPY . .
 
 # Generate Prisma client
-RUN npx prisma generate
-# Copy the rest of the source code
-COPY . ./
+RUN pnpm prisma:generate
 
-# Build the app (NestJS -> dist/)
-RUN npm run build
+# Build the app
+RUN pnpm build
 
-# Expose the port that the application listens on.
-EXPOSE 5000
+# Stage 2: Run
+FROM node:20-alpine
 
-# Run the application.
-CMD ["npm", "run", "start:prod"]
+WORKDIR /app
+
+# Copy build output & dependencies
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/prisma ./prisma
+# create uploads folder to upload all files
+RUN mkdir -p Uploads
+
+# Set production env
+ENV NODE_ENV=production
+EXPOSE 5056
+
+CMD ["npm", "run", "start:docker"]

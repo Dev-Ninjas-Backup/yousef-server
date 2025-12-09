@@ -11,6 +11,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "start:docker": "prisma generate && prisma migrate deploy && node dist/main",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --ignore-path .gitignore --check \"**/*.+(js|ts|json)\"",
@@ -74,9 +75,6 @@
     "stripe": "^18.5.0",
     "uuid": "^13.0.0"
   },
-  "prisma": {
-    "schema": "./prisma"
-  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
@@ -116,22 +114,5 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0",
     "yocto-spinner": "^1.0.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }
