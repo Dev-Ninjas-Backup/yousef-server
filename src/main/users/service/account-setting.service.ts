@@ -14,6 +14,49 @@ import { UpdatePasswordDto } from '../dto/updatepassword.dto';
 export class AccountSettingService {
   constructor(private readonly prisma: PrismaService) {}
 
+  //----------------- chnageReviewAlert----
+
+  // @HandleError('USER can be chnageReviewAlert user')
+  // async changeReviewAlert(userId: string) {
+  //   // Find user by ID
+  //   const user = await this.prisma.user.findUnique({
+  //     where: { id: userId },
+  //   });
+
+  //   if (!user) {
+  //     throw new NotFoundException('User not found');
+  //   }
+
+  //   // Toggle ReviewAlerts flag
+  //   const updatedUser = await this.prisma.user.update({
+  //     where: { id: userId },
+  //     data: { ReviewAlerts: !user.ReviewAlerts },
+  //   });
+
+  //   return successResponse(
+  //     updatedUser,
+  //     `Review Alert has been ${updatedUser.ReviewAlerts ? 'enabled' : 'disabled'} successfully.`,
+  //   );
+  // }
+
+  // Get all notifications
+  async getAllNotifications(userId: string): Promise<TResponse<any>> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        isEmailNotification: true,
+        isSmsNotification: true,
+        isEmailPromotional: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return successResponse(user, 'Notifications retrieved successfully');
+  }
+
   //----------------- changeEmailNotification----
 
   @HandleError('Failed to change email notification', 'Email Notification')
@@ -30,37 +73,15 @@ export class AccountSettingService {
     // Toggle EmailNotification flag
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
-      data: { isEmailNotification: true },
+      data: { isEmailNotification: !user.isEmailNotification },
+      select: { isEmailNotification: true },
     });
 
     return successResponse(
       updatedUser,
       `Email Notification has been ${
-        updatedUser.isEmailNotification ? 'true' : 'disabled'
+        updatedUser.isEmailNotification ? 'true' : 'false'
       } successfully.`,
-    );
-  }
-
-  @HandleError('USER can be chnageReviewAlert user')
-  async changeReviewAlert(userId: string) {
-    // Find user by ID
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // Toggle ReviewAlerts flag
-    const updatedUser = await this.prisma.user.update({
-      where: { id: userId },
-      data: { ReviewAlerts: !user.ReviewAlerts },
-    });
-
-    return successResponse(
-      updatedUser,
-      `Review Alert has been ${updatedUser.ReviewAlerts ? 'enabled' : 'disabled'} successfully.`,
     );
   }
 
@@ -79,7 +100,10 @@ export class AccountSettingService {
     // ------------ Toggle SmsNotification flag ------------------
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
-      data: { isSmsNotification: true },
+      data: { isSmsNotification: !user.isSmsNotification },
+      select: {
+        isSmsNotification: true,
+      },
     });
 
     return successResponse(
@@ -105,7 +129,8 @@ export class AccountSettingService {
     // Toggle EmailPromotional flag
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
-      data: { isEmailPromotional: true },
+      data: { isEmailPromotional: !user.isEmailPromotional },
+      select: { isEmailPromotional: true },
     });
 
     return successResponse(
