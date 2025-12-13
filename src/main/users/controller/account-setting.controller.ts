@@ -1,4 +1,4 @@
-import { Body, Controller, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Patch } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -14,12 +14,21 @@ export class UserSettingAccountController {
 
   // --------Review Alerts---
 
+  // @ApiBearerAuth()
+  // @ValidateAuth()
+  // @ApiOperation({ summary: 'Toggle Review Alerts for logged-in user' })
+  // @Patch('toggle-review-alerts')
+  // changeReviewAlert(@GetUser('userId') userId: string) {
+  //   return this.UserAccountSettings.changeReviewAlert(userId);
+  // }
+
+  // Get all notification
   @ApiBearerAuth()
   @ValidateAuth()
-  @ApiOperation({ summary: 'Toggle Review Alerts for logged-in user' })
-  @Patch('toggle-review-alerts')
-  changeReviewAlert(@GetUser('userId') userId: string) {
-    return this.UserAccountSettings.changeReviewAlert(userId);
+  @ApiOperation({ summary: 'Get all notifications for logged-in user' })
+  @Get('all-notifications')
+  getAllNotifications(@GetUser('userId') userId: string) {
+    return this.UserAccountSettings.getAllNotifications(userId);
   }
 
   //   ------------------toggle email-notification------------
@@ -52,7 +61,7 @@ export class UserSettingAccountController {
   // ----------------delete user-----------------
   @ApiBearerAuth()
   @ValidateAuth()
-  @ApiOperation({ summary: 'delete user' })
+  @ApiOperation({ summary: 'Soft delete user account' })
   @Patch('delete-user')
   deleteUser(@GetUser('userId') userId: string) {
     return this.UserAccountSettings.deleteUser(userId);
