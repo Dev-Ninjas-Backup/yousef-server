@@ -16,17 +16,18 @@ export class GarageAdminSettingsService {
   }
 
   async getNotificationSettings(userId: string) {
+    console.log('UserId', userId);
     const settings = await this.prisma.garageAdminNotification.findUnique({
       where: { userId },
     });
-    console.log(settings);
+    // console.log("Setting: ", settings);
 
     const inquiryNotification = await this.prisma.notificationToggle.findUnique(
       {
         where: { userId },
       },
     );
-    // console.log(inquiryNotification?.CustomerInquiryAlert);
+    console.log(inquiryNotification?.CustomerInquiryAlert);
 
     if (!settings) {
       return {
@@ -38,7 +39,9 @@ export class GarageAdminSettingsService {
 
     return {
       emailNotification: settings.emailNotification,
-      customerInquiryNotification: inquiryNotification?.CustomerInquiryAlert,
+      customerInquiryNotification: inquiryNotification?.CustomerInquiryAlert
+        ? inquiryNotification?.CustomerInquiryAlert
+        : false,
       productApprovalNotification: settings.productApprovalNotification,
     };
   }
@@ -96,18 +99,25 @@ export class GarageAdminSettingsService {
   }
   async toggleCustomerInquiryAlert(userId: string) {
     // 1. Get current notification setting
-    const setting = await this.prisma.notificationToggle.findUnique({
+    let setting = await this.prisma.notificationToggle.findUnique({
       where: { userId },
     });
 
+    // 2. If no setting, create a new one for this user
     if (!setting) {
-      throw new Error('Notification setting not found');
+      setting = await this.prisma.notificationToggle.create({
+        data: {
+          userId,
+          // default values or your desired initial values
+          CustomerInquiryAlert: false,
+        },
+      });
     }
 
-    // 2. Toggle the value (true -> false, false -> true)
+    // 3. Toggle the value
     const newValue = !setting.CustomerInquiryAlert;
 
-    // 3. Update with toggled value
+    // 4. Update toggled value
     const updated = await this.prisma.notificationToggle.update({
       where: { userId },
       data: {

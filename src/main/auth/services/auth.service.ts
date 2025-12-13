@@ -46,7 +46,7 @@ export class AuthService {
       confirmPassword,
       fullName,
       phone,
-
+      role,
       serviceCategories,
     } = payload;
 
@@ -79,13 +79,15 @@ export class AuthService {
         fullName,
         email,
         phone,
+        role,
         password: hashedPassword,
         serviceCategories: { set: categoriesToSet },
         isVerified: false,
-
+        
         freeProductsListing: 0,
         garageLogo: garageLogo ?? null,
         tradeLicense: tradeLicense ?? null,
+
       },
     });
 
@@ -236,9 +238,11 @@ export class AuthService {
     //   roles: updatedUser.role,
     // };
     const token = await this.jwt.signAsync(
-      { id: user.id, email: user.email, roles: user.role },
+      { id: user.id, email: user.email, roles: user.role as any },
       { secret: process.env.JWT_SECRET, expiresIn: '77d' },
     );
+
+    delete (updatedUser as any).password;
 
     return {
       success: true,

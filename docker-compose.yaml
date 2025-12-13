@@ -17,7 +17,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     volumes:
-      - yousef-file_data:/app/Uploads
+      - yousef-file_data:/app/uploads
     networks:
       - yousef-network
 
@@ -31,6 +31,8 @@ services:
       - POSTGRES_PASSWORD=yousef123Pass
       - POSTGRES_DB=yousef_db
       - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
     volumes:
       - yousef_data:/var/lib/postgresql/data
     healthcheck:
