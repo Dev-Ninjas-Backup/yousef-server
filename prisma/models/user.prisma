@@ -56,7 +56,7 @@ model User {
   hasPaid                 Boolean           @default(false)
   nextBillingDate         DateTime?
   // ------------------ Role & Category ------------------------
-  role                    UserRole          @default(CAR_OWNER)
+  role                    UserRole         
   serviceCategories       ServiceCategory[]
 
   // ------------------ Membership -----------------------------
