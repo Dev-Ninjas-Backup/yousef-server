@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { MailService } from 'src/lib/mail/mail.service';
@@ -11,7 +12,7 @@ export class SparepartsFinancialsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
-  ) {}
+  ) { }
 
   // Approve / Update spareparts status
   @HandleError('Failed to update spareparts')
@@ -39,8 +40,17 @@ export class SparepartsFinancialsService {
         select: { productApprovalNotification: true },
       });
 
-    if (productNotification?.productApprovalNotification) {
+    if (
+      user?.role === UserRole.GARAGE_OWNER &&
+      productNotification?.productApprovalNotification
+    ) {
       console.log('Product Notification');
+      await this.mailService.sendProductUpdateEmail(user.email as string, {
+        userName: user?.fullName as string,
+        productName: spareparts?.partName as string,
+        status: dto.status as 'PENDING' | 'APPROVED' | 'REJECTED',
+      });
+    } else if (user?.isEmailNotification) {
       await this.mailService.sendProductUpdateEmail(user.email as string, {
         userName: user?.fullName as string,
         productName: spareparts?.partName as string,
@@ -226,7 +236,6 @@ export class SparepartsFinancialsService {
   }
 
   // ----------------Last30AllDataExport-----------------
-
   // ----------------Last30AllDataExport-----------------
   @HandleError('Failed to export last 30 days data')
   async Last30AllDataExport() {
