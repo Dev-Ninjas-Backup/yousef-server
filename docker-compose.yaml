@@ -1,0 +1,55 @@
+services:
+  app:
+    image: softvence/yousef-server:latest
+    container_name: yousef-server
+    profiles:
+      - prod
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '${PORT}:${PORT}'
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - yousef-file_data:/app/uploads
+    networks:
+      - yousef-network
+
+  db:
+    image: postgres:16-alpine
+    profiles:
+      - dev
+      - prod
+    environment:
+      - POSTGRES_USER=yousef_user
+      - POSTGRES_PASSWORD=yousef123Pass
+      - POSTGRES_DB=yousef_db
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - yousef_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U yousef_user -d yousef_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    restart: unless-stopped
+    networks:
+      - yousef-network
+
+volumes:
+  yousef-file_data:
+  yousef_data:
+    driver: local
+
+networks:
+  yousef-network:
+    driver: bridge

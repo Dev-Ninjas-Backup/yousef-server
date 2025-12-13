@@ -240,6 +240,8 @@ export class AuthService {
       { secret: process.env.JWT_SECRET, expiresIn: '77d' },
     );
 
+    delete (updatedUser as any).password;
+
     return {
       success: true,
       message: 'OTP verified successfully',

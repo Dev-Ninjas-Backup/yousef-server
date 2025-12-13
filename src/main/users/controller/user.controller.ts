@@ -23,7 +23,7 @@ import { UpdateProfileDto } from '../dto/update.profile.dto';
 import {
   GetUser,
   ValidateAdmin,
-  ValidateAuth,
+  ValidateAuth
 } from 'src/common/jwt/jwt.decorator';
 import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
 import { UpdatePasswordDto } from '../dto/updatepassword.dto';
@@ -31,7 +31,27 @@ import { UserService } from '../service/user.service';
 @ApiTags('USER Profile Maintain')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
+
+  // ------------get all user for admin------------
+  @ApiOperation({ summary: 'Get all users only admin or super admin access' })
+  @ValidateAdmin()
+  @ApiBearerAuth()
+  @Get('all')
+  async getAllUsers() {
+    return this.userService.getAllUsers();
+  }
+
+  // ----------------get profile--------------------
+
+  @ApiOperation({ summary: 'Get user there owner  data ' })
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Get('me/profile')
+  async getUserData(@GetUser('userId') userId: string) {
+    return this.userService.getProfile(userId);
+  }
+
 
   @ApiOperation({ summary: 'Update user profile' })
   @ValidateAuth()
@@ -77,33 +97,16 @@ export class UserController {
   }
 
   // ----------------update password--------------------
-  @ApiOperation({ summary: 'Update user password' })
+  @ApiOperation({ summary: 'Change user password' })
   @ValidateAuth()
   @ApiBearerAuth()
-  @Post('me/update-password')
+  @Post('me/change-password')
   async getProfile(
     @GetUser('userId') userId: string,
     @Body() body: UpdatePasswordDto,
   ) {
     console.log('use id', userId);
     return this.userService.updatePassword(userId, body);
-  }
-  // ----------------get profile--------------------
-
-  @ApiOperation({ summary: 'Get user there owner  data ' })
-  @ValidateAuth()
-  @ApiBearerAuth()
-  @Get('me/profile')
-  async getUserData(@GetUser('userId') userId: string) {
-    return this.userService.getProfile(userId);
-  }
-  // ------------get all user for admin------------
-  @ApiOperation({ summary: 'Get all users only admin or super admin access' })
-  @ValidateAdmin()
-  @ApiBearerAuth()
-  @Get('all')
-  async getAllUsers() {
-    return this.userService.getAllUsers();
   }
 
   // ---------------------user report Contents----------------

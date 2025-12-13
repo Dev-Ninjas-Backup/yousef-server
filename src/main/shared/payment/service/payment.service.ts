@@ -253,17 +253,43 @@ export class PaymentService {
         updatedUser.subscriptionEndDate,
       );
 
+      // const findUser = await this.prisma.user.findUnique({
+      //   where: { id: userId },
+      //   select: {
+      //     id: true,
+      //     email: true,
+      //     role: true,
+      //   },
+      // })
+
+      // console.log("Find User: ", findUser);
+
+      const notification = await this.prisma.garageAdminNotification.findUnique(
+        {
+          where: {
+            userId: userId,
+          },
+        },
+      );
+
+      console.log('Email Notification: ', notification?.emailNotification);
+
       // Send email notification
       try {
-        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
-          userName: updatedUser.fullName || 'Valued Customer',
-          paymentType: 'garage_monthly',
-          amount: parseInt(amount) * 100,
-          transactionId: session.payment_intent as string,
-          garageName: updatedUser.garageName as string,
-          startDate: now,
-          endDate: subscriptionEndDate,
-        });
+        if (notification?.emailNotification) {
+          await this.mailService.sendPaymentConfirmationEmail(
+            updatedUser.email,
+            {
+              userName: updatedUser.fullName || 'Valued Customer',
+              paymentType: 'garage_monthly',
+              amount: parseInt(amount) * 100,
+              transactionId: session.payment_intent as string,
+              garageName: updatedUser.garageName as string,
+              startDate: now,
+              endDate: subscriptionEndDate,
+            },
+          );
+        }
       } catch (emailError) {
         console.error('Failed to send email:', emailError);
       }
