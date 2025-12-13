@@ -12,7 +12,7 @@ export class SparepartsFinancialsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
-  ) {}
+  ) { }
 
   // Approve / Update spareparts status
   @HandleError('Failed to update spareparts')
@@ -236,7 +236,6 @@ export class SparepartsFinancialsService {
   }
 
   // ----------------Last30AllDataExport-----------------
-
   // ----------------Last30AllDataExport-----------------
   @HandleError('Failed to export last 30 days data')
   async Last30AllDataExport() {
