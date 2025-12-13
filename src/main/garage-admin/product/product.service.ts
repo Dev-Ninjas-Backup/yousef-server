@@ -6,7 +6,9 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { AppError } from 'src/common/error/handle-error.app';
+import { successResponse } from 'src/common/utilsResponse/response.util';
 import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { S3FileService } from 'src/lib/s3file/s3file.service';
@@ -206,7 +208,17 @@ export class ProductService {
       productNotification?.emailNotification,
     );
 
-    if (productNotification?.emailNotification) {
+    if (
+      user?.role === UserRole.GARAGE_OWNER &&
+      productNotification?.emailNotification
+    ) {
+      console.log('Product Email Notification');
+      await this.mailService.sendProductUpdateEmail(user.email as string, {
+        userName: user?.fullName as string,
+        productName: product?.partName as string,
+        status: 'PENDING',
+      });
+    } else if (user?.isEmailNotification) {
       console.log('Product Email Notification');
       await this.mailService.sendProductUpdateEmail(user.email as string, {
         userName: user?.fullName as string,
@@ -215,7 +227,7 @@ export class ProductService {
       });
     }
 
-    return product;
+    return successResponse(product, 'Product created successfully');
   }
 
   async findAll(query?: {

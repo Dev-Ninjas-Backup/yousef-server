@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { PaymentStatus } from '@prisma/client';
+import { PaymentStatus, UserRole } from '@prisma/client';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
@@ -253,17 +253,6 @@ export class PaymentService {
         updatedUser.subscriptionEndDate,
       );
 
-      // const findUser = await this.prisma.user.findUnique({
-      //   where: { id: userId },
-      //   select: {
-      //     id: true,
-      //     email: true,
-      //     role: true,
-      //   },
-      // })
-
-      // console.log("Find User: ", findUser);
-
       const notification = await this.prisma.garageAdminNotification.findUnique(
         {
           where: {
@@ -325,14 +314,40 @@ export class PaymentService {
         updatedUser.freeProductsListing,
       );
 
+      const notification = await this.prisma.garageAdminNotification.findUnique(
+        {
+          where: {
+            userId: userId,
+          },
+        },
+      );
+
       // Send email notification
       try {
-        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
-          userName: updatedUser.fullName || 'Valued Customer',
-          paymentType: 'pay_per_product',
-          amount: parseInt(amount) * 100,
-          transactionId: session.payment_intent as string,
-        });
+        if (
+          updatedUser?.role === UserRole.GARAGE_OWNER &&
+          notification?.emailNotification
+        ) {
+          await this.mailService.sendPaymentConfirmationEmail(
+            updatedUser.email,
+            {
+              userName: updatedUser.fullName || 'Valued Customer',
+              paymentType: 'pay_per_product',
+              amount: parseInt(amount) * 100,
+              transactionId: session.payment_intent as string,
+            },
+          );
+        } else if (updatedUser?.isEmailNotification) {
+          await this.mailService.sendPaymentConfirmationEmail(
+            updatedUser.email,
+            {
+              userName: updatedUser.fullName || 'Valued Customer',
+              paymentType: 'pay_per_product',
+              amount: parseInt(amount) * 100,
+              transactionId: session.payment_intent as string,
+            },
+          );
+        }
       } catch (emailError) {
         console.error('Failed to send email:', emailError);
       }
@@ -370,16 +385,48 @@ export class PaymentService {
 
       console.log('Product Monthly Subscription activated for user:', userId);
 
+      const notification = await this.prisma.garageAdminNotification.findUnique(
+        {
+          where: {
+            userId: userId,
+          },
+        },
+      );
+      console.log(
+        'Product monthly subscription email',
+        updatedUser?.isEmailNotification,
+      );
+
       // Send email notification
       try {
-        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
-          userName: updatedUser.fullName || 'Valued Customer',
-          paymentType: 'product_monthly',
-          amount: parseInt(amount) * 100,
-          transactionId: session.payment_intent as string,
-          startDate: now,
-          endDate: endDate,
-        });
+        if (
+          updatedUser?.role === UserRole.GARAGE_OWNER &&
+          notification?.emailNotification
+        ) {
+          await this.mailService.sendPaymentConfirmationEmail(
+            updatedUser.email,
+            {
+              userName: updatedUser.fullName || 'Valued Customer',
+              paymentType: 'product_monthly',
+              amount: parseInt(amount) * 100,
+              transactionId: session.payment_intent as string,
+              startDate: now,
+              endDate: endDate,
+            },
+          );
+        } else if (updatedUser?.isEmailNotification) {
+          await this.mailService.sendPaymentConfirmationEmail(
+            updatedUser.email,
+            {
+              userName: updatedUser.fullName || 'Valued Customer',
+              paymentType: 'product_monthly',
+              amount: parseInt(amount) * 100,
+              transactionId: session.payment_intent as string,
+              startDate: now,
+              endDate: endDate,
+            },
+          );
+        }
       } catch (emailError) {
         console.error('Failed to send email:', emailError);
       }
@@ -415,14 +462,43 @@ export class PaymentService {
         updatedUser.promotionCredits,
       );
 
+      const notification = await this.prisma.garageAdminNotification.findUnique(
+        {
+          where: {
+            userId: userId,
+          },
+        },
+      );
+
       // Send email notification
       try {
-        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
-          userName: updatedUser.fullName || 'Valued Customer',
-          paymentType: 'promotional',
-          amount: parseInt(amount) * 100,
-          transactionId: session.payment_intent as string,
-        });
+        if (
+          updatedUser?.role === UserRole.GARAGE_OWNER &&
+          notification?.emailNotification
+        ) {
+          await this.mailService.sendPaymentConfirmationEmail(
+            updatedUser.email,
+            {
+              userName: updatedUser.fullName || 'Valued Customer',
+              paymentType: 'promotional',
+              amount: parseInt(amount) * 100,
+              transactionId: session.payment_intent as string,
+            },
+          );
+        } else if (
+          updatedUser?.isEmailNotification &&
+          updatedUser?.isEmailPromotional
+        ) {
+          await this.mailService.sendPaymentConfirmationEmail(
+            updatedUser.email,
+            {
+              userName: updatedUser.fullName || 'Valued Customer',
+              paymentType: 'promotional',
+              amount: parseInt(amount) * 100,
+              transactionId: session.payment_intent as string,
+            },
+          );
+        }
       } catch (emailError) {
         console.error('Failed to send email:', emailError);
       }
