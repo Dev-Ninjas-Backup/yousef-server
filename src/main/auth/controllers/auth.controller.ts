@@ -173,7 +173,7 @@ export class AuthController {
     };
   }
   //  ------------- Reset Password  --------------
-  @ApiOperation({ summary: 'reset-password' })
+  @ApiOperation({ summary: ' reset-password' })
   @Post('reset-password')
   async resetPassword(@Body() payload: ResetPasswordAuthDto) {
     const result = await this.authService.resetPassword(payload);

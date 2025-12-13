@@ -6,7 +6,7 @@ import path from 'path';
 
 // Create the S3 client
 const s3 = new S3({
-  region: 'us-east-1',
+  region: process.env.BUCKET_REGION as string,
   credentials: {
     accessKeyId: process.env.ACCESS_KEY as string,
     secretAccessKey: process.env.ACCESS_SECRET as string,
@@ -25,7 +25,7 @@ const uploadFileToS3 = async (
   const upload = new Upload({
     client: s3,
     params: {
-      Bucket: 'newportalbucket1122',
+      Bucket: process.env.BUCKET_NAME as string,
       Key: fileName,
       Body: fileContent,
       ContentType: contentType,

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ServiceCategory } from '@prisma/client';
+import { ServiceCategory, UserRole } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsArray,
@@ -123,4 +123,16 @@ export class RegisterDto {
   })
   @IsOptional()
   tradeLicense?: Express.Multer.File;
+
+  // --------select role ----
+  @ApiProperty({
+    example: 'GARAGE_OWNER',
+    required: true,
+    description: 'select your  role',
+  })
+
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(UserRole)
+  role: UserRole;
 }

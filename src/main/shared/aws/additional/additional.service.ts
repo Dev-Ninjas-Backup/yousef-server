@@ -55,11 +55,18 @@ export class AdditionalS3Service {
     }
   }
 
-  findAll() {
-    return `This action returns all testaws`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} testaw`;
+  // Delete file from S3
+  async deleteFileFromS3(key: string) {
+    try {
+      await this.s3.deleteObject({
+        Bucket: process.env.BUCKET_REGION!,
+        Key: key,
+      });
+      console.log(`🧹 Deleted file from S3: ${key}`);
+    } catch (error) {
+      console.error('❌ Deletion failed:', error);
+      throw error;
+    }
   }
 }

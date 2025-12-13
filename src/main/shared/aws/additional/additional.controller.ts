@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -49,11 +50,11 @@ export class AdditionalS3Controller {
 
     return {
       message: ' File uploaded successfully to S3',
-      s3Url: s3Result.url,
+      file: s3Result.url,
       key: s3Result.key,
     };
   }
-
+// ------------------ upload multiple files----------------
   @Post('upload-s3-additional-multiple')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -81,18 +82,19 @@ export class AdditionalS3Controller {
 
     return {
       message: 'Files uploaded successfully to S3',
-      s3Urls: s3Results.map((result) => result.url),
+      files: s3Results.map((result) => result.url),
       keys: s3Results.map((result) => result.key),
     };
   }
 
-  @Get()
-  findAll() {
-    return this.AdditionalS3Service.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.AdditionalS3Service.findOne(+id);
+// --------deleteFileFromS3-----------
+  @Delete('delete-s3-additional/:key')
+  async deleteFile(@Param('key') key: string) {
+    try {
+      await this.AdditionalS3Service.deleteFileFromS3(key);
+      return { message: 'File deleted successfully from S3' };
+    } catch (error) {
+      return { message: 'Failed to delete file from S3', error };
+    }
   }
 }
