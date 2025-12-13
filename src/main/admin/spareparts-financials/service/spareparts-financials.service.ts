@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { UpdateSparepartsDto } from '../dto/UpdateSpareparts.dto';
 
 @Injectable()
 export class SparepartsFinancialsService {
   // ------------------------- SparepartsFinancials ------------------------- //
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   // Approve / Update spareparts status
   @HandleError('Failed to update spareparts')
@@ -16,7 +21,31 @@ export class SparepartsFinancialsService {
     });
 
     if (!spareparts) {
-      throw new Error('Spareparts not found');
+      throw new AppError(404, 'Spare parts not found');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: spareparts.createdById },
+    });
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    const productNotification =
+      await this.prisma.garageAdminNotification.findUnique({
+        where: {
+          userId: spareparts.createdById,
+        },
+        select: { productApprovalNotification: true },
+      });
+
+    if (productNotification?.productApprovalNotification) {
+      console.log('Product Notification');
+      await this.mailService.sendProductUpdateEmail(user.email as string, {
+        userName: user?.fullName as string,
+        productName: spareparts?.partName as string,
+        status: dto.status as 'PENDING' | 'APPROVED' | 'REJECTED',
+      });
     }
 
     // Update status dynamically based on DTO

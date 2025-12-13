@@ -14,7 +14,7 @@ import {
 export class RegisterDto {
   // ──────────────────── BASIC INFO ────────────────────
   @ApiProperty({
-    example: 'Md Joy',
+    example: 'Demo User',
     required: false,
   })
   @IsOptional()
@@ -22,14 +22,14 @@ export class RegisterDto {
   fullName?: string;
 
   @ApiProperty({
-    example: '68urgent@powerscrews.com',
+    example: 'demo@gmail.com',
   })
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
   @ApiProperty({
-    example: '01700000000',
+    example: '01234567890',
   })
   @IsString()
   @IsNotEmpty()
@@ -52,7 +52,7 @@ export class RegisterDto {
 
   // ──────────────────── OPTIONAL GARAGE FIELDS ────────────────────
   @ApiProperty({
-    example: 'Joy Auto Care',
+    example: 'Ai Garage Auto Care',
     required: false,
   })
   @IsOptional()

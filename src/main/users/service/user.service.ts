@@ -18,7 +18,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
-  ) {}
+  ) { }
 
   // ------------------------- Update Password -----------------
   @HandleError('Failed to update password', 'User')
@@ -132,8 +132,11 @@ export class UserService {
 
     if (!user) throw new AppError(404, 'User not found');
 
+    delete (user as any).password;
+
     return successResponse(user, 'User profile retrieved successfully');
   }
+
   // ------------------------- Get All Users -----------------
 
   @HandleError('Failed to get all users', 'User')
