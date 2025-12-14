@@ -55,7 +55,6 @@ export class AdditionalS3Service {
     }
   }
 
-
   // Delete file from S3
   async deleteFileFromS3(key: string) {
     try {

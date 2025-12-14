@@ -130,7 +130,6 @@ export class RegisterDto {
     required: true,
     description: 'select your  role',
   })
-
   @IsString()
   @IsNotEmpty()
   @IsEnum(UserRole)

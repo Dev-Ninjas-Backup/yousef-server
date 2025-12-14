@@ -83,11 +83,10 @@ export class AuthService {
         password: hashedPassword,
         serviceCategories: { set: categoriesToSet },
         isVerified: false,
-        
+
         freeProductsListing: 0,
         garageLogo: garageLogo ?? null,
         tradeLicense: tradeLicense ?? null,
-
       },
     });
 
