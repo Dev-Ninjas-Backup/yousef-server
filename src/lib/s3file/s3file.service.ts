@@ -7,7 +7,6 @@ import * as mime from 'mime-types';
 import * as path from 'path';
 import { ENVEnum } from 'src/common/enum/env.enum';
 
-
 @Injectable()
 export class S3FileService {
   private readonly s3: S3;
@@ -72,7 +71,7 @@ export class S3FileService {
         key: safeFileName,
       };
     } catch (err) {
-      await fs.unlink(file.path).catch(() => { });
+      await fs.unlink(file.path).catch(() => {});
       throw new BadRequestException('Failed to upload file to S3');
     }
   }

@@ -54,7 +54,7 @@ export class AdditionalS3Controller {
       key: s3Result.key,
     };
   }
-// ------------------ upload multiple files----------------
+  // ------------------ upload multiple files----------------
   @Post('upload-s3-additional-multiple')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -87,7 +87,7 @@ export class AdditionalS3Controller {
     };
   }
 
-// --------deleteFileFromS3-----------
+  // --------deleteFileFromS3-----------
   @Delete('delete-s3-additional/:key')
   async deleteFile(@Param('key') key: string) {
     try {

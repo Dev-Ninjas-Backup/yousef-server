@@ -14,7 +14,6 @@ import { Server, Socket } from 'socket.io';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { LocationGarageService } from './service/locaticon.garage.service';
 
-
 interface LocationUpdateDto {
   userLat: number;
   userLng: number;
@@ -25,14 +24,16 @@ interface LocationUpdateDto {
   cors: { origin: '*', credentials: true },
   namespace: '/garage-location',
 })
-export class GarageLocationGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class GarageLocationGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
   private logger = new Logger(GarageLocationGateway.name);
 
   constructor(
     private prisma: PrismaService,
     private locationService: LocationGarageService,
-  ) { }
+  ) {}
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
@@ -44,13 +45,21 @@ export class GarageLocationGateway implements OnGatewayConnection, OnGatewayDisc
   }
 
   @SubscribeMessage('updateLocation')
-  async handleLocationUpdate(@ConnectedSocket() client: Socket, @MessageBody() data: LocationUpdateDto) {
+  async handleLocationUpdate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: LocationUpdateDto,
+  ) {
     const { userLat, userLng, radius = 10 } = data;
 
     if (
-      typeof userLat !== 'number' || typeof userLng !== 'number' ||
-      userLat < -90 || userLat > 90 || userLng < -180 || userLng > 180 ||
-      radius < 1 || radius > 100
+      typeof userLat !== 'number' ||
+      typeof userLng !== 'number' ||
+      userLat < -90 ||
+      userLat > 90 ||
+      userLng < -180 ||
+      userLng > 180 ||
+      radius < 1 ||
+      radius > 100
     ) {
       return client.emit('error', { message: 'Invalid location or radius' });
     }
@@ -61,7 +70,7 @@ export class GarageLocationGateway implements OnGatewayConnection, OnGatewayDisc
         lng: userLng,
         radius,
       });
-console.log('location result',result)
+      console.log('location result', result);
       client.emit('nearbyGarages', {
         ...result,
         userLocation: { lat: userLat, lng: userLng },

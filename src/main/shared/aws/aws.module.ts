@@ -6,7 +6,7 @@ import { AdditionalS3Controller } from './additional/additional.controller';
 @Global()
 @Module({
   providers: [AdditionalS3Service],
-  exports: [ AdditionalS3Service],
-  controllers: [ AdditionalS3Controller],
+  exports: [AdditionalS3Service],
+  controllers: [AdditionalS3Controller],
 })
 export class awsModule {}

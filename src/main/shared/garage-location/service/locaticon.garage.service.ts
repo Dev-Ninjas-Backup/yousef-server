@@ -22,13 +22,20 @@ export interface GarageWithDistance {
 export class LocationGarageService {
   constructor(private prisma: PrismaService) {}
 
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
     const R = 6371;
     const dLat = this.toRadians(lat2 - lat1);
     const dLon = this.toRadians(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) * Math.sin(dLon / 2) ** 2;
+      Math.cos(this.toRadians(lat1)) *
+        Math.cos(this.toRadians(lat2)) *
+        Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
@@ -48,7 +55,10 @@ export class LocationGarageService {
     };
   }
 
-  private isGarageOpen(weekdaysHours: string | null, weekendsHours: string | null): boolean {
+  private isGarageOpen(
+    weekdaysHours: string | null,
+    weekendsHours: string | null,
+  ): boolean {
     if (!weekdaysHours && !weekendsHours) return false;
 
     const now = new Date();
@@ -57,7 +67,9 @@ export class LocationGarageService {
     const hoursStr = isWeekend ? weekendsHours : weekdaysHours;
     if (!hoursStr) return false;
 
-    const match = hoursStr.match(/(\d{1,2}):?(\d{0,2})\s*(am|pm)?\s*-\s*(\d{1,2}):?(\d{0,2})\s*(am|pm)?/i);
+    const match = hoursStr.match(
+      /(\d{1,2}):?(\d{0,2})\s*(am|pm)?\s*-\s*(\d{1,2}):?(\d{0,2})\s*(am|pm)?/i,
+    );
     if (!match) return false;
 
     const parseTime = (h: string, m: string, p?: string): number => {
@@ -99,7 +111,11 @@ export class LocationGarageService {
         },
       },
       include: {
-        services: { include: { service: { select: { id: true, name: true, icon: true } } } },
+        services: {
+          include: {
+            service: { select: { id: true, name: true, icon: true } },
+          },
+        },
         reviews: { select: { overallExperience: true } },
       },
       take: 100,
@@ -107,11 +123,21 @@ export class LocationGarageService {
 
     const result = garages
       .map((garage) => {
-        const distance = this.calculateDistance(lat, lng, garage.garageLat!, garage.garageLng!);
+        const distance = this.calculateDistance(
+          lat,
+          lng,
+          garage.garageLat!,
+          garage.garageLng!,
+        );
         if (distance > radius) return null;
 
-        const totalRating = (garage as any).reviews.reduce((sum: number, r: any) => sum + r.overallExperience, 0);
-        const averageRating = (garage as any).reviews.length ? totalRating / (garage as any).reviews.length : 0;
+        const totalRating = (garage as any).reviews.reduce(
+          (sum: number, r: any) => sum + r.overallExperience,
+          0,
+        );
+        const averageRating = (garage as any).reviews.length
+          ? totalRating / (garage as any).reviews.length
+          : 0;
 
         return {
           id: garage.id,
@@ -124,7 +150,10 @@ export class LocationGarageService {
           averageRating: Number(averageRating.toFixed(1)),
           totalReviews: (garage as any).reviews.length,
           services: (garage as any).services.map((gs: any) => gs.service),
-          isOpenNow: this.isGarageOpen(garage.weekdaysHours, garage.weekendsHours),
+          isOpenNow: this.isGarageOpen(
+            garage.weekdaysHours,
+            garage.weekendsHours,
+          ),
         };
       })
       .filter(Boolean)
@@ -151,12 +180,23 @@ export class LocationGarageService {
       return { success: false, data: null };
     }
 
-    const distance = userLat && userLng
-      ? this.calculateDistance(userLat, userLng, garage.garageLat, garage.garageLng)
-      : null;
+    const distance =
+      userLat && userLng
+        ? this.calculateDistance(
+            userLat,
+            userLng,
+            garage.garageLat,
+            garage.garageLng,
+          )
+        : null;
 
-    const total = (garage as any).reviews.reduce((s: number, r: any) => s + r.overallExperience, 0);
-    const avg = (garage as any).reviews.length ? total / (garage as any).reviews.length : 0;
+    const total = (garage as any).reviews.reduce(
+      (s: number, r: any) => s + r.overallExperience,
+      0,
+    );
+    const avg = (garage as any).reviews.length
+      ? total / (garage as any).reviews.length
+      : 0;
 
     return {
       success: true,
@@ -171,7 +211,10 @@ export class LocationGarageService {
         averageRating: Number(avg.toFixed(1)),
         totalReviews: (garage as any).reviews.length,
         services: (garage as any).services.map((gs: any) => gs.service),
-        isOpenNow: this.isGarageOpen(garage.weekdaysHours, garage.weekendsHours),
+        isOpenNow: this.isGarageOpen(
+          garage.weekdaysHours,
+          garage.weekendsHours,
+        ),
       },
     };
   }
