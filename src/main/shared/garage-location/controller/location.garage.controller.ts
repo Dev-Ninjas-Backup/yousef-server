@@ -1,46 +1,34 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { NearbyGarageQueryDto } from '../dto/nearby-garage.dto';
-import {
-  GarageWithDistance,
-  LocationgarageService,
-} from './../service/locaticon.garage.service';
+// src/garage-location/controller/location.garage.controller.ts
 
-@ApiTags('Garages-location-nearby')
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { NearbyGarageQueryDto } from '../dto/nearby-garage.dto';
+import { LocationGarageService } from '../service/locaticon.garage.service';
+
+
+@ApiTags('Garages-Nearby')
 @Controller('garages')
 export class LocationGarageController {
-  constructor(private readonly LocationgarageService: LocationgarageService) {}
+  constructor(private readonly locationGarageService: LocationGarageService) {}
 
   @Get('nearby')
-  @ApiOperation({ summary: 'Find nearby garages by location or address' })
-  @ApiResponse({ status: 200, description: 'List of nearby garages' })
-  @ApiResponse({ status: 400, description: 'Invalid request parameters' })
-  async findNearbyGarages(@Query() query: NearbyGarageQueryDto): Promise<{
-    success: boolean;
-    data: {
-      garages: GarageWithDistance[];
-      searchLocation: { lat: number; lng: number; address: string | null };
-      pagination: {
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-      };
-      radius: number;
-    };
-  }> {
-    return this.LocationgarageService.findNearbyGarages(query);
+  @ApiOperation({ summary: 'Get nearby garages based on user location' })
+  @ApiQuery({ name: 'lat', required: true, type: Number, description: 'Latitude' })
+  @ApiQuery({ name: 'lng', required: true, type: Number, description: 'Longitude' })
+  @ApiQuery({ name: 'radius', required: false, type: Number, description: 'Radius in km (default: 100)' })
+  async findNearbyGarages(@Query() query: NearbyGarageQueryDto) {
+    return this.locationGarageService.findNearbyGarages(query);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get garage details by ID' })
-  @ApiResponse({ status: 200, description: 'Garage details' })
-  @ApiResponse({ status: 404, description: 'Garage not found' })
+  @ApiOperation({ summary: 'Get single garage details with optional distance' })
+  @ApiQuery({ name: 'userLat', required: false, type: Number })
+  @ApiQuery({ name: 'userLng', required: false, type: Number })
   async getGarageById(
     @Param('id') id: string,
     @Query('userLat') userLat?: number,
     @Query('userLng') userLng?: number,
-  ): Promise<{ success: boolean; data: any }> {
-    return this.LocationgarageService.getGarageById(id, userLat, userLng);
+  ) {
+    return this.locationGarageService.getGarageById(id, userLat, userLng);
   }
 }
