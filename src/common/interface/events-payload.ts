@@ -32,8 +32,7 @@ export interface UserRegistrationEvent extends BaseEvent<UserRegistrationMeta> {
   };
 }
 
-export interface CustomerInquiryAlertEvent
-  extends BaseEvent<CustomerInquiryAlertMeta> {
+export interface CustomerInquiryAlertEvent extends BaseEvent<CustomerInquiryAlertMeta> {
   info: {
     Id: string;
     subject: string;
@@ -52,8 +51,7 @@ export interface MessageEvent extends BaseEvent<NewMessageMeta> {
   };
 }
 
-export interface ProductApproveUpdateEvent
-  extends BaseEvent<ProductApproveUpdateMeta> {
+export interface ProductApproveUpdateEvent extends BaseEvent<ProductApproveUpdateMeta> {
   info: {
     productId: string;
     approverId: string;

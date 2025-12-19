@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
+  IsArray,
   IsEmail,
   IsNotEmpty,
   IsNumber,
@@ -159,4 +160,33 @@ export class CreateGarageDto {
   @IsString()
   @IsOptional()
   brandExpertise?: string;
+
+  @ApiProperty({
+    example: '["Oil Change", "Brake Repair", "Engine Diagnostics"]',
+    required: false,
+    type: String,
+    description: 'Send as JSON string or comma-separated values',
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+
+    if (Array.isArray(value)) return value;
+
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : undefined;
+      } catch {
+        return value
+          .split(',')
+          .map((item: string) => item.trim())
+          .filter(Boolean);
+      }
+    }
+
+    return undefined;
+  })
+  @IsArray({ message: 'services must be an array' })
+  services?: string[];
 }

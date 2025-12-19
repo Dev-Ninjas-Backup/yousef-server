@@ -12,7 +12,7 @@ export class SparepartsFinancialsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
-  ) { }
+  ) {}
 
   // Approve / Update spareparts status
   @HandleError('Failed to update spareparts')

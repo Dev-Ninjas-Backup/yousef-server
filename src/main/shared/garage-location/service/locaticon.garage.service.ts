@@ -30,18 +30,12 @@ export interface GarageWithDistance {
   weekdaysHours: string | null;
   weekendsHours: string | null;
   brandExpertise: string[];
+  services: string[];
   distance: number;
   user: {
     fullName: string | null;
     phone: string | null;
   };
-  services: {
-    service: {
-      id: string;
-      name: string;
-      icon: string;
-    };
-  }[];
   reviews: {
     id: string;
     overallExperience: number;
@@ -176,17 +170,6 @@ export class LocationgarageService {
             phone: true,
           },
         },
-        services: {
-          include: {
-            service: {
-              select: {
-                id: true,
-                name: true,
-                icon: true,
-              },
-            },
-          },
-        },
         reviews: {
           select: {
             id: true,
@@ -263,11 +246,6 @@ export class LocationgarageService {
             fullName: true,
             phone: true,
             email: true,
-          },
-        },
-        services: {
-          include: {
-            service: true,
           },
         },
         reviews: {

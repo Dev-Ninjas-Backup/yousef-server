@@ -49,4 +49,13 @@ export class QueryGarageDto {
   @IsOptional()
   @IsNumberString()
   limit?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by status',
+    example: 'APPROVED',
+    enum: ['PENDING', 'APPROVED', 'REJECTED'],
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
