@@ -1,28 +1,12 @@
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+// src/garage-location/service/location.garage.service.ts
 
-import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { NearbyGarageQueryDto } from '../dto/nearby-garage.dto';
 
 export interface GarageWithDistance {
   id: string;
   name: string;
-  coverPhoto: string | null;
-  profileImage: string | null;
-  garagePhone: string | null;
-  email: string | null;
-  street: string | null;
-  city: string | null;
-  emirate: string | null;
-  address: string;
-  formattedAddress: string | null;
-  placeId: string | null;
   garageLat: number;
   garageLng: number;
   description: string | null;
@@ -30,8 +14,9 @@ export interface GarageWithDistance {
   weekdaysHours: string | null;
   weekendsHours: string | null;
   brandExpertise: string[];
-  services: string[];
   distance: number;
+  address: string;
+  profileImage: string | null;
   user: {
     fullName: string | null;
     phone: string | null;
@@ -43,19 +28,14 @@ export interface GarageWithDistance {
   }[];
   averageRating: number;
   totalReviews: number;
+  services: { id: string; name: string; icon: string }[];
+  isOpenNow: boolean;
 }
 
 @Injectable()
-export class LocationgarageService {
-  constructor(
-    private prisma: PrismaService,
-    private configService: ConfigService,
-  ) {}
+export class LocationGarageService {
+  constructor(private prisma: PrismaService) {}
 
-  /**
-   * Calculate distance between two coordinates using Haversine formula
-   * Returns distance in kilometers
-   */
   private calculateDistance(
     lat1: number,
     lon1: number,
@@ -65,98 +45,79 @@ export class LocationgarageService {
     const R = 6371;
     const dLat = this.toRadians(lat2 - lat1);
     const dLon = this.toRadians(lon2 - lon1);
-
     const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLat / 2) ** 2 +
       Math.cos(this.toRadians(lat1)) *
         Math.cos(this.toRadians(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
+        Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
 
-  private toRadians(degrees: number): number {
-    return degrees * (Math.PI / 180);
+  private toRadians(deg: number): number {
+    return deg * (Math.PI / 180);
   }
 
-  /**
-   * Geocode address using Google Maps API
-   */
-  private async geocodeAddress(
-    address: string,
-  ): Promise<{ lat: number; lng: number }> {
-    const apiKey = this.configService.get<string>('GOOGLE_MAPS_API_KEY');
-
-    if (!apiKey) {
-      throw new HttpException(
-        'Google Maps API key not configured',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    try {
-      const response = await axios.get(
-        'https://maps.googleapis.com/maps/api/geocode/json',
-        {
-          params: {
-            address,
-            key: apiKey,
-          },
-        },
-      );
-
-      const data = response.data as any;
-      if (data.status !== 'OK' || !data.results.length) {
-        throw new BadRequestException('Unable to geocode the provided address');
-      }
-
-      const location = data.results[0].geometry.location;
-      return {
-        lat: location.lat,
-        lng: location.lng,
-      };
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Error geocoding address',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+  private calculateBoundingBox(lat: number, lng: number, radiusKm: number) {
+    const latDelta = radiusKm / 111;
+    const lngDelta = radiusKm / (111 * Math.cos(this.toRadians(lat)));
+    return {
+      minLat: lat - latDelta,
+      maxLat: lat + latDelta,
+      minLng: lng - lngDelta,
+      maxLng: lng + lngDelta,
+    };
   }
 
-  /**
-   * Find nearby garages based on coordinates or address
-   */
-  async findNearbyGarages(query: NearbyGarageQueryDto) {
-    let searchLat: number;
-    let searchLng: number;
+  private isGarageOpen(
+    weekdaysHours: string | null,
+    weekendsHours: string | null,
+  ): boolean {
+    if (!weekdaysHours && !weekendsHours) return false;
 
-    // Get coordinates from address or use provided lat/lng
-    if (query.address) {
-      const geocoded = await this.geocodeAddress(query.address);
-      searchLat = geocoded.lat;
-      searchLng = geocoded.lng;
-    } else if (query.lat && query.lng) {
-      searchLat = query.lat;
-      searchLng = query.lng;
-    } else {
-      throw new BadRequestException(
-        'Either coordinates (lat, lng) or address must be provided',
-      );
+    const now = new Date();
+    const day = now.getDay();
+    const isWeekend = day === 0 || day === 6;
+    const hoursStr = isWeekend ? weekendsHours : weekdaysHours;
+    if (!hoursStr) return false;
+
+    const match = hoursStr.match(
+      /(\d{1,2}):?(\d{0,2})\s*(am|pm)?\s*-\s*(\d{1,2}):?(\d{0,2})\s*(am|pm)?/i,
+    );
+    if (!match) return false;
+
+    const parseTime = (h: string, m: string, p?: string): number => {
+      let hour = parseInt(h);
+      const min = parseInt(m || '0');
+      if (p?.toLowerCase() === 'pm' && hour !== 12) hour += 12;
+      if (p?.toLowerCase() === 'am' && hour === 12) hour = 0;
+      return hour + min / 60;
+    };
+
+    const open = parseTime(match[1], match[2], match[3]);
+    const close = parseTime(match[4], match[5], match[6]);
+    const current = now.getHours() + now.getMinutes() / 60;
+
+    return current >= open && current < close;
+  }
+
+  async findNearbyGarages(query: NearbyGarageQueryDto): Promise<{
+    success: true;
+    garages: GarageWithDistance[];
+    count: number;
+  }> {
+    const { lat, lng, radius = 10 } = query;
+
+    if (!lat || !lng) {
+      throw new Error('Latitude and longitude are required');
     }
 
-    const radius = query.radius || 10;
+    const bbox = this.calculateBoundingBox(lat, lng, radius + 5);
 
-    // Fetch all garages with coordinates
     const garages = await this.prisma.garage.findMany({
       where: {
-        NOT: {
-          OR: [{ garageLat: 0 }, { garageLng: 0 }],
-        },
+        garageLat: { gte: bbox.minLat, lte: bbox.maxLat },
+        garageLng: { gte: bbox.minLng, lte: bbox.maxLng },
         user: {
           isActive: true,
           isDeleted: false,
@@ -178,68 +139,66 @@ export class LocationgarageService {
           },
         },
       },
+      take: 100,
     });
 
-    // Calculate distances and filter by radius
-    const garagesWithDistance: GarageWithDistance[] = garages
+    const result = garages
       .map((garage) => {
         const distance = this.calculateDistance(
-          searchLat,
-          searchLng,
+          lat,
+          lng,
           garage.garageLat!,
           garage.garageLng!,
         );
+        if (distance > radius) return null;
 
-        // Calculate average rating
-        const totalRating = garage.reviews.reduce(
-          (sum, review) => sum + review.overallExperience,
+        const totalRating = (garage as any).reviews.reduce(
+          (sum: number, r: any) => sum + r.overallExperience,
           0,
         );
-        const averageRating =
-          garage.reviews.length > 0 ? totalRating / garage.reviews.length : 0;
+        const averageRating = (garage as any).reviews.length
+          ? totalRating / (garage as any).reviews.length
+          : 0;
 
         return {
-          ...garage,
-          distance: parseFloat(distance.toFixed(2)),
-          averageRating: parseFloat(averageRating.toFixed(1)),
-          totalReviews: garage.reviews.length,
+          id: garage.id,
+          name: garage.name,
+          garageLat: garage.garageLat!,
+          garageLng: garage.garageLng!,
+          description: garage.description,
+          certifications: garage.certifications,
+          weekdaysHours: garage.weekdaysHours,
+          weekendsHours: garage.weekendsHours,
+          brandExpertise: garage.brandExpertise,
+          distance: Number(distance.toFixed(2)),
+          address: garage.address,
+          profileImage: garage.profileImage,
+          user: garage.user,
+          reviews: (garage as any).reviews,
+          averageRating: Number(averageRating.toFixed(1)),
+          totalReviews: (garage as any).reviews.length,
+          services:
+            (garage as any).services?.map((gs: any) => gs.service) || [],
+          isOpenNow: this.isGarageOpen(
+            garage.weekdaysHours,
+            garage.weekendsHours,
+          ),
         };
       })
-      .filter((garage) => garage.distance <= radius)
-      .sort((a, b) => a.distance - b.distance);
-
-    // Pagination
-    const page = query.page || 1;
-    const limit = query.limit || 20;
-    const skip = (page - 1) * limit;
-    const paginatedGarages = garagesWithDistance.slice(skip, skip + limit);
+      .filter(Boolean)
+      .sort((a, b) => a!.distance - b!.distance)
+      .slice(0, 50) as GarageWithDistance[];
 
     return {
       success: true,
-      data: {
-        garages: paginatedGarages,
-        searchLocation: {
-          lat: searchLat,
-          lng: searchLng,
-          address: query.address || null,
-        },
-        pagination: {
-          total: garagesWithDistance.length,
-          page,
-          limit,
-          totalPages: Math.ceil(garagesWithDistance.length / limit),
-        },
-        radius: radius,
-      },
+      garages: result,
+      count: result.length,
     };
   }
 
-  /**
-   * Get garage details by ID with distance from user location
-   */
-  async getGarageById(garageId: string, userLat?: number, userLng?: number) {
+  async getGarageById(id: string, userLat?: number, userLng?: number) {
     const garage = await this.prisma.garage.findUnique({
-      where: { id: garageId },
+      where: { id },
       include: {
         user: {
           select: {
@@ -264,39 +223,45 @@ export class LocationgarageService {
       },
     });
 
-    if (!garage) {
-      throw new BadRequestException('Garage not found');
+    if (!garage || !garage.garageLat || !garage.garageLng) {
+      return { success: false, data: null };
     }
 
-    let distance: number | null = null;
+    const distance =
+      userLat && userLng
+        ? this.calculateDistance(
+            userLat,
+            userLng,
+            garage.garageLat,
+            garage.garageLng,
+          )
+        : null;
 
-    if (userLat && userLng && garage.garageLat && garage.garageLng) {
-      distance = parseFloat(
-        this.calculateDistance(
-          userLat,
-          userLng,
-          garage.garageLat,
-          garage.garageLng,
-        ).toFixed(2),
-      );
-    }
-
-    const totalRating = garage.reviews.reduce(
-      (sum, review) => sum + review.overallExperience,
+    const total = (garage as any).reviews.reduce(
+      (s: number, r: any) => s + r.overallExperience,
       0,
     );
-    const averageRating =
-      garage.reviews.length > 0
-        ? parseFloat((totalRating / garage.reviews.length).toFixed(1))
-        : 0;
+    const avg = (garage as any).reviews.length
+      ? total / (garage as any).reviews.length
+      : 0;
 
     return {
       success: true,
       data: {
-        ...garage,
-        distance,
-        averageRating,
-        totalReviews: garage.reviews.length,
+        id: garage.id,
+        name: garage.name,
+        garageLat: garage.garageLat,
+        garageLng: garage.garageLng,
+        distance: distance ? Number(distance.toFixed(2)) : 0,
+        address: garage.address,
+        profileImage: garage.profileImage,
+        averageRating: Number(avg.toFixed(1)),
+        totalReviews: (garage as any).reviews.length,
+        services: (garage as any).services.map((gs: any) => gs.service),
+        isOpenNow: this.isGarageOpen(
+          garage.weekdaysHours,
+          garage.weekendsHours,
+        ),
       },
     };
   }

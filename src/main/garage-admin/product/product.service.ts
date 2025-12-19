@@ -476,14 +476,14 @@ export class ProductService {
 
     const hasGarageMonthly = Boolean(
       user.isMembership &&
-      user.subscriptionEndsAt &&
-      new Date(user.subscriptionEndsAt) > new Date(),
+        user.subscriptionEndsAt &&
+        new Date(user.subscriptionEndsAt) > new Date(),
     );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&
-      user.productMonthlyEndDate &&
-      new Date(user.productMonthlyEndDate) > new Date(),
+        user.productMonthlyEndDate &&
+        new Date(user.productMonthlyEndDate) > new Date(),
     );
 
     return {

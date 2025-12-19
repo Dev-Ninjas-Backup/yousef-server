@@ -79,7 +79,7 @@ export class AuthService {
         role,
         password: hashedPassword,
         serviceCategories: Array.isArray(serviceCategories)
-          ? serviceCategories
+          ? (serviceCategories as any)
           : [],
         isVerified: false,
         freeProductsListing: 0,

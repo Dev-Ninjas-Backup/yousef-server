@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-
 import { LocationGarageController } from './controller/location.garage.controller';
-import { LocationgarageService } from './service/locaticon.garage.service';
+import { GarageLocationGateway } from './Grage.gateway';
+import { LocationGarageService } from './service/locaticon.garage.service';
 
 @Module({
   controllers: [LocationGarageController],
-  providers: [LocationgarageService],
+  providers: [LocationGarageService, GarageLocationGateway],
+  exports: [LocationGarageService, GarageLocationGateway],
 })
 export class GarageLocationModule {}
