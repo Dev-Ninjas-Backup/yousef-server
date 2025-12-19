@@ -1,134 +1,39 @@
 Below is a **clean, ready-to-copy `package.json` snippet** that contains exactly the `"scripts"` section you posted, plus a minimal set of dependencies/devDependencies that make all those commands work out-of-the-box.
 
-```json
-{
-  "name": "indianssydney-backend",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
-  "license": "UNLICENSED",
-  "scripts": {
-    "build": "nest build",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "format": "prettier --ignore-path .gitignore --check \"**/*.+(js|ts|json)\"",
-    "format:fix": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
-    "ci:check": "npm run format && npm run lint && npm run db:validate && npm run build && npm run start",
-    "ci:fix": "npm run format:fix && npm run lint:fix",
-    "prisma": "npx prisma",
-    "db:push": "npx prisma db push",
-    "db:generate": "npx prisma generate",
-    "db:reset": "npx prisma migrate reset",
-    "db:migrate": "npx prisma migrate dev",
-    "db:deploy": "npx prisma migrate deploy",
-    "db:studio": "npx prisma studio",
-    "db:validate": "npx prisma validate",
-    "db:format": "npx prisma format",
-    "postinstall": "npx prisma generate",
-    "prepare": "husky"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.911.0",
-    "@aws-sdk/lib-storage": "^3.907.0",
-    "@aws-sdk/s3-request-presigner": "^3.911.0",
-    "@nestjs/axios": "^4.0.1",
-    "@nestjs/cache-manager": "^3.0.1",
-    "@nestjs/common": "^11.0.1",
-    "@nestjs/config": "^4.0.2",
-    "@nestjs/core": "^11.0.1",
-    "@nestjs/jwt": "^11.0.0",
-    "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.1.6",
-    "@nestjs/platform-socket.io": "^11.1.6",
-    "@nestjs/schedule": "^6.0.0",
-    "@nestjs/serve-static": "^5.0.3",
-    "@nestjs/swagger": "^11.2.0",
-    "@nestjs/websockets": "^11.1.6",
-    "@prisma/client": "^6.14.0",
-    "agora-access-token": "^2.0.4",
-    "aws-sdk": "^2.1692.0",
-    "axios": "^1.12.2",
-    "bcrypt": "^6.0.0",
-    "cache-manager": "^7.1.1",
-    "cache-manager-redis-store": "^3.0.1",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.2",
-    "cookie-parser": "^1.4.7",
-    "dotenv": "^17.2.3",
-    "firebase-admin": "^13.5.0",
-    "google-auth-library": "^10.2.1",
-    "mime-types": "^3.0.1",
-    "multer": "^2.0.2",
-    "nodemailer": "^7.0.5",
-    "passport": "^0.7.0",
-    "passport-jwt": "^4.0.1",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1",
-    "sharp": "^0.34.4",
-    "socket.io": "^4.8.1",
-    "stripe": "^18.5.0",
-    "uuid": "^13.0.0"
-  },
-  "prisma": {
-    "schema": "./prisma"
-  },
-  "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.0",
-    "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
-    "@types/aws-sdk": "^0.0.42",
-    "@types/axios": "^0.9.36",
-    "@types/bcrypt": "^6.0.0",
-    "@types/cookie-parser": "^1.4.9",
-    "@types/express": "^5.0.0",
-    "@types/jest": "^30.0.0",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^22.10.7",
-    "@types/nodemailer": "^7.0.1",
-    "@types/passport-jwt": "^4.0.1",
-    "@types/stripe": "^8.0.416",
-    "@types/supertest": "^6.0.2",
-    "@types/uuid": "^10.0.0",
-    "chalk": "^5.6.2",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
-    "globals": "^16.0.0",
-    "husky": "^9.1.7",
-    "jest": "^30.0.0",
-    "node-emoji": "^2.2.0",
-    "prettier": "^3.4.2",
-    "prisma": "^6.14.0",
-    "source-map-support": "^0.5.21",
-    "supertest": "^7.0.0",
-    "ts-jest": "^29.2.5",
-    "ts-loader": "^9.5.2",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0",
-    "yocto-spinner": "^1.0.0"
-  },
-  "jest": {
-    "moduleFileExtensions": ["js", "json", "ts"],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": ["**/*.(t|j)s"],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
-  }
-}
+# Garage Location API
+
+A real-time garage location tracking system with REST API and WebSocket support.
+
+## 📦 Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+
+# Run database migrations
+npx prisma migrate dev
+
+# Start the server
+npm run start:dev
 ```
+
+## 📖 Documentation Links
+
+- **[Real time near by garage location](./docs/garage-location-api-docs.md)** - Start here if you're building a frontend
+- **[Notes](./docs/note.md)** - Complete API specifications
+- **[WebSocket Guide](./docs/WEBSOCKET_EVENTS.md)** - Real-time communication details
+- **[masud rana](./docs/changelog.masudrana.md)** - Code change masud Rana
+
+## 👥 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ### How to use it
 
@@ -260,21 +165,6 @@ Swagger UI: **`/docs`**
 Authorization: Bearer <jwt-token>
 ```
 
-## Optional: Firebase
-
-```ts
-// lib/firebase.ts
-import * as admin from 'firebase-admin';
-
-admin.initializeApp({
-  credential: admin.credential.cert(
-    JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!),
-  ),
-});
-
-export default admin;
-```
-
 ## Generating Modules
 
 ```bash
@@ -298,7 +188,7 @@ Then run in your project folder:
 
 ## License
 
-MIT © 2025 Ss Joy
+Made with ❤️ by Team Dev Ninja
 
 ```
 

@@ -1,4 +1,4 @@
-// src/garage-location/gateway/garage-location.gateway.ts
+
 
 import { Logger } from '@nestjs/common';
 import {
@@ -21,19 +21,21 @@ interface LocationUpdateDto {
 }
 
 @WebSocketGateway({
-  cors: { origin: '*', credentials: true },
+  cors: {
+    origin: '*',
+    credentials: true
+  },
   namespace: '/garage-location',
 })
 export class GarageLocationGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private logger = new Logger(GarageLocationGateway.name);
 
   constructor(
     private prisma: PrismaService,
     private locationService: LocationGarageService,
-  ) {}
+  ) { }
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
