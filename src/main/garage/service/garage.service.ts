@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import { ValidationException } from 'src/common/filter/custom.exception';
 import {
   successResponse,
   TResponse,
@@ -18,7 +18,6 @@ export class GarageService {
   constructor(
     private prisma: PrismaService,
     private s3FileService: S3FileService,
-    private configService: ConfigService,
   ) {}
 
   @HandleError('Failed to create garage', 'Garage')
@@ -97,6 +96,12 @@ export class GarageService {
       data: garageData,
     });
 
+    // Validate business rules
+    if (garage.garageLat === null || garage.garageLng === null) {
+      throw new ValidationException('Latitude and longitude are required', {
+        receivedData: garage,
+      });
+    }
     return successResponse(garage, 'Garage created successfully');
   }
 

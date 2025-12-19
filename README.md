@@ -20,6 +20,27 @@ npx prisma migrate dev
 npm run start:dev
 ```
 
+
+## Custom Exception Classes
+
+# ValidationException - For validation errors
+# NotFoundException - For resource not found
+# UnauthorizedException - For auth errors
+# BusinessRuleException - For business logic violations
+# DatabaseException - For database errors
+# ExternalServiceException - For external API failures
+# RateLimitException - For rate limitin
+
+``` bash
+# Validate business rules
+    if (!data.latitude || !data.longitude) {
+      throw new ValidationException('Latitude and longitude are required', {
+        receivedData: data,
+      });
+    }
+```
+
+
 ## 📖 Documentation Links
 
 - **[Real time near by garage location](./docs/garage-location-api-docs.md)** - Start here if you're building a frontend
