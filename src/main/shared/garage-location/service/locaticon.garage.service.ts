@@ -9,9 +9,23 @@ export interface GarageWithDistance {
   name: string;
   garageLat: number;
   garageLng: number;
+  description: string | null;
+  certifications: string[];
+  weekdaysHours: string | null;
+  weekendsHours: string | null;
+  brandExpertise: string[];
   distance: number;
   address: string;
   profileImage: string | null;
+  user: {
+    fullName: string | null;
+    phone: string | null;
+  };
+  reviews: {
+    id: string;
+    overallExperience: number;
+    comment: string;
+  }[];
   averageRating: number;
   totalReviews: number;
   services: { id: string; name: string; icon: string }[];
@@ -111,12 +125,19 @@ export class LocationGarageService {
         },
       },
       include: {
-        services: {
-          include: {
-            service: { select: { id: true, name: true, icon: true } },
+        user: {
+          select: {
+            fullName: true,
+            phone: true,
           },
         },
-        reviews: { select: { overallExperience: true } },
+        reviews: {
+          select: {
+            id: true,
+            overallExperience: true,
+            comment: true,
+          },
+        },
       },
       take: 100,
     });
@@ -144,12 +165,20 @@ export class LocationGarageService {
           name: garage.name,
           garageLat: garage.garageLat!,
           garageLng: garage.garageLng!,
+          description: garage.description,
+          certifications: garage.certifications,
+          weekdaysHours: garage.weekdaysHours,
+          weekendsHours: garage.weekendsHours,
+          brandExpertise: garage.brandExpertise,
           distance: Number(distance.toFixed(2)),
           address: garage.address,
           profileImage: garage.profileImage,
+          user: garage.user,
+          reviews: (garage as any).reviews,
           averageRating: Number(averageRating.toFixed(1)),
           totalReviews: (garage as any).reviews.length,
-          services: (garage as any).services.map((gs: any) => gs.service),
+          services:
+            (garage as any).services?.map((gs: any) => gs.service) || [],
           isOpenNow: this.isGarageOpen(
             garage.weekdaysHours,
             garage.weekendsHours,
@@ -171,8 +200,26 @@ export class LocationGarageService {
     const garage = await this.prisma.garage.findUnique({
       where: { id },
       include: {
-        services: { include: { service: true } },
-        reviews: { select: { overallExperience: true } },
+        user: {
+          select: {
+            fullName: true,
+            phone: true,
+            email: true,
+          },
+        },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                fullName: true,
+                profilePhoto: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     });
 

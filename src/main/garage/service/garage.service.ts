@@ -58,17 +58,16 @@ export class GarageService {
       }
     }
 
-    // Process brand expertise
     const brandArray = createGarageDto.brandExpertise
       ? createGarageDto.brandExpertise.split(',').map((b) => b.trim())
       : [];
 
-    // Process certifications
     const certificationsArray = createGarageDto.certifications
       ? createGarageDto.certifications.split(',').map((b) => b.trim())
       : [];
 
-    // Create garage data object for Prisma
+    const servicesArray = createGarageDto.services || [];
+
     const garageData = {
       name: createGarageDto.name.trim(),
       coverPhoto: coverPhotoUrl,
@@ -88,6 +87,7 @@ export class GarageService {
       weekdaysHours: createGarageDto.weekdaysHours,
       weekendsHours: createGarageDto.weekendsHours,
       brandExpertise: brandArray,
+      services: servicesArray,
       userId: userId,
     };
 
@@ -132,32 +132,18 @@ export class GarageService {
 
     if (query?.serviceName) {
       where.services = {
-        some: {
-          service: {
-            name: {
-              contains: query.serviceName,
-              mode: 'insensitive',
-            },
-          },
-        },
+        has: query.serviceName,
       };
+    }
+
+    if (query?.status) {
+      where.status = query.status;
     }
 
     const [garages, total] = await Promise.all([
       this.prisma.garage.findMany({
         where,
         include: {
-          services: {
-            select: {
-              service: {
-                select: {
-                  id: true,
-                  name: true,
-                  icon: true,
-                },
-              },
-            },
-          },
           user: {
             select: {
               id: true,
@@ -188,7 +174,6 @@ export class GarageService {
       this.prisma.garage.count({ where }),
     ]);
 
-    // Transform the response with average rating
     const transformedGarages = garages.map((garage) => {
       const averageRating =
         garage.reviews.length > 0
@@ -210,7 +195,6 @@ export class GarageService {
 
       return {
         ...garage,
-        services: garage.services.map((gs) => gs.service),
         averageRating,
         totalReviews: garage.reviews.length,
         reviews: undefined,
@@ -235,17 +219,6 @@ export class GarageService {
     const garage = await this.prisma.garage.findUnique({
       where: { id },
       include: {
-        services: {
-          select: {
-            service: {
-              select: {
-                id: true,
-                name: true,
-                icon: true,
-              },
-            },
-          },
-        },
         user: {
           select: {
             id: true,
@@ -292,10 +265,8 @@ export class GarageService {
           )
         : 0;
 
-    // Transform the response
     const transformedGarage = {
       ...garage,
-      services: garage.services.map((gs) => gs.service),
       averageRating,
       totalReviews: garage.reviews.length,
       reviews: undefined,
@@ -369,15 +340,15 @@ export class GarageService {
       }
     }
 
-    // Process brand expertise
     const brandArray = updateGarageDto.brandExpertise
       ? updateGarageDto.brandExpertise.split(',').map((b) => b.trim())
       : undefined;
 
-    // Process certifications
     const certificationsArray = updateGarageDto.certifications
       ? updateGarageDto.certifications.split(',').map((b) => b.trim())
       : undefined;
+
+    const servicesArray = updateGarageDto.services;
 
     const updateData: any = {};
 
@@ -405,22 +376,12 @@ export class GarageService {
     if (updateGarageDto.weekendsHours)
       updateData.weekendsHours = updateGarageDto.weekendsHours;
     if (brandArray) updateData.brandExpertise = brandArray;
+    if (servicesArray) updateData.services = servicesArray;
 
     const updatedGarage = await this.prisma.garage.update({
       where: { id },
       data: updateData,
       include: {
-        services: {
-          select: {
-            service: {
-              select: {
-                id: true,
-                name: true,
-                icon: true,
-              },
-            },
-          },
-        },
         user: {
           select: {
             id: true,
@@ -439,7 +400,6 @@ export class GarageService {
 
     const transformedGarage = {
       ...updatedGarage,
-      services: updatedGarage.services.map((gs) => gs.service),
     };
 
     return successResponse(transformedGarage, 'Garage updated successfully');

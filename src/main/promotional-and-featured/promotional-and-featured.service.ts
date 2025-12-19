@@ -25,17 +25,6 @@ export class PromotionalAndFeaturedService {
   async getFeaturedGarages() {
     const garages = await this.prisma.garage.findMany({
       include: {
-        services: {
-          select: {
-            service: {
-              select: {
-                id: true,
-                name: true,
-                icon: true,
-              },
-            },
-          },
-        },
         user: {
           select: {
             id: true,
@@ -100,7 +89,6 @@ export class PromotionalAndFeaturedService {
 
     const transformedGarages = sortedGarages.map((garage) => ({
       ...garage,
-      services: garage.services.map((gs) => gs.service),
       reviews: undefined,
     }));
 

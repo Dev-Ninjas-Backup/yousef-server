@@ -71,6 +71,7 @@ export class S3FileService {
         key: safeFileName,
       };
     } catch (err) {
+      console.log(err);
       await fs.unlink(file.path).catch(() => {});
       throw new BadRequestException('Failed to upload file to S3');
     }

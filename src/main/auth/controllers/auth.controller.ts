@@ -55,6 +55,9 @@ export class AuthController {
       tradeLicense?: Express.Multer.File[];
     },
   ) {
+    console.log('Raw body:', body);
+    console.log('serviceCategories:', body.serviceCategories);
+    console.log('serviceCategories type:', typeof body.serviceCategories);
     try {
       let garageLogoUrl: string | undefined;
       let tradeLicenseUrl: string | undefined;
