@@ -17,7 +17,6 @@ export class ErrorLogger {
       details: context.details,
     };
 
-  
     if (context.statusCode >= 500) {
       this.logger.error(errorInfo, error.stack);
     } else if (context.statusCode >= 400) {
@@ -25,9 +24,5 @@ export class ErrorLogger {
     } else {
       this.logger.log(errorInfo);
     }
-
-
   }
-
-
 }
