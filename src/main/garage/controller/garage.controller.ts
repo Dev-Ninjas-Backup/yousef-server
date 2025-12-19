@@ -98,6 +98,11 @@ export class GarageController {
     required: false,
     description: 'Filter by service type name',
   })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by status (PENDING, APPROVED, REJECTED)',
+  })
   @ApiQuery({ name: 'page', required: false, description: 'Page number' })
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({

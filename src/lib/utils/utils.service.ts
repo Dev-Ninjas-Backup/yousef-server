@@ -14,7 +14,7 @@ export class UtilsService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   sanitizedResponse(dto: any, data: any) {
     return plainToInstance(dto, data, { excludeExtraneousValues: true });

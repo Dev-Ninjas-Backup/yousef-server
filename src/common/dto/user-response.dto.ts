@@ -1,4 +1,4 @@
-import { ServiceCategory, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import { Expose } from 'class-transformer';
 
 export class UserResponseDto {
@@ -39,7 +39,7 @@ export class UserResponseDto {
   role: UserRole;
 
   @Expose()
-  serviceCategories?: ServiceCategory[];
+  serviceCategories?: string[];
 
   // ---------- ACCOUNT STATUS ----------
   @Expose()

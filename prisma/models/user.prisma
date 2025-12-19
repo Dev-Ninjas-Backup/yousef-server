@@ -57,7 +57,7 @@ model User {
   nextBillingDate         DateTime?
   // ------------------ Role & Category ------------------------
   role                    UserRole         
-  serviceCategories       ServiceCategory[]
+  serviceCategories       String[]
 
   // ------------------ Membership -----------------------------
   Payment            Payment[]
@@ -110,14 +110,7 @@ enum UserRole {
   MEMBER
 }
 
-enum ServiceCategory {
-  MECHANICAL_REPAIR
-  AC_HEATING
-  ELECTRICAL_SYSTEMS
-  BODY_AND_PAINT
-  DIAGNOSTICS
-  GENERAL_MAINTENANCE
-}
+
 
 enum GarageStatus {
   APPROVE
