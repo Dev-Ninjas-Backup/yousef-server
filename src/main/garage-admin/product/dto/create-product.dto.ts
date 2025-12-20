@@ -131,4 +131,12 @@ export class CreateProductDto {
     description: 'Product photos (max 5 files)',
   })
   photos?: any;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description:
+      'Verification image (required when sellerType is VERIFIED_SUPPLIER)',
+  })
+  verificationImage?: any;
 }

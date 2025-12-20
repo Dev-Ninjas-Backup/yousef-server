@@ -7,5 +7,6 @@ import { ServiceTypeController } from './controller/service-type.controller';
   imports: [LibModule],
   controllers: [ServiceTypeController],
   providers: [ServiceTypeService],
+  exports: [ServiceTypeService],
 })
 export class ServiceTypeModule {}

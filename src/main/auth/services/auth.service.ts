@@ -49,6 +49,7 @@ export class AuthService {
       role,
       serviceCategories,
     } = payload;
+    console.log('Service Categories:', serviceCategories);
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Passwords do not match');
@@ -70,10 +71,6 @@ export class AuthService {
 
     // Setup trial only for GARAGE_OWNER
 
-    const categoriesToSet = Array.isArray(serviceCategories)
-      ? serviceCategories
-      : [];
-
     const newUser = await this.prisma.user.create({
       data: {
         fullName,
@@ -81,13 +78,13 @@ export class AuthService {
         phone,
         role,
         password: hashedPassword,
-        serviceCategories: { set: categoriesToSet },
+        serviceCategories: Array.isArray(serviceCategories)
+          ? (serviceCategories as any)
+          : [],
         isVerified: false,
-        
         freeProductsListing: 0,
         garageLogo: garageLogo ?? null,
         tradeLicense: tradeLicense ?? null,
-
       },
     });
 

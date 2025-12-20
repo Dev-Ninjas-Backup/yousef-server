@@ -3,16 +3,9 @@ import { IsString } from 'class-validator';
 
 export class CreateServiceTypeDto {
   @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    description: 'Service icon file upload',
-  })
-  icon: Express.Multer.File;
-
-  @ApiProperty({
-    description: 'Unique service name',
+    description: 'Service category name',
     example: 'Oil Change',
   })
   @IsString()
-  name: string;
+  serviceCategory: string;
 }

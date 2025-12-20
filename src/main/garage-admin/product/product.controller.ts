@@ -16,7 +16,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -46,9 +46,7 @@ export class ProductController {
   @ApiOperation({ summary: 'Create a new product with seller and photos' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FilesInterceptor(
-      'photos',
-      5,
+    AnyFilesInterceptor(
       new MulterService().createMulterOptions(
         './Uploads',
         'products',
@@ -66,7 +64,19 @@ export class ProductController {
   ) {
     try {
       console.log('Create Product', createProductDto);
-      return await this.productService.create(userId, createProductDto, files);
+
+      // Extract verificationImage from files if present
+      const verificationImageFile = files.find(
+        (f) => f.fieldname === 'verificationImage',
+      );
+      const photoFiles = files.filter((f) => f.fieldname === 'photos');
+
+      return await this.productService.create(
+        userId,
+        createProductDto,
+        photoFiles,
+        verificationImageFile,
+      );
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -167,9 +177,7 @@ export class ProductController {
   @ApiOperation({ summary: 'Update a product by ID' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
-    FilesInterceptor(
-      'photos',
-      5,
+    AnyFilesInterceptor(
       new MulterService().createMulterOptions(
         './Uploads',
         'products',
@@ -186,7 +194,17 @@ export class ProductController {
     @UploadedFiles() files: Express.Multer.File[] = [],
   ) {
     try {
-      return await this.productService.update(id, updateProductDto, files);
+      const verificationImageFile = files.find(
+        (f) => f.fieldname === 'verificationImage',
+      );
+      const photoFiles = files.filter((f) => f.fieldname === 'photos');
+
+      return await this.productService.update(
+        id,
+        updateProductDto,
+        photoFiles,
+        verificationImageFile,
+      );
     } catch (error) {
       if (
         error instanceof NotFoundException ||

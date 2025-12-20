@@ -3,15 +3,15 @@
 // ======================
 
 model Garage {
-  id           String  @id @default(uuid())
-  name         String 
-  coverPhoto   String?
-  profileImage String?
-  garagePhone  String?
-  email        String?
-  street       String?
-  city         String?
-  emirate      String?
+  id               String  @id @default(uuid())
+  name             String
+  coverPhoto       String?
+  profileImage     String?
+  garagePhone      String?
+  email            String?
+  street           String?
+  city             String?
+  emirate          String?
   // ---------- Garage Location (auto from address) ----------
   address          String
   formattedAddress String?
@@ -28,8 +28,8 @@ model Garage {
 
   // Relations
   userId   String
-  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  services GarageService[]
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services String[]
   reviews  Review[]
 
   createdAt DateTime @default(now())
@@ -39,32 +39,6 @@ model Garage {
   @@index([placeId])
   @@index([status])
   @@index([userId])
-}
-
-// ======================
-//  SERVICE MASTER LIST
-// ======================
-
-model Service {
-  id   String @id @default(uuid())
-  icon String
-  name String @unique
-
-  garages GarageService[]
-}
-
-// ======================
-//  GARAGE ↔ SERVICE (M2M)
-// ======================
-
-model GarageService {
-  garageId  String
-  serviceId String
-
-  garage  Garage  @relation(fields: [garageId], references: [id], onDelete: Cascade)
-  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  @@id([garageId, serviceId])
 }
 
 // =====================
