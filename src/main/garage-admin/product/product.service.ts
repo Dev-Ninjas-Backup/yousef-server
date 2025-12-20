@@ -343,7 +343,13 @@ export class ProductService {
     if (!product)
       throw new NotFoundException(`Product with ID ${id} not found`);
 
-    return product;
+    // Increment views count
+    await this.prisma.product.update({
+      where: { id },
+      data: { views: { increment: 1 } },
+    });
+
+    return { ...product, views: product.views + 1 };
   }
 
   // my products
