@@ -27,14 +27,12 @@ async function bootstrap() {
   // ------------enable cors---------------
   app.enableCors({
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        'http://localhost:5050',
+      if (process.env.NODE_ENV !== 'production') {
+        // dev → allow all
+        return callback(null, true);
+      }
 
-        'http://localhost:5050',
-        'http://localhost:5173',
-
-        'https://ruling-kitten-evolved.ngrok-free.app',
-      ];
+      const allowedOrigins = ['http://localhost:3000'];
 
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -42,8 +40,8 @@ async function bootstrap() {
         callback(new Error('Not allowed by CORS'));
       }
     },
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
   });
 

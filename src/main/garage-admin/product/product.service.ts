@@ -29,6 +29,7 @@ export class ProductService {
     userId: string,
     createProductDto: CreateProductDto,
     files: Express.Multer.File[] = [],
+    verificationImageFile?: Express.Multer.File,
   ) {
     const {
       sellerEmail,
@@ -44,6 +45,13 @@ export class ProductService {
     // Validate seller email
     if (!sellerEmail) {
       throw new BadRequestException('Seller email is required.');
+    }
+
+    // Validate verificationImage for VERIFIED_SUPPLIER
+    if (sellerType === 'VERIFIED_SUPPLIER' && !verificationImageFile) {
+      throw new BadRequestException(
+        'Verification image is required for VERIFIED_SUPPLIER seller type.',
+      );
     }
 
     const categoryExists = await this.prisma.partsCategory.findUnique({
@@ -146,12 +154,31 @@ export class ProductService {
       where: { email: sellerEmail },
     });
 
+    // Upload verification image if provided
+    let verificationImageUrl: string | null = null;
+    if (verificationImageFile) {
+      const { url } = await this.s3FileService.processUploadedFile(
+        verificationImageFile,
+      );
+      verificationImageUrl = url;
+    }
+
     if (!seller) {
       seller = await this.prisma.seller.create({
         data: {
           name: sellerName,
           email: sellerEmail,
           phoneNumber: sellerPhoneNumber,
+          sellerType,
+          verificationImage: verificationImageUrl,
+        },
+      });
+    } else if (verificationImageUrl) {
+      // Update existing seller with verification image
+      seller = await this.prisma.seller.update({
+        where: { id: seller.id },
+        data: {
+          verificationImage: verificationImageUrl,
           sellerType,
         },
       });
@@ -316,7 +343,13 @@ export class ProductService {
     if (!product)
       throw new NotFoundException(`Product with ID ${id} not found`);
 
-    return product;
+    // Increment views count
+    await this.prisma.product.update({
+      where: { id },
+      data: { views: { increment: 1 } },
+    });
+
+    return { ...product, views: product.views + 1 };
   }
 
   // my products
@@ -334,6 +367,7 @@ export class ProductService {
     id: string,
     updateProductDto: UpdateProductDto,
     files: Express.Multer.File[] = [],
+    verificationImageFile?: Express.Multer.File,
   ) {
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -351,6 +385,17 @@ export class ProductService {
       sellerType,
       ...productData
     } = updateProductDto;
+
+    // Validate verificationImage for VERIFIED_SUPPLIER
+    if (
+      sellerType === 'VERIFIED_SUPPLIER' &&
+      !verificationImageFile &&
+      !product.seller.verificationImage
+    ) {
+      throw new BadRequestException(
+        'Verification image is required for VERIFIED_SUPPLIER seller type.',
+      );
+    }
 
     // Upload new photos to S3
     const photoUrls: string[] = [];
@@ -375,12 +420,26 @@ export class ProductService {
     }
 
     // Update seller if provided
-    if (sellerName || sellerEmail || sellerPhoneNumber || sellerType || false) {
+    if (
+      sellerName ||
+      sellerEmail ||
+      sellerPhoneNumber ||
+      sellerType ||
+      verificationImageFile
+    ) {
       const sellerUpdateData: any = {};
       if (sellerName) sellerUpdateData.name = sellerName;
       if (sellerEmail) sellerUpdateData.email = sellerEmail;
       if (sellerPhoneNumber) sellerUpdateData.phoneNumber = sellerPhoneNumber;
       if (sellerType) sellerUpdateData.sellerType = sellerType;
+
+      // Upload verification image if provided
+      if (verificationImageFile) {
+        const { url } = await this.s3FileService.processUploadedFile(
+          verificationImageFile,
+        );
+        sellerUpdateData.verificationImage = url;
+      }
 
       await this.prisma.seller.update({
         where: { id: product.sellerId },
@@ -476,14 +535,14 @@ export class ProductService {
 
     const hasGarageMonthly = Boolean(
       user.isMembership &&
-        user.subscriptionEndsAt &&
-        new Date(user.subscriptionEndsAt) > new Date(),
+      user.subscriptionEndsAt &&
+      new Date(user.subscriptionEndsAt) > new Date(),
     );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&
-        user.productMonthlyEndDate &&
-        new Date(user.productMonthlyEndDate) > new Date(),
+      user.productMonthlyEndDate &&
+      new Date(user.productMonthlyEndDate) > new Date(),
     );
 
     return {
