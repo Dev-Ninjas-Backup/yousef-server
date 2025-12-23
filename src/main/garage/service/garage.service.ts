@@ -96,7 +96,7 @@ export class GarageService {
       data: garageData,
     });
 
-    // Validate business rules
+    //----------- Validate business rules ---------------------------
     if (garage.garageLat === null || garage.garageLng === null) {
       throw new ValidationException('Latitude and longitude are required', {
         receivedData: garage,

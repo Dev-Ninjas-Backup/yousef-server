@@ -4,6 +4,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
   MinLength,
@@ -29,7 +30,7 @@ export class CreateInquiryDto {
 
   @ApiProperty({
     enum: ContactSubject,
-    example: ContactSubject.CAR_SERVICE,
+    example: ContactSubject.OTHERS,
     description: 'Reason for contacting',
   })
   @IsEnum(ContactSubject)
@@ -45,6 +46,15 @@ export class CreateInquiryDto {
     message: 'Message must be at least 10 characters long',
   })
   message: string;
+
+  @ApiProperty({
+    example: 'some other subject',
+    description: 'Message content from the sender',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  othersubject?: string;
 
   @ApiProperty({
     example: 'c1ca7046-0f2c-4028-882e-022d68ca67e6',
