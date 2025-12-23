@@ -9,40 +9,34 @@ import {
 } from 'class-validator';
 
 export class CreateContactDto {
-  @ApiProperty({ example: 'Md', description: 'First name of the sender' })
+  @ApiProperty({ example: 'Md' })
   @IsString()
   @IsNotEmpty()
   FirstName: string;
 
-  @ApiProperty({ example: 'Nadim', description: 'Last name of the sender' })
+  @ApiProperty({ example: 'Nadim' })
   @IsString()
   @IsNotEmpty()
   LastName: string;
 
-  @ApiProperty({
-    example: 'example@mail.com',
-    description: 'Email of the sender',
-  })
+  @ApiProperty({ example: 'example@gmail.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({
-    example: 'CAR_PARTS',
-    enum: ContactSubject,
-    description: 'Contact subject type',
-  })
+  @ApiProperty({ enum: ContactSubject, example: ContactSubject.OTHERS })
   @IsEnum(ContactSubject)
   subject: ContactSubject;
 
-  @ApiProperty({
-    example: 'I need a car engine replacement',
-    description: 'Message sent by the user',
-  })
+  @ApiProperty({ example: 'I need a car engine replacement' })
   @IsString()
   @IsNotEmpty()
   message: string;
 
+  @ApiProperty({
+    example: 'some other subject',
+    required: false,
+  })
   @IsString()
   @IsOptional()
-  otherSubject?: string;
+  othersubject?: string;
 }

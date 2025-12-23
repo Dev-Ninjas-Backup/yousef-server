@@ -1,5 +1,10 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+
+  ApiTags,
+} from '@nestjs/swagger';
 import { GetUser, ValidateGarageOwner } from 'src/common/jwt/jwt.decorator';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
 import { InquiriesService } from './inquiries.service';
@@ -7,7 +12,7 @@ import { InquiriesService } from './inquiries.service';
 @Controller('Garage-admin-inquiries')
 @ApiTags('Garage-admin-Inquiries')
 export class InquiriesController {
-  constructor(private readonly inquiriesService: InquiriesService) {}
+  constructor(private readonly inquiriesService: InquiriesService) { }
 
   // ----------------custom inquiries messages ----------------
 
@@ -21,7 +26,10 @@ export class InquiriesController {
 
   // ---------------crate custom inquiries messages ---------------
 
-  @ApiOperation({ summary: 'Create custom inquiries messages' })
+  @ApiOperation({
+    summary:
+      'Create custom inquiries messages || when select OTHERS as subject then otherSubject is required-',
+  })
   @Post('create-custom-inquiries')
   async CreateCustomInquiries(@Body() payload: CreateInquiryDto) {
     return this.inquiriesService.createCustomInquiriesMessages(payload);
