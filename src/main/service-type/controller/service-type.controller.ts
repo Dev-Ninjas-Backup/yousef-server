@@ -1,10 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  GetUser,
-  ValidateAuth,
-  ValidateGarageOwner,
-} from 'src/common/jwt/jwt.decorator';
+import { GetUser, ValidateGarageOwner } from 'src/common/jwt/jwt.decorator';
 import { CreateServiceTypeDto } from '../dto/create-service.dto';
 import { ServiceTypeService } from '../service/service-type.service';
 
@@ -27,12 +23,10 @@ export class ServiceTypeController {
     );
   }
 
-  @ValidateAuth()
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all service categories' })
+  @ApiOperation({ summary: 'Get all service categories (public)' })
   @Get()
-  async getCombinedCategories(@GetUser('userId') userId: string) {
-    return this.serviceTypeService.getCombinedUniqueServiceCategories(userId);
+  async getAllCategories() {
+    return this.serviceTypeService.getAllCombinedUniqueServiceCategories();
   }
 
   @ValidateGarageOwner()
