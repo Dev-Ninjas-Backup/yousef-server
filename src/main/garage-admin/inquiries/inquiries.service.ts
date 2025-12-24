@@ -13,6 +13,7 @@ import {
 import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
+import { ContactSubject } from '@prisma/client';
 
 @Injectable()
 export class InquiriesService {
@@ -61,7 +62,15 @@ export class InquiriesService {
     // Save inquiry to database
     const contact = await this.prisma.contact.create({
       data: {
-        ...payload,
+        FirstName: payload.FirstName,
+        LastName: payload.LastName,
+        email: payload.email,
+        subject: payload.subject,
+        message: payload.message,
+        othersubject:
+          payload.subject === ContactSubject.OTHERS
+            ? payload.othersubject
+            : null,
         garageOwnerId: payload.garageOwnerId,
       },
     });

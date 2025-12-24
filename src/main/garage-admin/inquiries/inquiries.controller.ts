@@ -21,7 +21,10 @@ export class InquiriesController {
 
   // ---------------crate custom inquiries messages ---------------
 
-  @ApiOperation({ summary: 'Create custom inquiries messages' })
+  @ApiOperation({
+    summary:
+      'Create custom inquiries messages || when select OTHERS as subject then otherSubject is required-',
+  })
   @Post('create-custom-inquiries')
   async CreateCustomInquiries(@Body() payload: CreateInquiryDto) {
     return this.inquiriesService.createCustomInquiriesMessages(payload);

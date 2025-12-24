@@ -1,8 +1,6 @@
-Below is a **clean, ready-to-copy `package.json` snippet** that contains exactly the `"scripts"` section you posted, plus a minimal set of dependencies/devDependencies that make all those commands work out-of-the-box.
 
-# Garage Location API
 
-A real-time garage location tracking system with REST API and WebSocket support.
+
 
 ## 📦 Installation
 
@@ -21,31 +19,11 @@ npm run start:dev
 ```
 
 
-## Custom Exception Classes
-
-# ValidationException - For validation errors
-# NotFoundException - For resource not found
-# UnauthorizedException - For auth errors
-# BusinessRuleException - For business logic violations
-# DatabaseException - For database errors
-# ExternalServiceException - For external API failures
-# RateLimitException - For rate limitin
-
-``` bash
-# Validate business rules
-    if (!data.latitude || !data.longitude) {
-      throw new ValidationException('Latitude and longitude are required', {
-        receivedData: data,
-      });
-    }
-```
-
 
 ## 📖 Documentation Links
 
 - **[Real time near by garage location](./docs/garage-location-api-docs.md)** - Start here if you're building a frontend
-- **[Notes](./docs/note.md)** - Complete API specifications
-- **[WebSocket Guide](./docs/WEBSOCKET_EVENTS.md)** - Real-time communication details
+- **[notification event Guide](./docs/event_system_docs.md)** - Real-time notification details
 - **[masud rana](./docs/changelog.masudrana.md)** - Code change masud Rana
 
 ## 👥 Contributing

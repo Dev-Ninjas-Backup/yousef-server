@@ -8,7 +8,10 @@ import { ContactService } from '../services/contact.service';
 export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
-  @ApiOperation({ summary: 'Create a new contact message' })
+  @ApiOperation({
+    summary:
+      'Create a new contact message || when select OTHERS as subject then otherSubject is required',
+  })
   @Post()
   create(@Body() dto: CreateContactDto) {
     return this.contactService.create(dto);

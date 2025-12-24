@@ -9,6 +9,7 @@ import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 import { ConfigService } from '@nestjs/config';
+import { ContactSubject } from '@prisma/client';
 import { ContactEmailTemplate } from 'src/common/email/contact';
 import { ENVEnum } from 'src/common/enum/env.enum';
 import { CreateContactDto } from '../dto/create-subscribe.dto';
@@ -26,7 +27,17 @@ export class ContactService {
   @HandleError('Failed to create contact message', 'Contact')
   async create(payload: CreateContactDto): Promise<TResponse<any>> {
     const contact = await this.prisma.contact.create({
-      data: { ...payload },
+      data: {
+        FirstName: payload.FirstName,
+        LastName: payload.LastName,
+        email: payload.email,
+        subject: payload.subject,
+        message: payload.message,
+        othersubject:
+          payload.subject === ContactSubject.OTHERS
+            ? payload.othersubject
+            : null,
+      },
     });
 
     const adminEmail = this.configService.get<string>(ENVEnum.MAIL_USER);

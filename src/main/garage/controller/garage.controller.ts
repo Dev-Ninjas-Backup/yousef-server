@@ -196,7 +196,7 @@ export class GarageController {
     return this.garageService.remove(userId, id);
   }
 
-  // -----------grage with long -----
+  // -----------garage with long -----
   // @ValidateAuth()
   // @ApiBearerAuth()
   // @ValidateGarageOwner()
