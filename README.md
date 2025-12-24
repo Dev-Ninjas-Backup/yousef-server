@@ -1,8 +1,6 @@
 
 
-# Garage Location API
 
-A real-time garage location tracking system with REST API and WebSocket support.
 
 ## 📦 Installation
 
@@ -25,7 +23,7 @@ npm run start:dev
 ## 📖 Documentation Links
 
 - **[Real time near by garage location](./docs/garage-location-api-docs.md)** - Start here if you're building a frontend
-- **[WebSocket Guide](./docs/event_system_docs.md)** - Real-time notification details
+- **[notification event Guide](./docs/event_system_docs.md)** - Real-time notification details
 - **[masud rana](./docs/changelog.masudrana.md)** - Code change masud Rana
 
 ## 👥 Contributing
