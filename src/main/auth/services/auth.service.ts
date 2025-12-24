@@ -46,10 +46,15 @@ export class AuthService {
       confirmPassword,
       fullName,
       phone,
+      garageName,
+      address,
+      city,
+      emirate,
       role,
       serviceCategories,
     } = payload;
     console.log('Service Categories:', serviceCategories);
+    console.log('payload:', payload);
 
     if (password !== confirmPassword) {
       throw new BadRequestException('Passwords do not match');
@@ -78,6 +83,10 @@ export class AuthService {
         phone,
         role,
         password: hashedPassword,
+        garageName,
+        address,
+        city,
+        emirate,
         serviceCategories: Array.isArray(serviceCategories)
           ? (serviceCategories as any)
           : [],

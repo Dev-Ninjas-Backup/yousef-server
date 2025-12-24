@@ -52,4 +52,40 @@ export class ServiceTypeService {
 
     return user;
   }
+
+  async getCombinedUniqueServiceCategories(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        serviceCategories: true,
+        garages: {
+          select: {
+            services: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const userCategories = user.serviceCategories || [];
+
+    const garageServices = user.garages
+      .flatMap((garage) => garage.services || [])
+      .filter(Boolean);
+
+    const allCategories = [...userCategories, ...garageServices];
+
+    // unique + sort (optional sort)
+    const uniqueCategories = [...new Set(allCategories)].sort((a, b) =>
+      a.localeCompare(b),
+    );
+
+    return {
+      serviceCategories: uniqueCategories,
+      total: uniqueCategories.length,
+    };
+  }
 }
