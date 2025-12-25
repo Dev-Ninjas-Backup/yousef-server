@@ -139,7 +139,6 @@ export class UserService {
         emirate: dto.emirate?.trim() || user.emirate,
         userLat: dto.userLat?.trim() || user.userLat,
         userLng: dto.userLng?.trim() || user.userLng,
-  
       },
       select: {
         id: true,

@@ -30,7 +30,7 @@ export class AuthService {
     private readonly utils: UtilsService,
     private readonly mail: MailService,
     private readonly jwt: JwtService,
-  ) { }
+  ) {}
 
   // ---------- ----------REGISTER (send email verification OTP) ----------
 
@@ -54,7 +54,6 @@ export class AuthService {
       serviceCategories,
       userLat,
       userLng,
-
     } = payload;
     console.log('Service Categories:', serviceCategories);
     console.log('payload:', payload);
