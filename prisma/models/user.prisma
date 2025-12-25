@@ -7,8 +7,8 @@ model User {
   phone    String? @unique
   address  String?
   // ----------User Live Location ----------
-  userLat  Float?
-  userLng  Float?
+  userLat  String?
+  userLng  String?
 
   // ---------- file---------------------
   tradeLicense String?

@@ -137,6 +137,8 @@ export class UserService {
         address: dto.address?.trim() || user.address,
         city: dto.city?.trim() || user.city,
         emirate: dto.emirate?.trim() || user.emirate,
+        userLat: dto.userLat?.trim() || user.userLat,
+        userLng: dto.userLng?.trim() || user.userLng,
       },
       select: {
         id: true,
@@ -149,8 +151,11 @@ export class UserService {
         address: true,
         city: true,
         emirate: true,
+        userLat: true,
+        userLng: true,
         createdAt: true,
         updatedAt: true,
+        serviceCategories: true,
       },
     });
 
