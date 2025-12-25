@@ -65,7 +65,8 @@ export class GarageManagementController {
   @ApiBearerAuth()
   @ValidateSuperAdmin()
   @ApiOperation({
-    summary: 'Update garage status || APPROVE PENDING || DECLINE || ',
+    summary:
+      'Update garage status (APPROVE | PENDING | DECLINE) by providing userId',
   })
   @Patch('status/:id')
   updateStatus(
