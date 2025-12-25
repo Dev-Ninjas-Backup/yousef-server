@@ -52,6 +52,8 @@ export class AuthService {
       emirate,
       role,
       serviceCategories,
+      userLat,
+      userLng,
     } = payload;
     console.log('Service Categories:', serviceCategories);
     console.log('payload:', payload);
@@ -87,6 +89,8 @@ export class AuthService {
         address,
         city,
         emirate,
+        userLng,
+        userLat,
         serviceCategories: Array.isArray(serviceCategories)
           ? (serviceCategories as any)
           : [],
