@@ -52,4 +52,32 @@ export class ServiceTypeService {
 
     return user;
   }
+
+  async getAllCombinedUniqueServiceCategories() {
+    const users = await this.prisma.user.findMany({
+      select: {
+        serviceCategories: true,
+        garages: {
+          select: {
+            services: true,
+          },
+        },
+      },
+    });
+
+    const allCategories = users.flatMap((user) => [
+      ...(user.serviceCategories || []),
+      ...(user.garages?.flatMap((garage) => garage.services || []) || []),
+    ]);
+
+    // unique + sort
+    const uniqueCategories = [...new Set(allCategories)].sort((a, b) =>
+      a.localeCompare(b),
+    );
+
+    return {
+      serviceCategories: uniqueCategories,
+      total: uniqueCategories.length,
+    };
+  }
 }

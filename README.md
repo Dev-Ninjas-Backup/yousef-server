@@ -2,6 +2,17 @@
 
 
 
+
+
+
+## 📖 Documentation Links
+
+- **[Real time near by garage location](./docs/garage-location-api-docs.md)** - Start here if you're building a frontend
+- **[notification event Guide](./docs/event_system_docs.md)** - Real-time notification details
+- **[privateChat](./docs/private-chat.md)** - Real time chat message
+- **[masud rana](./docs/changelog.masudrana.md)** - Code change masud Rana
+
+
 ## 📦 Installation
 
 ```bash
@@ -17,15 +28,6 @@ npx prisma migrate dev
 # Start the server
 npm run start:dev
 ```
-
-
-
-## 📖 Documentation Links
-
-- **[Real time near by garage location](./docs/garage-location-api-docs.md)** - Start here if you're building a frontend
-- **[notification event Guide](./docs/event_system_docs.md)** - Real-time notification details
-- **[masud rana](./docs/changelog.masudrana.md)** - Code change masud Rana
-
 ## 👥 Contributing
 
 1. Fork the repository

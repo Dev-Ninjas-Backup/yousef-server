@@ -23,9 +23,15 @@ export class ServiceTypeController {
     );
   }
 
+  @ApiOperation({ summary: 'Get all service categories (public)' })
+  @Get()
+  async getAllCategories() {
+    return this.serviceTypeService.getAllCombinedUniqueServiceCategories();
+  }
+
   @ValidateGarageOwner()
   @ApiBearerAuth()
-  @Get()
+  @Get('me')
   @ApiOperation({ summary: 'Get user service categories' })
   findAll(@GetUser('userId') userId: string) {
     return this.serviceTypeService.getUserServiceCategories(userId);
