@@ -9,7 +9,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '${PORT}:${PORT}'
+      - "${PORT}:${PORT}"
     env_file:
       - .env
     depends_on:
@@ -32,11 +32,11 @@ services:
       - POSTGRES_DB=yousef_db
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "5442:5432"
     volumes:
       - yousef_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U yousef_user -d yousef_db']
+      test: ["CMD-SHELL", "pg_isready -U yousef_user -d yousef_db"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -64,4 +64,22 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   emirate?: string;
+
+  @ApiProperty({
+    example: '13353',
+    description: 'Enter the user userLat',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  userLat?: string;
+
+  @ApiProperty({
+    example: '53353',
+    description: 'Enter the user userLng',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  userLng?: string;
 }
