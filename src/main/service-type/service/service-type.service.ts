@@ -53,9 +53,8 @@ export class ServiceTypeService {
     return user;
   }
 
-  async getCombinedUniqueServiceCategories(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+  async getAllCombinedUniqueServiceCategories() {
+    const users = await this.prisma.user.findMany({
       select: {
         serviceCategories: true,
         garages: {
@@ -66,19 +65,12 @@ export class ServiceTypeService {
       },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    const allCategories = users.flatMap((user) => [
+      ...(user.serviceCategories || []),
+      ...(user.garages?.flatMap((garage) => garage.services || []) || []),
+    ]);
 
-    const userCategories = user.serviceCategories || [];
-
-    const garageServices = user.garages
-      .flatMap((garage) => garage.services || [])
-      .filter(Boolean);
-
-    const allCategories = [...userCategories, ...garageServices];
-
-    // unique + sort (optional sort)
+    // unique + sort
     const uniqueCategories = [...new Set(allCategories)].sort((a, b) =>
       a.localeCompare(b),
     );
