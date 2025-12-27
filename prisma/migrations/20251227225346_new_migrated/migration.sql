@@ -8,10 +8,10 @@ CREATE TYPE "DayType" AS ENUM ('WEEKDAYS', 'WEEKENDS');
 CREATE TYPE "Status" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('contentStatus', 'LiveEvent', 'Shift', 'UserRolechange');
+CREATE TYPE "NotificationType" AS ENUM ('CustomerInquiryAlert', 'NewMessage', 'ProductApproveUpdate');
 
 -- CreateEnum
-CREATE TYPE "PaymentType" AS ENUM ('GARAGE_SUBSCRIPTION', 'PAY_PER_PRODUCT', 'PRODUCT_PROMOTION_CREDIT', 'PRODUCT_PROMOTION', 'GENERAL');
+CREATE TYPE "PaymentType" AS ENUM ('GARAGE_SUBSCRIPTION', 'PAY_PER_PRODUCT', 'MONTHLY_PEY_PRODUCT', 'PRODUCT_PROMOTION_CREDIT', 'PRODUCT_PROMOTION', 'GENERAL');
 
 -- CreateEnum
 CREATE TYPE "SubscriptionType" AS ENUM ('TRIAL', 'PAID');
@@ -50,23 +50,19 @@ CREATE TYPE "LanguageType" AS ENUM ('Afrikaans', 'Albanian', 'Amharic', 'Arabic'
 CREATE TYPE "UserRole" AS ENUM ('CAR_OWNER', 'GARAGE_OWNER', 'SUPER_ADMIN', 'MEMBER');
 
 -- CreateEnum
-CREATE TYPE "ServiceCategory" AS ENUM ('MECHANICAL_REPAIR', 'AC_HEATING', 'ELECTRICAL_SYSTEMS', 'BODY_AND_PAINT', 'DIAGNOSTICS', 'GENERAL_MAINTENANCE');
-
--- CreateEnum
 CREATE TYPE "GarageStatus" AS ENUM ('APPROVE', 'PENDING', 'DECLINE', 'GARAGE_PAID_OWNER', 'GARAGE_TRAIL_OWNER');
 
 -- CreateTable
 CREATE TABLE "NotificationToggle" (
     "id" TEXT NOT NULL,
-    "email" BOOLEAN NOT NULL DEFAULT false,
-    "userUpdates" BOOLEAN NOT NULL DEFAULT false,
-    "contentStatus" BOOLEAN NOT NULL DEFAULT false,
-    "communication" BOOLEAN NOT NULL DEFAULT false,
-    "surveyAndPoll" BOOLEAN NOT NULL DEFAULT false,
-    "tasksAndProjects" BOOLEAN NOT NULL DEFAULT false,
-    "scheduling" BOOLEAN NOT NULL DEFAULT false,
-    "message" BOOLEAN NOT NULL DEFAULT false,
-    "userRegistration" BOOLEAN NOT NULL DEFAULT false,
+    "email" BOOLEAN NOT NULL DEFAULT true,
+    "userUpdates" BOOLEAN NOT NULL DEFAULT true,
+    "message" BOOLEAN NOT NULL DEFAULT true,
+    "userRegistration" BOOLEAN NOT NULL DEFAULT true,
+    "CustomerInquiryAlert" BOOLEAN NOT NULL DEFAULT true,
+    "NewMessage" BOOLEAN NOT NULL DEFAULT true,
+    "ProductApproveUpdate" BOOLEAN NOT NULL DEFAULT true,
+    "Message" BOOLEAN NOT NULL DEFAULT true,
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "NotificationToggle_pkey" PRIMARY KEY ("id")
@@ -83,6 +79,7 @@ CREATE TABLE "Contact" (
     "othersubject" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "garageOwnerId" TEXT,
 
     CONSTRAINT "Contact_pkey" PRIMARY KEY ("id")
 );
@@ -92,6 +89,7 @@ CREATE TABLE "Message" (
     "id" TEXT NOT NULL,
     "contactId" TEXT NOT NULL,
     "isFromAdmin" BOOLEAN NOT NULL DEFAULT false,
+    "isForGrageAdmin" BOOLEAN NOT NULL DEFAULT false,
     "content" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -126,6 +124,17 @@ CREATE TABLE "file_instance" (
 );
 
 -- CreateTable
+CREATE TABLE "garage_admin_notifications" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "emailNotification" BOOLEAN NOT NULL DEFAULT false,
+    "customerInquiryNotification" BOOLEAN NOT NULL DEFAULT false,
+    "productApprovalNotification" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "garage_admin_notifications_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Garage" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -136,9 +145,11 @@ CREATE TABLE "Garage" (
     "street" TEXT,
     "city" TEXT,
     "emirate" TEXT,
-    "address" TEXT,
-    "garageLat" DOUBLE PRECISION,
-    "garageLng" DOUBLE PRECISION,
+    "address" TEXT NOT NULL,
+    "formattedAddress" TEXT,
+    "placeId" TEXT,
+    "garageLat" DOUBLE PRECISION NOT NULL,
+    "garageLng" DOUBLE PRECISION NOT NULL,
     "description" TEXT,
     "certifications" TEXT[],
     "weekdaysHours" TEXT,
@@ -146,27 +157,11 @@ CREATE TABLE "Garage" (
     "brandExpertise" TEXT[],
     "status" "Status" NOT NULL DEFAULT 'PENDING',
     "userId" TEXT NOT NULL,
+    "services" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Garage_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Service" (
-    "id" TEXT NOT NULL,
-    "icon" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-
-    CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "GarageService" (
-    "garageId" TEXT NOT NULL,
-    "serviceId" TEXT NOT NULL,
-
-    CONSTRAINT "GarageService_pkey" PRIMARY KEY ("garageId","serviceId")
 );
 
 -- CreateTable
@@ -337,7 +332,7 @@ CREATE TABLE "products" (
     "createdById" TEXT NOT NULL,
     "partName" TEXT NOT NULL,
     "brand" TEXT,
-    "category" TEXT NOT NULL,
+    "categoryId" TEXT NOT NULL,
     "condition" TEXT NOT NULL,
     "price" DECIMAL(10,2) NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
@@ -394,7 +389,13 @@ CREATE TABLE "Review" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "garageId" TEXT NOT NULL,
-    "rating" INTEGER NOT NULL,
+    "overallExperience" INTEGER NOT NULL,
+    "serviceQuality" INTEGER NOT NULL,
+    "timeliness" INTEGER NOT NULL,
+    "valueForMoney" INTEGER NOT NULL,
+    "photos" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "isVisible" BOOLEAN NOT NULL DEFAULT true,
+    "recommendation" BOOLEAN NOT NULL DEFAULT false,
     "comment" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -485,8 +486,9 @@ CREATE TABLE "users" (
     "password" TEXT,
     "bio" TEXT,
     "phone" TEXT,
-    "userLat" DOUBLE PRECISION,
-    "userLng" DOUBLE PRECISION,
+    "address" TEXT,
+    "userLat" TEXT,
+    "userLng" TEXT,
     "tradeLicense" TEXT,
     "garageLogo" TEXT,
     "profilePhoto" TEXT,
@@ -521,8 +523,8 @@ CREATE TABLE "users" (
     "garagePaidMember" BOOLEAN NOT NULL DEFAULT false,
     "hasPaid" BOOLEAN NOT NULL DEFAULT false,
     "nextBillingDate" TIMESTAMP(3),
-    "role" "UserRole" NOT NULL DEFAULT 'CAR_OWNER',
-    "serviceCategories" "ServiceCategory"[],
+    "role" "UserRole" NOT NULL,
+    "serviceCategories" TEXT[],
     "subscriptionEndsAt" TIMESTAMP(3),
     "subscriptionTrialStartDate" TIMESTAMP(3),
     "subscriptionTrialEndDate" TIMESTAMP(3),
@@ -531,6 +533,9 @@ CREATE TABLE "users" (
     "subscriptionEndDate" TIMESTAMP(3),
     "nextSubscriptionBillingDate" TIMESTAMP(3),
     "isSubscribed" BOOLEAN NOT NULL DEFAULT false,
+    "productMonthlyActive" BOOLEAN NOT NULL DEFAULT false,
+    "productMonthlyStartDate" TIMESTAMP(3),
+    "productMonthlyEndDate" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -541,10 +546,19 @@ CREATE TABLE "users" (
 CREATE UNIQUE INDEX "NotificationToggle_userId_key" ON "NotificationToggle"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Garage_name_key" ON "Garage"("name");
+CREATE UNIQUE INDEX "garage_admin_notifications_userId_key" ON "garage_admin_notifications"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Service_name_key" ON "Service"("name");
+CREATE INDEX "Garage_garageLat_garageLng_idx" ON "Garage"("garageLat", "garageLng");
+
+-- CreateIndex
+CREATE INDEX "Garage_placeId_idx" ON "Garage"("placeId");
+
+-- CreateIndex
+CREATE INDEX "Garage_status_idx" ON "Garage"("status");
+
+-- CreateIndex
+CREATE INDEX "Garage_userId_idx" ON "Garage"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "UserNotification_userId_notificationId_key" ON "UserNotification"("userId", "notificationId");
@@ -566,6 +580,21 @@ CREATE UNIQUE INDEX "sellers_email_key" ON "sellers"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "GaragePromotionQuota_garageId_key" ON "GaragePromotionQuota"("garageId");
+
+-- CreateIndex
+CREATE INDEX "Review_garageId_idx" ON "Review"("garageId");
+
+-- CreateIndex
+CREATE INDEX "Review_userId_idx" ON "Review"("userId");
+
+-- CreateIndex
+CREATE INDEX "Review_createdAt_idx" ON "Review"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "Review_isVisible_idx" ON "Review"("isVisible");
+
+-- CreateIndex
+CREATE INDEX "Review_overallExperience_idx" ON "Review"("overallExperience");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PrivacyPolicy_title_key" ON "PrivacyPolicy"("title");
@@ -595,13 +624,10 @@ ALTER TABLE "NotificationToggle" ADD CONSTRAINT "NotificationToggle_userId_fkey"
 ALTER TABLE "Message" ADD CONSTRAINT "Message_contactId_fkey" FOREIGN KEY ("contactId") REFERENCES "Contact"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "garage_admin_notifications" ADD CONSTRAINT "garage_admin_notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Garage" ADD CONSTRAINT "Garage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "GarageService" ADD CONSTRAINT "GarageService_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "GarageService" ADD CONSTRAINT "GarageService_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserNotification" ADD CONSTRAINT "UserNotification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -650,6 +676,9 @@ ALTER TABLE "products" ADD CONSTRAINT "products_sellerId_fkey" FOREIGN KEY ("sel
 
 -- AddForeignKey
 ALTER TABLE "products" ADD CONSTRAINT "products_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "products" ADD CONSTRAINT "products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "PartsCategory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "GaragePromotionQuota" ADD CONSTRAINT "GaragePromotionQuota_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
