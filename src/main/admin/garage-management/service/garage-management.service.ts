@@ -122,6 +122,7 @@ export class GarageManagementService {
         id: true,
         fullName: true,
         phone: true,
+        isDeleted: true,
         garageName: true,
         serviceCategories: true,
         tradeLicense: true,
@@ -148,6 +149,7 @@ export class GarageManagementService {
       Garage_Name: u.garageName,
       serviceCategories: u.serviceCategories,
       Contract: u.phone,
+      isDeleted: u.isDeleted,
       tradeLicense: u.tradeLicense,
       garageLogo: u.garageLogo,
       garageStatus: u.garageStatus,
@@ -220,7 +222,7 @@ export class GarageManagementService {
     // ------------Update role to GARAGE_OWNER------------------
     await this.prisma.user.update({
       where: { id },
-      data: { role: 'GARAGE_OWNER' },
+      data: { role: 'GARAGE_OWNER', isGarageVerified: true },
     });
 
     // ------------------Update status + trial info if needed-------------------
