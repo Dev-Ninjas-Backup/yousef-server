@@ -1,0 +1,804 @@
+model NotificationToggle {
+  id                   String  @id @default(uuid())
+  email                Boolean @default(true)
+  userUpdates          Boolean @default(true)
+  message              Boolean @default(true)
+  userRegistration     Boolean @default(true)
+  CustomerInquiryAlert Boolean @default(true)
+  NewMessage           Boolean @default(true)
+  ProductApproveUpdate Boolean @default(true)
+  Message              Boolean @default(true)
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Contact {
+  id            String         @id @default(uuid())
+  FirstName     String
+  LastName      String
+  email         String
+  subject       ContactSubject
+  message       String
+  othersubject  String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  garageOwnerId String?
+  messages      Message[]
+}
+
+model Message {
+  id        String  @id @default(uuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  // true → admin, false → user
+  isFromAdmin     Boolean @default(false)
+  isForGrageAdmin Boolean @default(false)
+
+  content   String
+  createdAt DateTime @default(now())
+}
+
+enum ContactSubject {
+  CAR_PARTS
+  CAR_SERVICE
+  OTHERS
+}
+
+model ExclusiveOffer {
+  id          String @id @default(uuid())
+  bannerImage String
+  validUnit   String
+  title       String
+  description String
+}
+
+model FileInstance {
+  id String @id @default(uuid())
+
+  filename         String
+  originalFilename String
+  path             String
+  url              String
+  fileType         String
+  mimeType         String
+  size             Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // privateMessages PrivateMessage[]
+
+  @@map("file_instance")
+}
+
+model garageAdminNotification {
+  id                          String  @id @default(uuid())
+  userId                      String  @unique
+  emailNotification           Boolean @default(false)
+  customerInquiryNotification Boolean @default(false)
+  productApprovalNotification Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("garage_admin_notifications")
+}
+
+// ======================
+//  GARAGE MODEL
+// ======================
+
+model Garage {
+  id               String  @id @default(uuid())
+  name             String
+  coverPhoto       String?
+  profileImage     String?
+  garagePhone      String?
+  email            String?
+  street           String?
+  city             String?
+  emirate          String?
+  // ---------- Garage Location (auto from address) ----------
+  address          String
+  formattedAddress String?
+  placeId          String?
+  garageLat        Float
+  garageLng        Float
+
+  description    String?
+  certifications String[]
+  weekdaysHours  String?
+  weekendsHours  String?
+  brandExpertise String[]
+  status         Status   @default(PENDING)
+
+  // Relations
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services String[]
+  reviews  Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([garageLat, garageLng])
+  @@index([placeId])
+  @@index([status])
+  @@index([userId])
+}
+
+// =====================
+// ENUMS
+// =====================
+
+enum DayType {
+  WEEKDAYS
+  WEEKENDS
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model GeneralSetting {
+  id                  String  @id @default(ulid())
+  platformName        String?
+  supportEmail        String?
+  PlatformDescription String?
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  type    NotificationType
+  title   String
+  message String
+  meta    Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  users UserNotification[]
+}
+
+enum NotificationType {
+  CustomerInquiryAlert
+  NewMessage
+  ProductApproveUpdate
+}
+
+model UserNotification {
+  id String @id @default(uuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notificationId String
+
+  read Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, notificationId])
+}
+
+model PaymentSetting {
+  id                 String @id @default(uuid())
+  platformCommission Int
+  MinimumPayout      Int
+}
+
+model PaymentConfigure {
+  id                           String  @id @default(uuid())
+  sparePartsMonthly            String?
+  perListingPrice              String?
+  promotionalAdPrice           String?
+  freePromotionalListings      String?
+  freePromotionalListingStatus Boolean @default(true)
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  sessionId     String        @unique
+  transactionId String?
+  amount        Int? // in cents
+  currency      String        @default("usd")
+  status        PaymentStatus @default(PENDING) // PENDING, COMPLETED, FAILED
+  paymentMethod String?
+  paymentType   PaymentType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ----------- Common Relations -----------
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  planId String?
+  plan   PaymentPlan? @relation(fields: [planId], references: [id])
+
+  // ----------- Polymorphic Relations  -----------
+  // Garage Subscription Payment
+  garageSubscriptionId String?
+  garageSubscription   GarageSubscription? @relation(fields: [garageSubscriptionId], references: [id])
+
+  // Pay-per-product or promotion credit
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+model PaymentPlan {
+  id           String    @id @default(cuid())
+  name         String
+  Price        Int
+  billingCycle String
+  shortBio     String?
+  features     String[]
+  payments     Payment[] // relation back
+}
+
+// Garage Subscription History
+model GarageSubscription {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  type            SubscriptionType // TRIAL or PAID
+  amount          Int? // null for trial
+  currency        String?
+  stripeSessionId String?          @unique
+  stripePaymentId String?
+
+  startDate    DateTime
+  endDate      DateTime
+  billingCycle BillingCycle?
+
+  status    SubscriptionStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  // Relation back to Payment (optional, for audit)
+  payment Payment[]
+
+  @@map("garage_subscriptions")
+}
+
+enum PaymentType {
+  GARAGE_SUBSCRIPTION
+  PAY_PER_PRODUCT
+  MONTHLY_PEY_PRODUCT
+  PRODUCT_PROMOTION_CREDIT
+  PRODUCT_PROMOTION
+  GENERAL
+}
+
+enum SubscriptionType {
+  TRIAL // 90 days free
+  PAID // $100 monthly
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+model PrivateConversation {
+  id      String @id @default(uuid())
+  user1Id String
+  user2Id String
+
+  user1 User @relation("User1Conversations", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2 User @relation("User2Conversations", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  lastMessageId String?
+  lastMessage   PrivateMessage? @relation("PrivateLastMessage", fields: [lastMessageId], references: [id], onDelete: SetNull)
+
+  messages  PrivateMessage[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([user1Id, user2Id])
+}
+
+model PrivateMessage {
+  id String @id @default(uuid())
+
+  content  String
+  statuses PrivateMessageStatus[]
+
+  isRead Boolean @default(false)
+
+  files String[]
+
+  PrivateLastMessage PrivateConversation[] @relation("PrivateLastMessage")
+
+  conversationId String
+  conversation   PrivateConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  // back relation for last message
+}
+
+model PrivateMessageStatus {
+  id        String                @id @default(uuid())
+  messageId String
+  userId    String
+  status    MessageDeliveryStatus
+  updatedAt DateTime              @updatedAt
+
+  message PrivateMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+}
+
+enum MessageDeliveryStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+// ====================== ENUMS ======================
+enum SellerType {
+  INDIVIDUAL
+  VERIFIED_SUPPLIER
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ListingPlan {
+  PAY_PER_LISTING
+  MONTHLY_100
+}
+
+// ====================== MAIN MODELS ======================
+
+model Seller {
+  id          String  @id @default(uuid())
+  name        String?
+  email       String  @unique
+  phoneNumber String?
+
+  sellerType        SellerType @default(INDIVIDUAL)
+  isVerified        Boolean    @default(false)
+  verificationImage String?
+
+  subscriptionPlan      ListingPlan @default(PAY_PER_LISTING)
+  subscriptionExpiresAt DateTime?
+  freeProductsUsed      Int         @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  products Product[]
+
+  @@map("sellers")
+}
+
+model Product {
+  id       String @id @default(uuid())
+  sellerId String
+  seller   Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  // User who created the product
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  partName    String
+  brand       String?
+  // category    String
+  categoryId  String
+  category    PartsCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  condition   String
+  price       Decimal       @db.Decimal(10, 2)
+  quantity    Int           @default(1)
+  description String?
+
+  photos String[] @default([])
+
+  status     ProductStatus @default(PENDING)
+  isPromoted Boolean       @default(false)
+  promoCost  Decimal?      @db.Decimal(10, 2)
+
+  views     Int @default(0)
+  inquiries Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  promotions Promotion[]
+  payments   Payment[]
+
+  @@map("products")
+}
+
+model GaragePromotionQuota {
+  id                String   @id @default(uuid())
+  garageId          String   @unique
+  freeListingsTotal Int      @default(2)
+  freeListingsUsed  Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  garage User @relation(fields: [garageId], references: [id], onDelete: Cascade)
+}
+
+model Promotion {
+  id          String   @id @default(uuid())
+  userId      String
+  productId   String?
+  adTitle     String
+  description String
+  adType      String
+  discount    Float?
+  location    String
+  validFrom   DateTime
+  validUntil  DateTime
+  imageUrl    String[] @default([])
+
+  isFree    Boolean @default(true)
+  isPaid    Boolean @default(false)
+  paymentId String?
+
+  status    PromotionAdStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+}
+
+enum PromotionAdStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model Review {
+  id                String   @id @default(uuid())
+  userId            String
+  garageId          String
+  overallExperience Int
+  serviceQuality    Int
+  timeliness        Int
+  valueForMoney     Int
+  photos            String[] @default([])
+  isVisible         Boolean  @default(true)
+  recommendation    Boolean  @default(false)
+  comment           String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  garage Garage @relation(fields: [garageId], references: [id], onDelete: Cascade)
+
+  @@index([garageId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([isVisible])
+  @@index([overallExperience])
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PrivacyPolicy {
+  id      String @id @default(uuid())
+  title   String @unique
+  subtext String
+}
+
+model TermsConditions {
+  id      String @id @default(uuid())
+  title   String @unique
+  content String
+}
+
+// -----------------faq sections----------------------
+model FaqSection {
+  id           String @id @default(uuid())
+  sectionTitle String
+
+  faqs Faq[]
+}
+
+model Faq {
+  id        String     @id @default(uuid())
+  question  String
+  answer    String
+  sectionId String
+  section   FaqSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+}
+
+model Language {
+  id          String       @id @default(uuid())
+  languageuse Int?         @default(0)
+  language    LanguageType
+}
+
+model Ads {
+  id          String      @id @default(uuid())
+  title       String
+  link        String?
+  adsimage    String
+  subtitle    String?
+  adsposition AdsPostion?
+}
+
+model PartsCategory {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
+}
+
+enum AdsPostion {
+  FRONTPAGE
+  CATEGORYPAGE
+}
+
+enum LanguageType {
+  Afrikaans
+  Albanian
+  Amharic
+  Arabic
+  Armenian
+  Assamese
+  Azerbaijani
+  Basque
+  Belarusian
+  Bengali
+  Bosnian
+  Bulgarian
+  Burmese
+  Catalan
+  Chinese
+  Croatian
+  Czech
+  Danish
+  Dutch
+  English
+  Estonian
+  Filipino
+  Finnish
+  French
+  Galician
+  Georgian
+  German
+  Greek
+  Gujarati
+  HaitianCreole
+  Hausa
+  Hebrew
+  Hindi
+  Hungarian
+  Icelandic
+  Igbo
+  Indonesian
+  Irish
+  Italian
+  Japanese
+  Javanese
+  Kannada
+  Kazakh
+  Khmer
+  Korean
+  Kurdish
+  Kyrgyz
+  Lao
+  Latvian
+  Lithuanian
+  Macedonian
+  Malagasy
+  Malay
+  Malayalam
+  Maltese
+  Maori
+  Marathi
+  Mongolian
+  Nepali
+  Norwegian
+  Odia
+  Pashto
+  Persian
+  Polish
+  Portuguese
+  Punjabi
+  Romanian
+  Russian
+  Samoan
+  ScotsGaelic
+  Serbian
+  Sesotho
+  Shona
+  Sindhi
+  Sinhala
+  Slovak
+  Slovenian
+  Somali
+  Spanish
+  Sundanese
+  Swahili
+  Swedish
+  Tajik
+  Tamil
+  Tatar
+  Telugu
+  Thai
+  Turkish
+  Turkmen
+  Ukrainian
+  Urdu
+  Uzbek
+  Vietnamese
+  Welsh
+  Xhosa
+  Yiddish
+  Yoruba
+  Zulu
+}
+
+model Subscribe {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscribe")
+}
+
+model User {
+  id       String  @id @default(uuid())
+  email    String  @unique
+  fullName String?
+  password String?
+  bio      String?
+  phone    String? @unique
+  address  String?
+  // ----------User Live Location ----------
+  userLat  String?
+  userLng  String?
+
+  // ---------- file---------------------
+  tradeLicense String?
+  garageLogo   String?
+  profilePhoto String?
+  // -------- garage information-------
+
+  city         String?
+  emirate      String?
+  garageName   String?
+  garageStatus GarageStatus @default(PENDING)
+
+  // ------------------ Google Authentication ------------------
+  googleId     String?   @unique
+  emailOtp     Int?
+  otpExpiry    DateTime?
+  isVerified   Boolean   @default(false)
+  ReviewAlerts Boolean   @default(false)
+
+  // ------------------ Password Reset OTP ---------------------
+  resetOtp       Int?
+  resetOtpExpiry DateTime?
+
+  // ------------------ Account Status -------------------------
+  isActive                Boolean   @default(true)
+  isDeleted               Boolean   @default(false)
+  deletedAt               DateTime?
+  isMembership            Boolean   @default(false)
+  isEmailNotification     Boolean   @default(false)
+  isCustomerInquiryAlerts Boolean   @default(false)
+  isSmsNotification       Boolean   @default(false)
+  isEmailPromotional      Boolean   @default(false)
+  isGarageVerified        Boolean   @default(false)
+  // Trial tracking
+  trialStartDate          DateTime?
+  trialEndDate            DateTime?
+  isTrialActive           Boolean   @default(false)
+  productApprovalAlerts   Boolean   @default(false)
+  freeProductsListing     Int       @default(0)
+  freeProductsUsed        Int       @default(0)
+  promotionCredits        Int       @default(0)
+  garageTrailMember       Boolean   @default(true)
+  garagePaidMember        Boolean   @default(false)
+  // Payment tracking
+  hasPaid                 Boolean   @default(false)
+  nextBillingDate         DateTime?
+  // ------------------ Role & Category ------------------------
+  role                    UserRole
+  serviceCategories       String[]
+
+  // ------------------ Membership -----------------------------
+  Payment            Payment[]
+  subscriptionEndsAt DateTime?
+
+  // for garage subscription
+  subscriptionTrialStartDate  DateTime?
+  subscriptionTrialEndDate    DateTime?
+  isSubscriptionTrialActive   Boolean   @default(false)
+  subscriptionStartDate       DateTime?
+  subscriptionEndDate         DateTime?
+  nextSubscriptionBillingDate DateTime?
+  isSubscribed                Boolean   @default(false)
+
+  // Product Monthly Subscription fields
+  productMonthlyActive    Boolean   @default(false)
+  productMonthlyStartDate DateTime?
+  productMonthlyEndDate   DateTime?
+
+  // ------------------ Relations ------------------------------
+  UserNotification     UserNotification[]
+  notificationToggle   NotificationToggle?
+  garages              Garage[]
+  promotions           Promotion[]
+  garagePromotionQuota GaragePromotionQuota?
+  reviews              Review[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  // ------message relation---
+  privateConversation1 PrivateConversation[]  @relation("User1Conversations")
+  privateConversation2 PrivateConversation[]  @relation("User2Conversations")
+  privateMessage       PrivateMessage[]
+  privateMessageStatus PrivateMessageStatus[]
+
+  // ------product relation---
+  createdProducts Product[]
+
+  // garage subscriptions
+  garageSubscriptions      GarageSubscription[]
+  garageAdminNotifications garageAdminNotification[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  CAR_OWNER
+  GARAGE_OWNER
+  SUPER_ADMIN
+  MEMBER
+}
+
+enum GarageStatus {
+  APPROVE
+  PENDING
+  DECLINE
+  GARAGE_PAID_OWNER
+  GARAGE_TRAIL_OWNER
+}
