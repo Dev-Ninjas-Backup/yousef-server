@@ -32,7 +32,10 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      const allowedOrigins = ['http://localhost:3000'];
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'https://13.50.107.2503000',
+      ];
 
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -88,7 +91,7 @@ async function bootstrap() {
   app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
   // app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
   const configService = app.get(ConfigService);
-  const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '5000', 10);
+  const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '3000', 10);
   await app.listen(port);
   console.log(` Server running on http://localhost:${port}`);
   console.log(`Swagger docs available at http://localhost:${port}/docs`);
