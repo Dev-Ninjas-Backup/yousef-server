@@ -35,7 +35,7 @@ async function bootstrap() {
       const allowedOrigins = [
         'http://localhost:3000',
         'http://13.50.107.250:3000',
-        'http://ec2-13-50-107-250.eu-north-1.compute.amazonaws.com:3000'
+        'http://ec2-13-50-107-250.eu-north-1.compute.amazonaws.com:3000',
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
