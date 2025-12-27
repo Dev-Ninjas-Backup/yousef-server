@@ -34,8 +34,7 @@ async function bootstrap() {
 
       const allowedOrigins = [
         'http://localhost:3000',
-        'https://13.50.107.2503000'
-
+        'https://13.50.107.2503000',
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
