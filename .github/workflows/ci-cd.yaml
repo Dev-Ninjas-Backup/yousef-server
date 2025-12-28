@@ -1,112 +1,124 @@
 name: Lint, Format, Build, Push & Deploy
 
 on:
-   push:
-      branches: ["main"]
-   pull_request:
-      branches:
-         - "**"
+  push:
+    branches: ["main"]
+  pull_request:
+    branches:
+      - "**"
 
 jobs:
-   ci-check:
-      name: Lint, Format, Build
-      runs-on: ubuntu-latest
+  # -------------------------
+  # CI: Lint + Build
+  # -------------------------
+  ci-check:
+    name: Lint, Format, Build
+    runs-on: ubuntu-latest
 
-      steps:
-         - name: Checkout code
-           uses: actions/checkout@v3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-         - name: Setup Node.js
-           uses: actions/setup-node@v3
-           with:
-              node-version: 24
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
 
-         - name: Install dependencies
-           run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-         - name: Generate Prisma Client
-           run: npx prisma generate
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
-         - name: Run Lint
-           run: npm run lint
+      - name: Run Lint
+        run: npm run lint
 
-         - name: Build Project
-           run: npm run build
+      - name: Build Project
+        run: npm run build
 
-   build-and-push:
-      name: Build and Push Docker Image
-      runs-on: ubuntu-latest
-      needs: ci-check
-      if: github.ref == 'refs/heads/main'
+  # -------------------------
+  # Build & Push Docker Image
+  # -------------------------
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: ci-check
+    if: github.ref == 'refs/heads/main'
 
-      steps:
-         - name: Checkout code
-           uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-         - name: Log in to Docker Hub
-           uses: docker/login-action@v3
-           with:
-              username: ${{ secrets.DOCKER_USERNAME }}
-              password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-         - name: Set up Docker Buildx
-           uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-         - name: Build and Push Docker image
-           uses: docker/build-push-action@v5
-           with:
-              context: .
-              push: true
-              tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PACKAGE_NAME }}:latest
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PACKAGE_NAME }}:latest
 
-   deploy:
-      name: Deploy
-      runs-on: ubuntu-latest
-      needs: build-and-push
-      if: github.ref == 'refs/heads/main'
+  # -------------------------
+  # Deploy to EC2
+  # -------------------------
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
 
-      steps:
-         - uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-         - name: Login to Docker Hub
-           uses: docker/login-action@v3
-           with:
-              username: ${{ secrets.DOCKER_USERNAME }}
-              password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-         - name: Copy Compose File
-           uses: appleboy/scp-action@v0.1.7
-           with:
-              host: ${{ secrets.EC2_HOST }}
-              username: ${{ secrets.EC2_USER }}
-              key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-              port: 22
-              source: "docker-compose.prod.yaml"
-              target: "/home/${{ secrets.EC2_USER }}/yousef-server"
-              strip_components: 0
+      - name: Copy Docker Compose file to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          source: "docker-compose.yaml"
+          target: "/home/${{ secrets.EC2_USER }}/yousef-server"
 
-         - name: Copy .env File
-           uses: appleboy/scp-action@v0.1.7
-           with:
-              host: ${{ secrets.EC2_HOST }}
-              username: ${{ secrets.EC2_USER }}
-              key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-              port: 22
-              source: ".env"
-              target: "/home/${{ secrets.EC2_USER }}/yousef-server"
-              strip_components: 0
+      - name: Create .env and deploy containers
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -e
 
-         - name: Deploy via SSH
-           uses: appleboy/ssh-action@v1.0.3
-           with:
-              host: ${{ secrets.EC2_HOST }}
-              username: ${{ secrets.EC2_USER }}
-              key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-              port: 22
-              script: |
-                 cd /home/${{ secrets.EC2_USER }}/yousef-server
-                 mv docker-compose.prod.yaml docker-compose.yaml
-                 sudo docker-compose pull
-                 sudo docker-compose down
-                 sudo docker-compose up -d
-                 sudo docker system prune -f
+            mkdir -p /home/${{ secrets.EC2_USER }}/yousef-server
+            cd /home/${{ secrets.EC2_USER }}/yousef-server
+
+            cat <<EOF > .env
+            PORT=3000
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            EOF
+
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
+
+            docker system prune -f
