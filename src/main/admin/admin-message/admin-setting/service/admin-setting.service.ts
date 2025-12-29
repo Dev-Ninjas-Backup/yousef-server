@@ -7,7 +7,7 @@ import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 
 @Injectable()
 export class AdminSettingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ---------------platform setting create----
   @HandleError('Failed to create or update platform setting')
@@ -130,25 +130,24 @@ export class AdminSettingService {
     };
   }
 
-  // -----------auto approve garages-------------
+  // // -----------auto approve autoupdateApprovalSettingParts-------------
 
   @HandleError('failed to auto approve garages')
-  async updateApprovalSettingGarage() {
-    const updated = await this.prisma.user.updateMany({
+  async autoupdateApprovalSettingParts() {
+    const updated = await this.prisma.product.updateMany({
       where: {
-        role: 'GARAGE_OWNER',
-        garageStatus: 'PENDING',
-        isGarageVerified: false,
+        status: 'PENDING',
+      
       },
       data: {
-        garageStatus: 'APPROVE',
-        isGarageVerified: true,
+        status: 'APPROVED',
+       
       },
     });
 
     return {
       success: true,
-      message: `${updated.count} all garages auto-approved.`,
+      message: `${updated.count} products auto-approved.`,
     };
   }
 
