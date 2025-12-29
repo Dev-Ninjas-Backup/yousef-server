@@ -517,6 +517,7 @@ export class ProductService {
         isMembership: true,
         productMonthlyActive: true,
         productMonthlyEndDate: true,
+        promotionCredits: true,
       },
     });
 
@@ -532,6 +533,7 @@ export class ProductService {
 
     const freeUsed = user.freeProductsUsed || 0;
     const credits = user.freeProductsListing || 0;
+    const promotionCredits = user.promotionCredits || 0;
 
     const hasGarageMonthly = Boolean(
       user.isMembership &&
@@ -552,6 +554,7 @@ export class ProductService {
       freeProductsRemaining: Math.max(0, freePromotionalListings - freeUsed),
       canAddFreeProduct: freeUsed < freePromotionalListings,
       productCredits: credits,
+      promotionCredits: promotionCredits,
       hasGarageMonthly,
       hasProductMonthly,
       productMonthlyEndsAt: user.productMonthlyEndDate,

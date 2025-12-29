@@ -711,7 +711,7 @@ export class PaymentService {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=product_monthly`,
+      success_url: `${process.env.FRONTEND_URL}/garage-admin/my-products/add-product?session_id={CHECKOUT_SESSION_ID}&type=product_monthly`,
       cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=product_monthly`,
       metadata: {
         userId,
@@ -754,7 +754,7 @@ export class PaymentService {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=pay_per`,
+      success_url: `${process.env.FRONTEND_URL}/garage-admin/my-products/add-product?session_id={CHECKOUT_SESSION_ID}&type=pay_per`,
       cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=pay_per`,
       metadata: {
         userId,
@@ -851,7 +851,7 @@ export class PaymentService {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=promotion`,
+      success_url: `${process.env.FRONTEND_URL}/garage-admin/my-products/add-product?session_id={CHECKOUT_SESSION_ID}&type=promotion`,
       cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=promotion`,
       metadata: {
         userId,
