@@ -24,6 +24,7 @@ export class UserService {
   @HandleError('Failed to get all users', 'User')
   async getAllUsers() {
     const users = await this.prisma.user.findMany({
+      where: { isVerified: true },
       select: {
         id: true,
         role: true,
