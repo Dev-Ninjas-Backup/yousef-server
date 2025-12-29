@@ -34,7 +34,7 @@ export class PaymentService {
       where: { id: payload.planId },
     });
 
-    if (!plan) throw new NotFoundException('Payment plan not found');
+    if (!plan) throw new NotFoundException('Payment plan not found...');
 
     // 2. Create Stripe checkout session
     const session = await this.stripe.checkout.sessions.create({

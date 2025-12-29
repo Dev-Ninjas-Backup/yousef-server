@@ -10,8 +10,8 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "start:docker": "prisma generate && prisma migrate deploy && node dist/main",
+    "start:prod": "node dist/src/main.js",
+    "start:docker": "prisma generate && prisma migrate deploy && node dist/src/main.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --ignore-path .gitignore --check \"**/*.+(js|ts|json)\"",
@@ -27,7 +27,6 @@
     "db:studio": "npx prisma studio",
     "db:validate": "npx prisma validate",
     "db:format": "npx prisma format",
-    "postinstall": "npx prisma generate",
     "prepare": "husky",
     "webhook:listen": "stripe listen --forward-to localhost:5050/payment/webhook",
     "webhook:test": "node test-webhook.js"
