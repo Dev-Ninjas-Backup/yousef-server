@@ -7,7 +7,7 @@ import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 
 @Injectable()
 export class AdminSettingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ---------------platform setting create----
   @HandleError('Failed to create or update platform setting')
@@ -112,7 +112,7 @@ export class AdminSettingService {
   }
 
   // ---------- admin every user on of email notification ----
-  @HandleError('Failed to update email notification for user')
+  @HandleError('Failed to update email notification for user setting')
   async updateEmailNotificationForUser(isEmailNotification: boolean) {
     const user = await this.prisma.user.updateMany({
       where: {
@@ -132,7 +132,7 @@ export class AdminSettingService {
 
   // // -----------auto approve autoupdateApprovalSettingParts-------------
 
-  @HandleError('failed to auto approve garages')
+  @HandleError('failed to auto approve autoupdateApprovalSettingParts')
   async autoupdateApprovalSettingParts() {
     const updated = await this.prisma.product.updateMany({
       where: {
@@ -145,7 +145,7 @@ export class AdminSettingService {
 
     return {
       success: true,
-      message: `${updated.count} products auto-approved.`,
+      message: `${updated.count} products parts were auto-approved.`,
     };
   }
 
