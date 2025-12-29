@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 24
+          node-version: 20
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -86,15 +86,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           source: "docker-compose.yaml"
-          target: "/home/${{ secrets.EC2_USER }}/server"
-      - name: Copy Caddy File
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          source: "Caddyfile"
-          target: "/home/${{ secrets.EC2_USER }}/server"
+          target: "/home/${{ secrets.EC2_USER }}/yousef-server"
+          timeout: 120s
+          command_timeout: 15m
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -102,8 +96,10 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          timeout: 120s
+          command_timeout: 15m
           script: |
-            cd ~/server
+            cd ~/yousef-server
             sudo docker compose --profile prod pull
             sudo docker compose --profile prod down --remove-orphans
             sudo docker compose --profile prod up -d
