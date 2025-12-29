@@ -55,7 +55,6 @@ export class AuthGoogleService {
           role: UserRole.CAR_OWNER,
           isActive: true,
           isDeleted: false,
-          
         },
       });
     } else if (!user.googleId) {
