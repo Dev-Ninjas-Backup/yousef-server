@@ -64,4 +64,4 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs && \
     chown -R nestjs:nodejs /app
 
-CMD ["pnpm", "start:docker"]
+CMD ["npm", "run", "start:docker"]
