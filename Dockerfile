@@ -41,12 +41,17 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Install dependencies (skip prepare/postinstall scripts for production)
 RUN npm ci --omit=dev --ignore-scripts
+
+# Re-generate Prisma Client in production stage (recommended)
+RUN npx prisma generate
 
 # Expose the port
 EXPOSE 3000
 
 # Run the app
-CMD ["npm","run", "start:docker"]
+CMD ["npm", "run", "start:docker"]
