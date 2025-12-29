@@ -26,13 +26,19 @@ async function bootstrap() {
 
   // ------------enable cors---------------
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: any) => {
       if (process.env.NODE_ENV !== 'production') {
         // dev → allow all
         return callback(null, true);
       }
 
-      const allowedOrigins = ['http://localhost:3000'];
+      const allowedOrigins = [
+        'http://13.62.72.14:3000',
+        'http://ec2-13-62-72-14.eu-north-1.compute.amazonaws.com:3000',
+        'http://localhost:3000',
+        'http://13.50.107.250:3000',
+        'http://localhost:5173',
+      ];
 
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -88,7 +94,7 @@ async function bootstrap() {
   app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
   // app.use('/webhook', bodyParser.raw({ type: 'application/json' }));
   const configService = app.get(ConfigService);
-  const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '5000', 10);
+  const port = parseInt(configService.get<string>(ENVEnum.PORT) ?? '3000', 10);
   await app.listen(port);
   console.log(` Server running on http://localhost:${port}`);
   console.log(`Swagger docs available at http://localhost:${port}/docs`);

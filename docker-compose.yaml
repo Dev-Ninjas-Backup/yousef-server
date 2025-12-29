@@ -1,7 +1,7 @@
 services:
   app:
-    image: softvence/yousef-server:latest
-    container_name: yousef-server
+    image: ${DOCKER_USERNAME}/yousef_server:latest
+    container_name: yousef_server
     profiles:
       - prod
     platform: linux/amd64
@@ -9,7 +9,11 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${PORT}:${PORT}"
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     env_file:
       - .env
     depends_on:
@@ -26,27 +30,32 @@ services:
     profiles:
       - dev
       - prod
+    container_name: yousef-postgres
     environment:
-      - POSTGRES_USER=yousef_user
-      - POSTGRES_PASSWORD=yousef123Pass
-      - POSTGRES_DB=yousef_db
+      - POSTGRES_USER=${POSTGRES_USER:-yousef_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-yousef123Pass}
+      - POSTGRES_DB=${POSTGRES_DB:-yousef_db}
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - "5442:5432"
     volumes:
       - yousef_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U yousef_user -d yousef_db"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-yousef_user} -d ${POSTGRES_DB:-yousef_db}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
-
     restart: unless-stopped
     networks:
       - yousef-network
 
 volumes:
   yousef-file_data:
+    driver: local
   yousef_data:
     driver: local
 

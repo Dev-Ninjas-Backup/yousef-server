@@ -55,10 +55,10 @@ export class AdminSettingController {
   // ------------ approval setting garage -----------
   @ApiBearerAuth()
   @ValidateSuperAdmin()
-  @ApiOperation({ summary: 'update approval setting garage' })
-  @Patch('auto-approval-garages')
-  updateApprovalSettingGarage() {
-    return this.adminSettingService.updateApprovalSettingGarage();
+  @ApiOperation({ summary: 'update approval parts catch' })
+  @Patch('auto-approval-parts')
+  autoupdateApprovalSettingParts() {
+    return this.adminSettingService.autoupdateApprovalSettingParts();
   }
 
   /* -------------------------------------------------------------
