@@ -49,4 +49,4 @@ RUN npm ci --omit=dev --ignore-scripts
 EXPOSE 3000
 
 # Run the app
-CMD ["npm", "start:docker"]
+CMD ["npm","run", "start:docker"]
