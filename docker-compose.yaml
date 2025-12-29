@@ -1,7 +1,7 @@
 services:
   app:
-    image: yousef-server:latest
-    container_name: yousef-server
+    image: ${DOCKER_USERNAME}/yousef_server:latest
+    container_name: yousef_server
     profiles:
       - prod
     platform: linux/amd64
