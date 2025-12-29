@@ -160,5 +160,4 @@ export class UserController {
   hardDeleteUserAccount(@GetUser('userId') userId: string) {
     return this.userService.hardDeleteUserAccount(userId);
   }
- 
 }
