@@ -25,7 +25,7 @@ RUN ls -la node_modules/.prisma/client || echo "Prisma client not found"
 
 # Build the app (NestJS -> dist/)
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN npm run build -- --verbose
+RUN npm run build --verbose
 
 # ====== PRODUCTION STAGE ======
 FROM node:20-slim AS production
