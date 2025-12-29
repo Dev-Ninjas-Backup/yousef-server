@@ -5,27 +5,31 @@ FROM node:20-slim AS builder
 WORKDIR /app
 
 # Install system dependencies for build
-RUN apt update && apt install -y openssl
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
-# Copy package, lock file & prisma folder
-COPY package.json package-lock.json ./
-COPY prisma ./prisma
+# Copy package files
+COPY package*.json ./
 
-# Install dependencies
+# Install ALL dependencies
 RUN npm ci
 
-# Copy rest of the project files
-COPY . .
+# Copy prisma files
+COPY prisma.config.ts ./
+COPY prisma ./prisma
 
-# Generate Prisma Client before building
+# Use dummy DATABASE_URL for prisma generate (won't be used for actual connection)
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+
+# Generate Prisma Client
 RUN npx prisma generate
 
-# Verify Prisma Client was generated
-RUN ls -la node_modules/.prisma/client || echo "Prisma client not found"
+# Copy source code
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+COPY src ./src
 
-# Build the app (NestJS -> dist/)
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN npm run build --verbose
+# Build the app
+RUN npm run build
 
 # ====== PRODUCTION STAGE ======
 FROM node:20-slim AS production
@@ -33,25 +37,42 @@ FROM node:20-slim AS production
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies needed at runtime
-RUN apt update && apt install -y openssl curl
+# Install system dependencies
+RUN apt-get update && apt-get install -y openssl curl && rm -rf /var/lib/apt/lists/*
 
-# Copy only necessary files from builder stage
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/package-lock.json ./package-lock.json
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Copy package files
+COPY package*.json ./
 
-# Install dependencies (skip prepare/postinstall scripts for production)
-RUN npm ci --omit=dev --ignore-scripts
+# Install ALL dependencies (removed --omit=dev)
+RUN npm ci --ignore-scripts
 
-# Re-generate Prisma Client in production stage (recommended)
+# Copy prisma files
+COPY prisma.config.ts ./
+COPY prisma ./prisma
+
+# Use dummy DATABASE_URL for prisma generate
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+
+# Generate Prisma Client
 RUN npx prisma generate
 
-# Expose the port
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nestjs && \
+    chown -R nestjs:nodejs /app
+
+# Switch to non-root user
+USER nestjs
+
+# Expose port
 EXPOSE 3000
 
-# Run the app
-CMD ["npm", "run", "start:docker"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+# Start app
+CMD ["npm", "start"]
