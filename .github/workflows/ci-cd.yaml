@@ -109,6 +109,8 @@ jobs:
             mkdir -p /home/${{ secrets.EC2_USER }}/yousef-server
             cd /home/${{ secrets.EC2_USER }}/yousef-server
 
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+
             docker compose --profile prod pull
             docker compose --profile prod down
             docker compose --profile prod up -d
