@@ -27,16 +27,16 @@ jobs:
           version: 10
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
       - name: Generate Prisma Client
         run: npx prisma generate
 
       - name: CI Check
-        run: pnpm ci:fix
+        run: npm run ci:fix
 
       - name: Build Project
-        run: pnpm build
+        run: npm run build
 
   build-and-push:
     name: Build and Push Docker Image
