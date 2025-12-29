@@ -60,12 +60,23 @@ export class PartsCategoryService {
         orderBy: { name: 'asc' },
         skip,
         take: limit,
+        include: {
+          _count: {
+            select: { products: true },
+          },
+        },
       }),
       this.prisma.partsCategory.count({ where }),
     ]);
 
+    const formattedCategories = categories.map((category) => ({
+      ...category,
+      totalParts: category._count.products,
+      _count: undefined,
+    }));
+
     const result = {
-      data: categories,
+      data: formattedCategories,
       pagination: {
         page,
         limit,
