@@ -17,13 +17,14 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
-  ) {}
+  ) { }
 
   // ------------------------- Get All Users -----------------
 
   @HandleError('Failed to get all users', 'User')
   async getAllUsers() {
     const users = await this.prisma.user.findMany({
+      where: { isVerified: true },
       select: {
         id: true,
         role: true,

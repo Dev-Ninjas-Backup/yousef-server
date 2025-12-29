@@ -160,13 +160,5 @@ export class UserController {
   hardDeleteUserAccount(@GetUser('userId') userId: string) {
     return this.userService.hardDeleteUserAccount(userId);
   }
-  // --------Review Alerts---
-
-  // @ApiBearerAuth()
-  // @ValidateAuth()
-  // @ApiOperation({ summary: 'Toggle Review Alerts for logged-in user' })
-  // @Patch('toggle-review-alerts')
-  // changeReviewAlert(@GetUser('userId') userId: string) {
-  //   return this.userService.changeReviewAlert(userId);
-  // }
+ 
 }
