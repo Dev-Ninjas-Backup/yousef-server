@@ -38,4 +38,4 @@ RUN mkdir -p uploads
 ENV NODE_ENV=production
 EXPOSE 5056
 
-CMD ["npm", "run", "start:docker"]
+CMD ["pnpm", "start:docker"]
