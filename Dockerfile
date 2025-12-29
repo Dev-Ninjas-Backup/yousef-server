@@ -1,5 +1,5 @@
 # ====== BUILD STAGE ======
-FROM node:24-slim AS builder
+FROM node:20-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -17,12 +17,18 @@ RUN npm ci
 # Copy rest of the project files
 COPY . .
 
+# Generate Prisma Client before building
+RUN npx prisma generate
+
+# Verify Prisma Client was generated
+RUN ls -la node_modules/.prisma/client || echo "Prisma client not found"
+
 # Build the app (NestJS -> dist/)
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN npm run build
+RUN npm run build -- --verbose
 
 # ====== PRODUCTION STAGE ======
-FROM node:24-slim AS production
+FROM node:20-slim AS production
 
 # Set working directory
 WORKDIR /app
@@ -36,8 +42,8 @@ COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
-# Install dependencies
-RUN npm ci --omit=dev
+# Install dependencies (skip prepare/postinstall scripts for production)
+RUN npm ci --omit=dev --ignore-scripts
 
 # Expose the port
 EXPOSE 3000
