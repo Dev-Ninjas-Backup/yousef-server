@@ -12,7 +12,7 @@ import { UpdatePartsCategoryDto } from './dto/update-parts-category.dto';
 
 @Injectable()
 export class PartsCategoryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   @HandleError('Failed to create parts category', 'Parts Category')
   async create(
@@ -47,11 +47,11 @@ export class PartsCategoryService {
 
     const where = query?.search
       ? {
-          name: {
-            contains: query.search,
-            mode: 'insensitive' as const,
-          },
-        }
+        name: {
+          contains: query.search,
+          mode: 'insensitive' as const,
+        },
+      }
       : {};
 
     const [categories, total] = await Promise.all([
@@ -60,12 +60,23 @@ export class PartsCategoryService {
         orderBy: { name: 'asc' },
         skip,
         take: limit,
+        include: {
+          _count: {
+            select: { products: true },
+          },
+        },
       }),
       this.prisma.partsCategory.count({ where }),
     ]);
 
+    const formattedCategories = categories.map(category => ({
+      ...category,
+      totalParts: category._count.products,
+      _count: undefined,
+    }));
+
     const result = {
-      data: categories,
+      data: formattedCategories,
       pagination: {
         page,
         limit,
