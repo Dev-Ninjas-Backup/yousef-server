@@ -1,42 +1,46 @@
-# Stage 1: Build
-FROM node:20 AS builder
+# ====== BUILD STAGE ======
+FROM node:24-slim AS builder
 
+# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Install system dependencies for build
+RUN apt update && apt install -y openssl
 
-# Copy prisma schema
+# Copy package, lock file & prisma folder
+COPY package.json package-lock.json ./
 COPY prisma ./prisma
 
-# Clean install with explicit Prisma generation
-RUN npm i -g npm@latest
+# Install dependencies
 RUN npm ci
-RUN npx prisma generate --schema=./prisma/models
 
-# Copy source code
+# Copy rest of the project files
 COPY . .
 
-# Build the application
+# Build the app (NestJS -> dist/)
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
-# Stage 2: Run
-FROM node:20-alpine
+# ====== PRODUCTION STAGE ======
+FROM node:24-slim AS production
 
+# Set working directory
 WORKDIR /app
 
-# Copy necessary files from builder
+# Install system dependencies needed at runtime
+RUN apt update && apt install -y openssl curl
+
+# Copy only necessary files from builder stage
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/prisma ./prisma
 
-# Create uploads folder
-RUN mkdir -p uploads
+# Install dependencies
+RUN npm ci --omit=dev
 
-# Set environment
-ENV NODE_ENV=production
-EXPOSE 5056
+# Expose the port
+EXPOSE 3000
 
-CMD ["npm", "run", "start:docker"]
+# Run the app
+CMD ["npm", "start:docker"]
