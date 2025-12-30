@@ -2,7 +2,7 @@ name: Lint, Format, Build, Push & Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, joy]
 
 jobs:
   ci-check:
@@ -82,8 +82,8 @@ jobs:
           timeout: 120s
           command_timeout: 15m
           script: |
-            cd ~/yousef-server
-            sudo docker compose --profile prod pull
-            sudo docker compose --profile prod down --remove-orphans
-            sudo docker compose --profile prod up -d
-            sudo docker system prune -f
+            cd /home/ubuntu/yousef-server
+            docker compose --profile prod pull
+            docker compose --profile prod down --remove-orphans
+            docker compose --profile prod up -d
+            docker system prune -f
