@@ -1,16 +1,17 @@
-
 model Contact {
-  id           String         @id @default(uuid())
-  FirstName    String
-  LastName     String
-  email        String
-  subject      ContactSubject
-  message      String
-  othersubject String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id            String         @id @default(uuid())
+  FirstName     String
+  LastName      String
+  email         String
+  subject       ContactSubject
+  message       String
+  othersubject  String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   garageOwnerId String?
-  messages Message[]
+  userId        String?
+  makeasClosed   Boolean        @default(false)
+  messages      Message[]
 }
 
 model Message {
@@ -19,7 +20,7 @@ model Message {
   contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
   // true → admin, false → user
-  isFromAdmin Boolean @default(false)
+  isFromAdmin     Boolean @default(false)
   isForGrageAdmin Boolean @default(false)
 
   content   String
