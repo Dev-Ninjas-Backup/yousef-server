@@ -56,66 +56,6 @@ export class UserService {
     return successResponse(user, 'User profile retrieved successfully');
   }
 
-  // ------------------------- Update Password -----------------
-  // @HandleError('Failed to update password', 'User')
-  // async updatePassword(
-  //   userid: string,
-  //   dto: UpdatePasswordDto,
-  // ): Promise<TResponse<any>> {
-  //   const user = await this.prisma.user.findUnique({
-  //     where: { id: userid },
-  //     select: {
-  //       id: true,
-  //       email: true,
-  //       fullName: true,
-  //       profilePhoto: true,
-  //       password: true,
-  //       googleId: true,
-  //     },
-  //   });
-
-  //   if (!user) {
-  //     throw new AppError(404, 'User not found');
-  //   }
-
-  //   // If user registered via Google only (no password set yet)
-  //   if (!user.password) {
-  //     const hashedPassword = await this.utils.hash(dto.newPassword);
-
-  //     const updatedUser = await this.prisma.user.update({
-  //       where: { id: userid },
-  //       data: { password: hashedPassword },
-  //       select: { id: true, email: true, fullName: true, profilePhoto: true },
-  //     });
-
-  //     return successResponse(updatedUser, 'Password set successfully');
-  //   }
-
-  //   // For normal email/password users — require current password check
-  //   if (!dto.currentPassword) {
-  //     throw new AppError(400, 'Current password is required');
-  //   }
-
-  //   const isPasswordValid = await this.utils.compare(
-  //     dto.currentPassword,
-  //     user.password,
-  //   );
-
-  //   if (!isPasswordValid) {
-  //     throw new AppError(400, 'Invalid current password');
-  //   }
-
-  //   const hashedPassword = await this.utils.hash(dto.newPassword);
-
-  //   const updatedUser = await this.prisma.user.update({
-  //     where: { id: userid },
-  //     data: { password: hashedPassword },
-  //     select: { id: true, email: true, fullName: true, profilePhoto: true },
-  //   });
-
-  //   return successResponse(updatedUser, 'Password updated successfully');
-  // }
-
   // ----------------- update user profile ---------
 
   @HandleError('Failed to update profile', 'Profile')

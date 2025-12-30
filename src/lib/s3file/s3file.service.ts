@@ -52,27 +52,48 @@ export class S3FileService {
     const safeFileName =
       Date.now() + '-' + file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
 
+    let fileBuffer: Buffer;
+    try {
+      fileBuffer = await fs.readFile(file.path);
+    } catch (err) {
+      throw new BadRequestException('Failed to read uploaded file');
+    }
+
     const upload = new Upload({
       client: this.s3,
       params: {
         Bucket: this.config.get<string>(ENVEnum.BUCKET_NAME)!,
         Key: `content/${safeFileName}`,
-        Body: await fs.readFile(file.path),
+        Body: fileBuffer,
         ContentType: mime.lookup(ext) || 'application/octet-stream',
       },
     });
 
     try {
       const result = await upload.done();
-      await fs.unlink(file.path);
+
+      // Delete file only after successful upload
+      try {
+        await fs.unlink(file.path);
+      } catch (unlinkErr) {
+        console.error('Failed to delete temporary file:', unlinkErr);
+      }
 
       return {
         url: result.Location as string,
         key: safeFileName,
       };
     } catch (err) {
-      console.log(err);
-      await fs.unlink(file.path).catch(() => {});
+      console.error('S3 upload error:', err);
+      // Attempt to clean up the temporary file
+      try {
+        await fs.unlink(file.path);
+      } catch (unlinkErr) {
+        console.error(
+          'Failed to delete temporary file after error:',
+          unlinkErr,
+        );
+      }
       throw new BadRequestException('Failed to upload file to S3');
     }
   }

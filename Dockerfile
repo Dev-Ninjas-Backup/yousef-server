@@ -64,4 +64,15 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs && \
     chown -R nestjs:nodejs /app
 
+# Switch to non-root user
+USER nestjs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+# Start app
 CMD ["npm", "run", "start:docker"]
