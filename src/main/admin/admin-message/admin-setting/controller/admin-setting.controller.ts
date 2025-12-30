@@ -8,7 +8,7 @@ import { AdminSettingService } from '../service/admin-setting.service';
 @ApiTags('Admin-Settings => Approval setting, parts category')
 @Controller('admin-setting')
 export class AdminSettingController {
-  constructor(private readonly adminSettingService: AdminSettingService) {}
+  constructor(private readonly adminSettingService: AdminSettingService) { }
 
   // ----------platform fee setting admin -----------
   @ApiBearerAuth()
@@ -40,14 +40,7 @@ export class AdminSettingController {
   GetApprovalSettings() {
     return this.adminSettingService.GetApprovalSettings();
   }
-  // // ---------auto approval setting garage -----------
-  // @ApiBearerAuth()
-  // @ValidateSuperAdmin()
-  // @ApiOperation({ summary: 'Get auto approval garages toggle status' })
-  // @Get('auto-approve-garages')
-  // getAutoApproveGaragesToggle() {
-  //   return this.adminSettingService.getAutoApproveGaragesToggle();
-  // }
+
 
   @ApiBearerAuth()
   @ValidateSuperAdmin()
@@ -57,13 +50,7 @@ export class AdminSettingController {
     return this.adminSettingService.autoApprovalSettingGarage();
   }
 
-  // @ApiBearerAuth()
-  // @ValidateSuperAdmin()
-  // @ApiOperation({ summary: 'Get auto approval parts toggle status' })
-  // @Get('auto-approval-parts')
-  // getAutoApprovalPartsToggle() {
-  //   return this.adminSettingService.getAutoApprovalPartsToggle();
-  // }
+
 
   @ApiBearerAuth()
   @ValidateSuperAdmin()
@@ -73,13 +60,7 @@ export class AdminSettingController {
     return this.adminSettingService.autoupdateApprovalSettingParts();
   }
 
-  // @ApiBearerAuth()
-  // @ValidateSuperAdmin()
-  // @ApiOperation({ summary: 'Get email notification toggle status' })
-  // @Get('auto-email-notification')
-  // getEmailNotificationToggle() {
-  //   return this.adminSettingService.getEmailNotificationToggle();
-  // }
+
 
   @ApiBearerAuth()
   @ValidateSuperAdmin()
