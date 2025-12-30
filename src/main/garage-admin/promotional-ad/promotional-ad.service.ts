@@ -6,11 +6,12 @@ export class PromotionalAdService {
   constructor(private prisma: PrismaService) {}
 
   async getPromotedProducts(userId: string) {
+    console.log('User Id.........', userId);
     return this.prisma.product.findMany({
       where: {
         createdById: userId,
         isPromoted: true,
-        status: 'APPROVED',
+        // status: 'APPROVED',
       },
       include: {
         seller: {

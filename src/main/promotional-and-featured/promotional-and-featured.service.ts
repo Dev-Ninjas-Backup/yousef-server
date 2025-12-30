@@ -15,6 +15,7 @@ export class PromotionalAndFeaturedService {
     return this.prisma.product.findMany({
       where: {
         isPromoted: true,
+        status: 'APPROVED',
         createdAt: { gte: thirtyDaysAgo },
       },
     });
