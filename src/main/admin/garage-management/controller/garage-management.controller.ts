@@ -51,7 +51,7 @@ export class GarageManagementController {
   @ValidateAuth()
   @ApiBearerAuth()
   @ValidateSuperAdmin()
-  @ApiOperation({ summary: 'Update garage info' })
+  @ApiOperation({ summary: 'Update garage info...' })
   @Patch(':id')
   updateGarageInfo(
     @Param('id') id: string,

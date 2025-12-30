@@ -29,14 +29,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Install missing type definitions
+        run: npm install --save-dev @types/body-parser @types/jsonwebtoken
+
       - name: Generate Prisma Client
         run: npx prisma generate
 
       - name: CI Check
-        run: npm run ci:fix
+        run: pnpm ci:fix
 
       - name: Build Project
-        run: npm run build
+        run: pnpm build
 
   build-and-push:
     name: Build and Push Docker Image
