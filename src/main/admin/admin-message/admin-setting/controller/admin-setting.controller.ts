@@ -27,48 +27,67 @@ export class AdminSettingController {
   getPlatformSetting() {
     return this.adminSettingService.getPlatformSetting();
   }
-  // ------------- -------------------------------------------
 
-  //----------------------- Approval settings ------------
-  // --------------------------------------------------
+  // ---------------------- Approval Settings-----------------
 
-  // ---------auto approval setting garage -----------
   @ApiBearerAuth()
   @ValidateSuperAdmin()
-  @ApiOperation({ summary: 'auto approval setting garage' })
+  @ApiOperation({
+    summary:
+      'GetApproval Settings Auto-approval parts toggle  parts toggle email notification toggle',
+  })
+  @Get('get-approval-settings')
+  GetApprovalSettings() {
+    return this.adminSettingService.GetApprovalSettings();
+  }
+  // // ---------auto approval setting garage -----------
+  // @ApiBearerAuth()
+  // @ValidateSuperAdmin()
+  // @ApiOperation({ summary: 'Get auto approval garages toggle status' })
+  // @Get('auto-approve-garages')
+  // getAutoApproveGaragesToggle() {
+  //   return this.adminSettingService.getAutoApproveGaragesToggle();
+  // }
+
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'Toggle auto approval setting for garages' })
   @Patch('auto-approve-garages')
-  autoApprovalSettingGarage() {
+  toggleAutoApprovalGarages() {
     return this.adminSettingService.autoApprovalSettingGarage();
   }
-  // ----------email notify setting user -----------
+
+  // @ApiBearerAuth()
+  // @ValidateSuperAdmin()
+  // @ApiOperation({ summary: 'Get auto approval parts toggle status' })
+  // @Get('auto-approval-parts')
+  // getAutoApprovalPartsToggle() {
+  //   return this.adminSettingService.getAutoApprovalPartsToggle();
+  // }
+
   @ApiBearerAuth()
   @ValidateSuperAdmin()
-  @ApiOperation({ summary: 'update email notification setting user' })
-  @Patch('auto-email-notification')
-  updateEmailNotificationForUser(
-    @Body('isEmailNotification') isEmailNotification: boolean,
-  ) {
-    return this.adminSettingService.updateEmailNotificationForUser(
-      isEmailNotification,
-    );
-  }
-  // ------------ approval setting garage -----------
-  @ApiBearerAuth()
-  @ValidateSuperAdmin()
-  @ApiOperation({ summary: 'update approval parts catch' })
+  @ApiOperation({ summary: 'Toggle auto approval setting for parts' })
   @Patch('auto-approval-parts')
-  autoupdateApprovalSettingParts() {
+  toggleAutoApprovalParts() {
     return this.adminSettingService.autoupdateApprovalSettingParts();
   }
 
-  /* -------------------------------------------------------------
-   ----------------- payment related setting-----------------
-  
-   -----------------------------------------------------
-   
-   */
-  //---------------free promotion listing---------
-  //
+  // @ApiBearerAuth()
+  // @ValidateSuperAdmin()
+  // @ApiOperation({ summary: 'Get email notification toggle status' })
+  // @Get('auto-email-notification')
+  // getEmailNotificationToggle() {
+  //   return this.adminSettingService.getEmailNotificationToggle();
+  // }
+
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'Toggle email notification setting for users' })
+  @Patch('auto-email-notification')
+  updateEmailNotificationForUser() {
+    return this.adminSettingService.updateEmailNotificationForUser(true);
+  }
 
   // --------------------- payment configure --
   @ApiBearerAuth()
@@ -86,7 +105,7 @@ export class AdminSettingController {
     return this.adminSettingService.updatePaymentConfig(dto);
   }
 
-  // ---------------------  freePromotionalListingStatus-------
+  // ---------------------  freePromotionalListingStatus --------------------------
   @ApiBearerAuth()
   @ValidateSuperAdmin()
   @ApiOperation({ summary: 'Update free promotional listing status' })
