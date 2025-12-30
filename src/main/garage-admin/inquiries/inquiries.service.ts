@@ -20,7 +20,7 @@ export class InquiriesService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   @HandleError('Failed to fetch custom inquiries', 'INQUIRIES')
   async getCustomInquiries(userId: string) {
