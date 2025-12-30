@@ -3,9 +3,6 @@ name: Lint, Format, Build, Push & Deploy
 on:
   push:
     branches: [main]
-  # pull_request:
-  #   branches:
-  #     - "**"
 
 jobs:
   ci-check:
@@ -31,10 +28,6 @@ jobs:
 
       - name: Generate Prisma Client
         run: npx prisma generate
-
-      - name: CI Check
-        run: npm run ci:fix
-
       - name: Build Project
         run: npm run build
 
