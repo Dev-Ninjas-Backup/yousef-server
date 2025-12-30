@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ContactSubject } from '@prisma/client';
 import { ContactEmailTemplate } from 'src/common/email/contact';
 import { UserEnum } from 'src/common/enum/user.enum';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
+import { successResponse } from 'src/common/filter/response.util';
 import { CustomerInquiryAlertEvent } from 'src/common/interface/events-payload';
 import { EVENT_TYPES } from 'src/common/interface/events.name';
-import {
-  successResponse,
-  TResponse,
-} from 'src/common/utilsResponse/response.util';
+import { TResponse } from 'src/common/utilsResponse/response.util';
 import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
-import { ContactSubject } from '@prisma/client';
+import { CreateGarageAdminReplyDto } from './dto/inquiryreply.dto';
 
 @Injectable()
 export class InquiriesService {
@@ -21,7 +20,7 @@ export class InquiriesService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   @HandleError('Failed to fetch custom inquiries', 'INQUIRIES')
   async getCustomInquiries(userId: string) {
@@ -40,6 +39,8 @@ export class InquiriesService {
         subject: true,
         message: true,
         createdAt: true,
+        othersubject: true,
+        makeasClosed: true,
         messages: {
           where: {
             isForGrageAdmin: true,
@@ -58,7 +59,23 @@ export class InquiriesService {
   @HandleError('Failed to create contact message', 'Contact')
   async createCustomInquiriesMessages(
     payload: CreateInquiryDto,
-  ): Promise<TResponse<any>> {
+    userId: string,
+  ) {
+    const sender = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        fullName: true,
+        role: true,
+        profilePhoto: true,
+        email: true,
+      },
+    });
+
+    if (!sender) {
+      throw new AppError(404, 'Sender user not found');
+    }
+
     // Save inquiry to database
     const contact = await this.prisma.contact.create({
       data: {
@@ -72,6 +89,7 @@ export class InquiriesService {
             ? payload.othersubject
             : null,
         garageOwnerId: payload.garageOwnerId,
+        userId: sender.id,
       },
     });
 
@@ -142,11 +160,11 @@ export class InquiriesService {
     console.log('🔍 Found recipients:', recipients.length, recipients);
 
     // -----------------------------------------
-    // ✅ FIX: Fallback if no recipients found
+    //  FIX: Fallback if no recipients found
     // -----------------------------------------
     if (recipients.length === 0) {
       console.warn(
-        '⚠️ No recipients with CustomerInquiryAlert enabled. Adding garage owner as fallback.',
+        ' No recipients with CustomerInquiryAlert enabled. Adding garage owner as fallback.',
       );
       recipients.push({
         user: {
@@ -216,8 +234,110 @@ export class InquiriesService {
       eventPayload,
     );
 
-    console.log('✅ Event emitted with', recipients.length, 'recipients');
+    console.log(' Event emitted with', recipients.length, 'recipients');
 
-    return successResponse(contact, 'Contact message created & emailed');
+    return {
+      message: 'Inquiry created successfully',
+      data: {
+        sender,
+        contact,
+      },
+    };
+  }
+
+  // --------------garage owner reply to inquiry message -------------
+  @HandleError('Failed to send admin reply', 'Garage-Inquiry-GarageOwner-Reply')
+  async replyInquiryMessage(
+    dto: CreateGarageAdminReplyDto,
+    userId: string,
+  ): Promise<TResponse<any>> {
+    const GarageOwner = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        fullName: true,
+        role: true,
+        profilePhoto: true,
+        email: true,
+      },
+    });
+
+    if (!GarageOwner) {
+      throw new AppError(404, 'Sender user not found');
+    }
+
+    // ---  Fetch contact ---
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: dto.contactId },
+      select: {
+        id: true,
+        FirstName: true,
+        LastName: true,
+        email: true,
+      },
+    });
+
+    if (!contact) {
+      throw new AppError(404, 'Contact not found');
+    }
+
+    // 2. Sav garage admin reply
+    const message = await this.prisma.message.create({
+      data: {
+        contactId: dto.contactId,
+        isForGrageAdmin: true,
+        content: dto.content,
+      },
+    });
+
+    // 3. Send email to user
+    await this.mailService.sendEmail(
+      contact.email,
+      'Support Team Reply',
+      ContactEmailTemplate.adminReply({
+        firstName: contact.FirstName,
+        lastName: contact.LastName,
+        content: dto.content,
+      }),
+    );
+
+    // 4. Optional: Notify admin
+    await this.mailService.sendEmail(
+      GarageOwner.email,
+      `Reply sent to ${contact.email}`,
+      `
+          <p>You replied to <strong>${contact.FirstName} ${contact.LastName}</strong>:</p>
+          <blockquote>${dto.content}</blockquote>
+        `,
+    );
+
+    return successResponse(message, 'INQUIRY_REPLYReply sent successfully');
+  }
+
+  // ----------------DeleteCustomInquirie ----------------
+  @HandleError('Failed to delete custom inquiries', 'INQUIRIES')
+  async DeleteCustomInquiries(contactId: string) {
+    // Check if contact exists
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: contactId },
+    });
+
+    if (!contact) {
+      throw new AppError(404, 'Contact not found');
+    }
+
+    // Delete associated messages first due to foreign key constraints
+    await this.prisma.message.deleteMany({
+      where: { contactId: contactId },
+    });
+
+    // Delete the contact
+    await this.prisma.contact.delete({
+      where: { id: contactId },
+    });
+
+    return {
+      message: 'Custom inquiry deleted successfully',
+    };
   }
 }
