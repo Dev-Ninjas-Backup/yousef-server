@@ -1,10 +1,13 @@
 import { S3 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
-import { Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  OnModuleInit,
+} from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as mime from 'mime-types';
 import * as path from 'path';
-import { ensureUploadDirectory } from './ensure-upload-dir';
 
 @Injectable()
 export class AdditionalS3Service implements OnModuleInit {
@@ -20,8 +23,8 @@ export class AdditionalS3Service implements OnModuleInit {
     });
   }
 
-  async onModuleInit() {
-    await ensureUploadDirectory();
+  onModuleInit() {
+    // Module initialization logic if needed
   }
 
   async uploadFileToS3(localFilePath: string, prefix: string) {
@@ -36,7 +39,7 @@ export class AdditionalS3Service implements OnModuleInit {
     let fileStats;
     try {
       fileStats = await fs.stat(absolutePath);
-      console.log(`📊 File stats:`, {
+      console.log(` File stats:`, {
         size: fileStats.size,
         mode: fileStats.mode.toString(8),
         uid: fileStats.uid,
@@ -52,9 +55,12 @@ export class AdditionalS3Service implements OnModuleInit {
     // Try to fix permissions (may fail but continue anyway)
     try {
       await fs.chmod(absolutePath, 0o666);
-      console.log(`✅ Changed file permissions to 666`);
+      console.log(` Changed file permissions to 666`);
     } catch (chmodError) {
-      console.warn(`⚠️ Could not change permissions (continuing anyway):`, chmodError.message);
+      console.warn(
+        `⚠️ Could not change permissions (continuing anyway):`,
+        chmodError.message,
+      );
     }
 
     // Read file into buffer
@@ -69,7 +75,9 @@ export class AdditionalS3Service implements OnModuleInit {
       try {
         const fsSync = require('fs');
         fileContent = fsSync.readFileSync(absolutePath);
-        console.log(`✅ Read file using sync method: ${fileContent.length} bytes`);
+        console.log(
+          `✅ Read file using sync method: ${fileContent.length} bytes`,
+        );
       } catch (syncError) {
         console.error(`❌ Sync read also failed:`, syncError);
         throw new InternalServerErrorException(
@@ -126,5 +134,4 @@ export class AdditionalS3Service implements OnModuleInit {
       );
     }
   }
-
 }

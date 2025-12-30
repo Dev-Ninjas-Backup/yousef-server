@@ -89,7 +89,10 @@ export class S3FileService {
       try {
         await fs.unlink(file.path);
       } catch (unlinkErr) {
-        console.error('Failed to delete temporary file after error:', unlinkErr);
+        console.error(
+          'Failed to delete temporary file after error:',
+          unlinkErr,
+        );
       }
       throw new BadRequestException('Failed to upload file to S3');
     }

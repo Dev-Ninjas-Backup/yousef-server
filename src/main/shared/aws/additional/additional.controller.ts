@@ -1,10 +1,18 @@
-import { BadRequestException, Controller, Post, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { ApiConsumes, ApiTags } from "@nestjs/swagger";
-import { join } from "path";
-import { FileType, MulterService } from "src/lib/multer/multer.service";
-import { S3FileService } from "src/lib/s3file/s3file.service";
-import { AdditionalS3Service } from "./additional.service";
+import {
+  BadRequestException,
+  Controller,
+  Post,
+  UploadedFile,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { join } from 'path';
+import { FileType, MulterService } from 'src/lib/multer/multer.service';
+import { S3FileService } from 'src/lib/s3file/s3file.service';
+import { AdditionalS3Service } from './additional.service';
+import { AdditionalDto, AdditionalMultipleDto } from './dto/additional.dto';
 
 @ApiTags('aws-file-upload-additional-all')
 @Controller('aws-file-upload-additional-all')
@@ -12,10 +20,11 @@ export class AdditionalS3Controller {
   constructor(
     private readonly s3FileService: S3FileService,
     private readonly additionalS3Service: AdditionalS3Service,
-  ) { }
+  ) {}
 
   @Post('upload-s3-additional')
   @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: AdditionalDto })
   @UseInterceptors(
     FileInterceptor(
       'file',
@@ -42,6 +51,7 @@ export class AdditionalS3Controller {
 
   @Post('upload-s3-additional-multiple')
   @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: AdditionalMultipleDto })
   @UseInterceptors(
     FilesInterceptor(
       'files',
@@ -68,6 +78,4 @@ export class AdditionalS3Controller {
       keys: results.map((r) => r.key),
     };
   }
-
-
 }

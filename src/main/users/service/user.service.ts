@@ -17,7 +17,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
-  ) { }
+  ) {}
 
   // ------------------------- Get All Users -----------------
 
@@ -55,8 +55,6 @@ export class UserService {
 
     return successResponse(user, 'User profile retrieved successfully');
   }
-
-
 
   // ----------------- update user profile ---------
 
