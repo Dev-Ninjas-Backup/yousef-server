@@ -9,7 +9,7 @@
 
 ```bash
 # Install dependencies
-npm install
+npm install.,
 
 # Set up environment variables
 cp .env.example .env
