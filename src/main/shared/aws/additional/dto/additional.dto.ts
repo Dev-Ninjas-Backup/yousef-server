@@ -11,7 +11,7 @@ export class AdditionalDto {
 
 export class AdditionalMultipleDto {
   @ApiProperty({
-    description: 'Multiple files to upload -------------------------',
+    description: 'Multiple files to upload TO S3',
     type: 'string',
     format: 'binary',
     isArray: true,
