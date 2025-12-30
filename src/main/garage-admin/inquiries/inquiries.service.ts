@@ -39,6 +39,8 @@ export class InquiriesService {
         subject: true,
         message: true,
         createdAt: true,
+        othersubject: true,
+        makeasClosed: true,
         messages: {
           where: {
             isForGrageAdmin: true,
@@ -235,13 +237,11 @@ export class InquiriesService {
     console.log(' Event emitted with', recipients.length, 'recipients');
 
     return {
-
       message: 'Inquiry created successfully',
       data: {
         sender,
-        contact
+        contact,
       },
-
     };
   }
 
@@ -251,7 +251,6 @@ export class InquiriesService {
     dto: CreateGarageAdminReplyDto,
     userId: string,
   ): Promise<TResponse<any>> {
-
     const GarageOwner = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -314,5 +313,4 @@ export class InquiriesService {
 
     return successResponse(message, 'INQUIRY_REPLYReply sent successfully');
   }
-
 }

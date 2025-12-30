@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsUUID } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsUUID } from 'class-validator';
 
 export class CreateGarageAdminReplyDto {
   @ApiProperty({ description: 'Contact thread ID' })

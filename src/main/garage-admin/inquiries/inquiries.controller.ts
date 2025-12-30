@@ -1,6 +1,10 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GetUser, ValidateGarageOwner, ValidateUser } from 'src/common/jwt/jwt.decorator';
+import {
+  GetUser,
+  ValidateGarageOwner,
+  ValidateUser,
+} from 'src/common/jwt/jwt.decorator';
 import { CreateInquiryDto } from './dto/create-inquiry.dto';
 import { CreateGarageAdminReplyDto } from './dto/inquiryreply.dto';
 import { InquiriesService } from './inquiries.service';
@@ -8,7 +12,7 @@ import { InquiriesService } from './inquiries.service';
 @Controller('Garage-admin-inquiries')
 @ApiTags('Garage-admin-Inquiries')
 export class InquiriesController {
-  constructor(private readonly inquiriesService: InquiriesService) { }
+  constructor(private readonly inquiriesService: InquiriesService) {}
 
   // ----------------custom inquiries messages ----------------
 
@@ -26,7 +30,10 @@ export class InquiriesController {
   @ValidateGarageOwner()
   @ApiOperation({ summary: 'Garage owner reply to inquiry message' })
   @Post('reply-inquiry-message')
-  async ReplyInquiryMessage(@Body() dto: CreateGarageAdminReplyDto, @GetUser('userId') userId: string,) {
+  async ReplyInquiryMessage(
+    @Body() dto: CreateGarageAdminReplyDto,
+    @GetUser('userId') userId: string,
+  ) {
     return this.inquiriesService.replyInquiryMessage(dto, userId);
   }
   // ---------------crate custom inquiries messages ---------------
@@ -44,7 +51,4 @@ export class InquiriesController {
   ) {
     return this.inquiriesService.createCustomInquiriesMessages(payload, userId);
   }
-
-
-
 }
