@@ -11,7 +11,7 @@ export class LoginDto {
 
   @ApiProperty({
     example: '12345678',
-    description: 'Password (min 6 characters)',
+    description: 'Password (min 6 characters ...........)',
   })
   @IsNotEmpty()
   @MinLength(6)
