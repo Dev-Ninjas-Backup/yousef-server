@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   GetUser,
   ValidateGarageOwner,
@@ -12,7 +12,7 @@ import { InquiriesService } from './inquiries.service';
 @Controller('Garage-admin-inquiries')
 @ApiTags('Garage-admin-Inquiries')
 export class InquiriesController {
-  constructor(private readonly inquiriesService: InquiriesService) {}
+  constructor(private readonly inquiriesService: InquiriesService) { }
 
   // ----------------custom inquiries messages ----------------
 
@@ -50,5 +50,34 @@ export class InquiriesController {
     @GetUser('userId') userId: string,
   ) {
     return this.inquiriesService.createCustomInquiriesMessages(payload, userId);
+  }
+  // ------------delete custom  query content id inquiries message -------------
+
+  @ApiBearerAuth()
+  @ValidateGarageOwner()
+  @ApiOperation({ summary: 'Delete custom inquiries message' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        contactId: {
+          type: 'string',
+          format: 'uuid',
+          example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          description: 'Contact ID to delete',
+        },
+      },
+      required: ['contactId'],
+    },
+  })
+  @Delete('delete-custom-inquiries')
+  async DeleteCustomInquiries(
+    @Body('contactId') contactId: string,
+
+  ) {
+    return this.inquiriesService.DeleteCustomInquiries(
+      contactId,
+
+    );
   }
 }

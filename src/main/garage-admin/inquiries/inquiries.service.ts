@@ -313,4 +313,31 @@ export class InquiriesService {
 
     return successResponse(message, 'INQUIRY_REPLYReply sent successfully');
   }
+
+  // ----------------DeleteCustomInquirie ----------------
+  @HandleError('Failed to delete custom inquiries', 'INQUIRIES')
+  async DeleteCustomInquiries(contactId: string) {
+    // Check if contact exists
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: contactId },
+    });
+
+    if (!contact) {
+      throw new AppError(404, 'Contact not found');
+    }
+
+    // Delete associated messages first due to foreign key constraints
+    await this.prisma.message.deleteMany({
+      where: { contactId: contactId },
+    });
+
+    // Delete the contact
+    await this.prisma.contact.delete({
+      where: { id: contactId },
+    });
+
+    return {
+      message: 'Custom inquiry deleted successfully',
+    };
+  }
 }
