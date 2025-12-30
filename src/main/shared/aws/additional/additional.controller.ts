@@ -1,27 +1,18 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Param,
-  Post,
-  UploadedFile,
-  UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
+import { BadRequestException, Controller, Post, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import { ApiConsumes, ApiTags } from "@nestjs/swagger";
+import { join } from "path";
+import { FileType, MulterService } from "src/lib/multer/multer.service";
+import { S3FileService } from "src/lib/s3file/s3file.service";
+import { AdditionalS3Service } from "./additional.service";
 
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { FileType, MulterService } from 'src/lib/multer/multer.service';
-import uploadFileToS3 from 'src/lib/utils/uploadImageAWS';
-import {
-  Additionaldto,
-  AdditionalMultipleDto,
-} from '../dto/uploadadditional.dto';
-import { AdditionalS3Service } from './additional.service';
 @ApiTags('aws-file-upload-additional-all')
 @Controller('aws-file-upload-additional-all')
 export class AdditionalS3Controller {
-  constructor(private readonly AdditionalS3Service: AdditionalS3Service) {}
+  constructor(
+    private readonly s3FileService: S3FileService,
+    private readonly additionalS3Service: AdditionalS3Service,
+  ) { }
 
   @Post('upload-s3-additional')
   @ApiConsumes('multipart/form-data')
@@ -29,31 +20,26 @@ export class AdditionalS3Controller {
     FileInterceptor(
       'file',
       new MulterService().createMulterOptions(
-        './uploads',
+        join('/tmp', 'uploads'),
         'content',
         FileType.ANY,
       ),
     ),
   )
-  async create(
-    @Body() createTestawDto: Additionaldto,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async create(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      return { message: 'No file uploaded' };
+      throw new BadRequestException('No file uploaded');
     }
 
-    //  Upload to AWS S3
-    const s3Result = await uploadFileToS3(file?.path);
-    console.log(' Uploaded to S3:', s3Result.url);
+    const result = await this.s3FileService.processUploadedFile(file);
 
     return {
-      message: ' File uploaded successfully to S3',
-      file: s3Result.url,
-      key: s3Result.key,
+      message: 'File uploaded successfully to S3',
+      file: result.url,
+      key: result.key,
     };
   }
-  // ------------------ upload multiple files----------------
+
   @Post('upload-s3-additional-multiple')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -61,39 +47,27 @@ export class AdditionalS3Controller {
       'files',
       10,
       new MulterService().createMulterOptions(
-        './uploads',
+        join('/tmp', 'uploads'),
         'content',
         FileType.ANY,
       ),
     ),
   )
-  async createMultiple(
-    @Body() createTestawDto: AdditionalMultipleDto,
-    @UploadedFiles() files: Express.Multer.File[],
-  ) {
+  async createMultiple(@UploadedFiles() files: Express.Multer.File[]) {
     if (!files || files.length === 0) {
-      return { message: 'No files uploaded' };
+      throw new BadRequestException('No files uploaded');
     }
 
-    const s3Results = await Promise.all(
-      files.map((file) => uploadFileToS3(file?.path)),
+    const results = await Promise.all(
+      files.map((file) => this.s3FileService.processUploadedFile(file)),
     );
 
     return {
       message: 'Files uploaded successfully to S3',
-      files: s3Results.map((result) => result.url),
-      keys: s3Results.map((result) => result.key),
+      files: results.map((r) => r.url),
+      keys: results.map((r) => r.key),
     };
   }
 
-  // --------deleteFileFromS3-----------
-  @Delete('delete-s3-additional/:key')
-  async deleteFile(@Param('key') key: string) {
-    try {
-      await this.AdditionalS3Service.deleteFileFromS3(key);
-      return { message: 'File deleted successfully from S3' };
-    } catch (error) {
-      return { message: 'Failed to delete file from S3', error };
-    }
-  }
+
 }
