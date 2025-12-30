@@ -12,7 +12,7 @@ import { InquiriesService } from './inquiries.service';
 @Controller('Garage-admin-inquiries')
 @ApiTags('Garage-admin-Inquiries')
 export class InquiriesController {
-  constructor(private readonly inquiriesService: InquiriesService) { }
+  constructor(private readonly inquiriesService: InquiriesService) {}
 
   // ----------------custom inquiries messages ----------------
 
@@ -71,13 +71,7 @@ export class InquiriesController {
     },
   })
   @Delete('delete-custom-inquiries')
-  async DeleteCustomInquiries(
-    @Body('contactId') contactId: string,
-
-  ) {
-    return this.inquiriesService.DeleteCustomInquiries(
-      contactId,
-
-    );
+  async DeleteCustomInquiries(@Body('contactId') contactId: string) {
+    return this.inquiriesService.DeleteCustomInquiries(contactId);
   }
 }
