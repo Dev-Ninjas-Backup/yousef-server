@@ -83,7 +83,12 @@ jobs:
           command_timeout: 15m
           script: |
             cd /home/ubuntu/yousef-server
-            docker compose --profile prod pull
+            echo "Pulling latest images..."
+            docker compose --profile prod pull --quiet
+            echo "Stopping containers..."
             docker compose --profile prod down --remove-orphans
-            docker compose --profile prod up -d
-            docker system prune -f
+            echo "Starting containers with latest image..."
+            docker compose --profile prod up -d --force-recreate
+            echo "Cleaning up unused images..."
+            docker image prune -af
+            echo "Deployment completed successfully!"
