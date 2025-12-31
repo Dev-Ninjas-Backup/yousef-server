@@ -9,7 +9,7 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}🚀 Starting deployment to EC2...${NC}"
 
 # Variables
-EC2_HOST="ubuntu@ec2-13-50-107-250.eu-north-1.compute.amazonaws.com"
+EC2_HOST="ubuntu@ec2-13-62-72-14.eu-north-1.compute.amazonaws.com"
 PEM_FILE="yousef-server.pem"
 REMOTE_DIR="/home/ubuntu/yousef-server"
 DOCKER_IMAGE="softvence/yousef_server:latest"
