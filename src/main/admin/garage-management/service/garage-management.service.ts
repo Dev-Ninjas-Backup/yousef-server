@@ -28,6 +28,7 @@ export class GarageManagementService {
       where: {
         isDeleted: false,
         role: 'GARAGE_OWNER',
+        isGarageVerified: true,
       },
       select: {
         id: true,
@@ -259,7 +260,7 @@ export class GarageManagementService {
     // ------------Update role to GARAGE_OWNER------------------
     await this.prisma.user.update({
       where: { id },
-      data: { role: 'GARAGE_OWNER', isGarageVerified: true },
+      data: {  isGarageVerified: true },
     });
 
     // ------------------Update status + trial info if needed-------------------
@@ -295,7 +296,6 @@ export class GarageManagementService {
       select: {
         id: true,
         garageName: true,
-
         city: true,
         emirate: true,
         garageLogo: true,
