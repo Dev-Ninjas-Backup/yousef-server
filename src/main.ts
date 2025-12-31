@@ -33,8 +33,10 @@ async function bootstrap() {
       }
 
       const allowedOrigins = [
+        'https://yousef-softvence.saikat.com.bd',
+        'https://yousef-frontend-nine.vercel.app',
+        'https://yousef-frontend-teal.vercel.app',
         'http://13.62.72.14:3000',
-        'http://ec2-13-62-72-14.eu-north-1.compute.amazonaws.com:3000',
         'http://localhost:3000',
         'http://13.50.107.250:3000',
         'http://localhost:5173',

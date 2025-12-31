@@ -23,7 +23,7 @@ export class ProductService {
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   async create(
     userId: string,
@@ -256,19 +256,25 @@ export class ProductService {
 
     return successResponse(product, 'Product created successfully');
   }
-
+  // --------------find all with search, filter, pagination, last 30 days only----------------
   async findAll(query?: {
-    page?: string;
-    limit?: string;
+    page?: number;
+    limit?: number;
     search?: string;
     category?: string;
     condition?: string;
   }) {
-    const page = parseInt(query?.page || '1');
-    const limit = parseInt(query?.limit || '20');
+    const page = query?.page || 1;
+    const limit = query?.limit || 20;
     const skip = (page - 1) * limit;
 
     const where: any = {};
+
+    // Date filter: only products from last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    where.createdAt = { gte: thirtyDaysAgo };
 
     // Searching: partName, description, brand
     if (query?.search) {
@@ -286,22 +292,14 @@ export class ProductService {
       };
     }
 
-    // Filtering: condition
+    // Filtering: condition (exact match)
     if (query?.condition) {
-      where.condition = { contains: query.condition, mode: 'insensitive' };
+      where.condition = query.condition;
     }
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setHours(0, 0, 0, 0);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
-        where: {
-          createdAt: {
-            gte: thirtyDaysAgo,
-          },
-        },
+        where,
         include: {
           seller: true,
           createdBy: { select: { id: true, email: true, fullName: true } },
@@ -311,16 +309,12 @@ export class ProductService {
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.product.count({
-        where: {
-          createdAt: {
-            gte: thirtyDaysAgo,
-          },
-        },
-      }),
+      this.prisma.product.count({ where }),
     ]);
 
     return {
+      success: true,
+      message: 'Products fetched successfully',
       data: products,
       pagination: {
         page,

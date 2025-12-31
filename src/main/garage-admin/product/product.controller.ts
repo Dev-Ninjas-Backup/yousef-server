@@ -30,6 +30,7 @@ import { GetUser, ValidateAuth } from 'src/common/jwt/jwt.decorator';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
 import { PaymentService } from '../../shared/payment/service/payment.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { ProductFilterDto } from './dto/product-filter.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductService } from './product.service';
 @ApiTags('Products')
@@ -98,56 +99,8 @@ export class ProductController {
   @ApiOperation({
     summary: 'Get all products with search, filter and pagination',
   })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    example: 1,
-    description: 'Page number (default: 1)',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    example: 10,
-    description: 'Items per page (default: 10)',
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    type: String,
-    example: 'Brake Pads Front Set',
-    description: 'Search in name/description',
-  })
-  @ApiQuery({
-    name: 'category',
-    required: false,
-    type: String,
-    example: 'Engine Parts',
-    description: 'Filter by category name',
-  })
-  @ApiQuery({
-    name: 'condition',
-    required: false,
-    type: String,
-    example: 'New',
-    description: 'Filter by condition ',
-  })
-  @ApiResponse({ status: 200, description: 'List of products with pagination' })
-  async findAll(
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
-    @Query('search') search?: string,
-    @Query('category') category?: string,
-    @Query('condition') condition?: string,
-  ) {
-    return this.productService.findAll({
-      page,
-      limit,
-      search,
-      category,
-      condition,
-    });
+  async findAll(@Query() filterDto: ProductFilterDto) {
+    return this.productService.findAll(filterDto);
   }
 
   // My products
