@@ -13,7 +13,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      server:
+      app:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "caddy validate --config /etc/caddy/Caddyfile"]
@@ -44,6 +44,8 @@ services:
     restart: unless-stopped
     volumes:
       - yousef-file_data:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:3000"]
     networks:
       - yousef-network
 
