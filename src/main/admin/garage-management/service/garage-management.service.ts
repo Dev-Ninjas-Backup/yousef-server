@@ -27,8 +27,8 @@ export class GarageManagementService {
     const users = await this.prisma.user.findMany({
       where: {
         isDeleted: false,
-        role: 'GARAGE_OWNER',
-        isGarageVerified: true,
+        role: 'GARAGE_OWNER'
+
       },
       select: {
         id: true,
@@ -125,7 +125,7 @@ export class GarageManagementService {
 
   @HandleError('Failed to search garage', 'Garage')
   async searchGarages(dto: SearchGarageDto) {
-   
+
     const { page, limit, name, status } = dto;
     const skip = (page - 1) * limit;
 
@@ -156,7 +156,7 @@ export class GarageManagementService {
       where: {
         isDeleted: false,
         role: 'GARAGE_OWNER',
-        isGarageVerified: true,
+
         ...where,
       },
       skip,
@@ -269,7 +269,7 @@ export class GarageManagementService {
       data: { isGarageVerified: true, garageStatus: 'APPROVE' },
     });
 
-    
+
     // ------------------Update status + trial info if needed-------------------
     const updatedGarage = await this.prisma.user.update({
       where: { id },
