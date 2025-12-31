@@ -58,6 +58,8 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.PACKAGE_NAME }}:latest
+          no-cache: true
+          platforms: linux/amd64
 
   deploy:
     name: Deploy
