@@ -19,7 +19,7 @@ export class GarageManagementService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
-  ) {}
+  ) { }
 
   // ---------get all garage----------------
   @HandleError('Failed to get all garage', 'Garage')
@@ -52,10 +52,29 @@ export class GarageManagementService {
           select: {
             id: true,
             name: true,
+            coverPhoto: true,
+            profileImage: true,
+            garagePhone: true,
+            email: true,
+            street: true,
+            city: true,
+            emirate: true,
             address: true,
+            formattedAddress: true,
+            placeId: true,
+            garageLat: true,
+            garageLng: true,
+            description: true,
+            certifications: true,
+            weekdaysHours: true,
+            weekendsHours: true,
+            brandExpertise: true,
             status: true,
-          },
-        },
+            services: true,
+            createdAt: true,
+            updatedAt: true,
+          }
+        }
       },
     });
 
@@ -75,14 +94,32 @@ export class GarageManagementService {
       garages: u.garages.map((g) => ({
         garageId: g.id,
         garageName: g.name,
+        coverPhoto: g.coverPhoto,
+        profileImage: g.profileImage,
+        garagePhone: g.garagePhone,
+        email: g.email,
+        street: g.street,
+        city: g.city,
+        emirate: g.emirate,
         location: g.address,
+        formattedAddress: g.formattedAddress,
+        placeId: g.placeId,
+        garageLat: g.garageLat,
+        garageLng: g.garageLng,
+        description: g.description,
+        certifications: g.certifications,
+        weekdaysHours: g.weekdaysHours,
+        weekendsHours: g.weekendsHours,
+        brandExpertise: g.brandExpertise,
         garageStatus: g.status,
+        services: g.services,
+        createdAt: g.createdAt,
+        updatedAt: g.updatedAt,
       })),
     }));
 
     return successResponse(result, 'All garage fetched successfully');
   }
-
   // ----------search garage-------------
 
   @HandleError('Failed to search garage', 'Garage')
