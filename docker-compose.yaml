@@ -20,6 +20,8 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    networks:
+      - yousef-network
 
   app:
     image: ${DOCKER_USERNAME}/yousef_server:latest
@@ -81,6 +83,10 @@ volumes:
   yousef-file_data:
     driver: local
   yousef_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local
 
 networks:
