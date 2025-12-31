@@ -29,7 +29,6 @@ export class AdminSettingController {
   }
 
   // ---------------------- Approval Settings-----------------
-
   @ApiBearerAuth()
   @ValidateSuperAdmin()
   @ApiOperation({
