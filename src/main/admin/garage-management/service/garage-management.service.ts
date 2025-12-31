@@ -260,9 +260,10 @@ export class GarageManagementService {
     // ------------Update role to GARAGE_OWNER------------------
     await this.prisma.user.update({
       where: { id },
-      data: {  isGarageVerified: true },
+      data: { isGarageVerified: true, garageStatus: 'APPROVE' },
     });
 
+    
     // ------------------Update status + trial info if needed-------------------
     const updatedGarage = await this.prisma.user.update({
       where: { id },
