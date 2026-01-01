@@ -110,11 +110,13 @@ jobs:
             
             cd /home/${{ secrets.EC2_USER }}/yousef-server
             
-            # Load environment variables from .env file
-            export $(cat .env | grep -v '^#' | xargs)
+            # Source the .env file properly (safer than export)
+            set -a
+            source .env
+            set +a
             
             echo "Image to deploy: ${DOCKER_USERNAME}/${PACKAGE_NAME}:latest"
-            echo "✓ Changed to project directory"
+            echo "✓ Environment variables loaded"
             
             echo "========================================="
             echo "Logging in to Docker Hub..."
@@ -132,7 +134,7 @@ jobs:
             echo "Removing old Docker images..."
             echo "========================================="
             docker rmi -f ${DOCKER_USERNAME}/${PACKAGE_NAME}:latest || true
-            docker rmi -f $(docker images ${DOCKER_USERNAME}/${PACKAGE_NAME} -q) || true
+            docker rmi -f $(docker images ${DOCKER_USERNAME}/${PACKAGE_NAME} -q) 2>/dev/null || true
             echo "✓ Old images removed"
             
             echo "========================================="
