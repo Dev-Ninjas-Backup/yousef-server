@@ -23,7 +23,7 @@ import { GarageManagementService } from '../service/garage-management.service';
 export class GarageManagementController {
   constructor(
     private readonly garageManagementService: GarageManagementService,
-  ) {}
+  ) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -61,20 +61,20 @@ export class GarageManagementController {
   }
 
   // -----------update garage status by garage ID ---
-  @ValidateAuth()
-  @ApiBearerAuth()
-  @ValidateSuperAdmin()
-  @ApiOperation({
-    summary:
-      'Update garage status (APPROVE | PENDING | DECLINE) by providing garageId. This updates both the garage and its owner.',
-  })
-  @Patch('status/:garageId')
-  updateStatus(
-    @Param('garageId') garageId: string,
-    @Body() updateGarageDto: UpdateGarageStatusDto,
-  ) {
-    return this.garageManagementService.updateStatus(garageId, updateGarageDto);
-  }
+  // @ValidateAuth()
+  // @ApiBearerAuth()
+  // @ValidateSuperAdmin()
+  // @ApiOperation({
+  //   summary:
+  //     'Update garage status (APPROVE | PENDING | DECLINE) by providing garageId. This updates both the garage and its owner.',
+  // })
+  // @Patch('status/:garageId')
+  // updateStatus(
+  //   @Param('garageId') garageId: string,
+  //   @Body() updateGarageDto: UpdateGarageStatusDto,
+  // ) {
+  //   return this.garageManagementService.updateStatus(garageId, updateGarageDto);
+  // }
 
   // -----------update garage status by garage ID (alternative endpoint) ------------------
   @ValidateAuth()
@@ -105,7 +105,7 @@ export class GarageManagementController {
   @Patch('user-garage-status/:userId')
   updateGarageStatusByUserId(
     @Param('userId') userId: string,
-  
+
   ) {
     return this.garageManagementService.updateGarageStatusByUserId(
       userId,
