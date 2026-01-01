@@ -1,4 +1,4 @@
-name: Lint, Format, Build, Push & Deploy
+name: Build, Push & Deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   ci-check:
-    name: Lint, Format, Build
+    name:  Format, Build
     runs-on: ubuntu-latest
 
     steps:
