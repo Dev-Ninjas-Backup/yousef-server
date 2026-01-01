@@ -103,4 +103,6 @@ export class GarageManagementController {
   deleteGarageInfo(@Param('id') id: string) {
     return this.garageManagementService.softDeleteGarage(id);
   }
+
+  
 }
