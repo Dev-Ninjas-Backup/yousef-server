@@ -1,4 +1,4 @@
-name: Lint, Format, Build, Push & Deploy
+name: Build, Push & Deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   ci-check:
-    name: Lint, Format, Build
+    name:  Format, Build
     runs-on: ubuntu-latest
 
     steps:
@@ -39,10 +39,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Install missing type definitions
-        run: pnpm add -D @types/body-parser @types/jsonwebtoken
-
       - name: Generate Prisma Client
         run: pnpm exec prisma generate
 
