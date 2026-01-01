@@ -272,20 +272,40 @@ export class GarageManagementService {
     });
   }
 
-  // -------Only update garage updateStatus-------------
+  // -------Update garage status by garage ID-------------
 
   @HandleError('Failed to update garage status', 'Garage')
   async updateStatus(
-    id: string,
+    garageId: string,
     dto: UpdateGarageStatusDto,
   ): Promise<TResponse<any>> {
-    // ----------- Find the garage user-----------------
-    const garage = await this.prisma.user.findUnique({ where: { id } });
-    if (!garage) throw new NotFoundException('Garage not found');
+    // ----------- Find the garage by ID-----------------
+    const garage = await this.prisma.garage.findUnique({
+      where: { id: garageId },
+      include: { user: true },
+    });
 
-    //------------- If status is being updated to APPROVE and trial hasn't started yet----------------
+    if (!garage) {
+      throw new NotFoundException(`Garage with ID ${garageId} not found. Please verify the garage ID.`);
+    }
+
+    //------------- Map User GarageStatus to Garage Status enum----------------
+    let garageRecordStatus: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING';
+    if (dto.garageStatus === 'APPROVE') {
+      garageRecordStatus = 'APPROVED';
+    } else if (dto.garageStatus === 'DECLINE') {
+      garageRecordStatus = 'REJECTED';
+    }
+
+    // ------------------Update the garage status-------------------
+    const updatedGarage = await this.prisma.garage.update({
+      where: { id: garageId },
+      data: { status: garageRecordStatus },
+    });
+
+    //------------- Update garage owner information and trial if approved----------------
     let trialData = {};
-    if (dto.garageStatus === 'APPROVE' && !garage.isTrialActive) {
+    if (dto.garageStatus === 'APPROVE' && !garage.user.isTrialActive) {
       const trialStart = new Date();
       const trialEnd = new Date();
       trialEnd.setMonth(trialEnd.getMonth() + 3);
@@ -300,18 +320,12 @@ export class GarageManagementService {
       };
     }
 
-    // ------------Update role to GARAGE_OWNER------------------
-    await this.prisma.user.update({
-      where: { id },
-      data: { isGarageVerified: true, garageStatus: 'APPROVE' },
-    });
-
-
-    // ------------------Update status + trial info if needed-------------------
-    const updatedGarage = await this.prisma.user.update({
-      where: { id },
+    // ------------------Update garage owner status + trial info if needed-------------------
+    const updatedUser = await this.prisma.user.update({
+      where: { id: garage.userId },
       data: {
-        ...dto,
+        garageStatus: dto.garageStatus,
+        isGarageVerified: dto.garageStatus === 'APPROVE',
         ...trialData,
       },
     });
@@ -319,16 +333,105 @@ export class GarageManagementService {
     // -------------------------------------
     // ------------------- Send email on approval -----------------------
     // -------------------------------------
-    if (dto.garageStatus === 'APPROVE' && updatedGarage.email) {
+    if (dto.garageStatus === 'APPROVE' && updatedUser.email) {
       await this.mail.sendEmail(
-        updatedGarage.email,
+        updatedUser.email,
         'Your Garage Has Been Approved!',
         GarageAcceptEmailTemplate({
-          name: updatedGarage.fullName ?? undefined,
-          garageName: updatedGarage.garageName ?? undefined,
+          name: updatedUser.fullName ?? undefined,
+          garageName: garage.name ?? undefined,
         }),
       );
     }
+    
+    return successResponse(
+      {
+        garage: updatedGarage,
+        owner: {
+          id: updatedUser.id,
+          fullName: updatedUser.fullName,
+          email: updatedUser.email,
+          garageStatus: updatedUser.garageStatus,
+          isGarageVerified: updatedUser.isGarageVerified,
+        },
+      },
+      'Garage status updated successfully',
+    );
+  }
+
+  // -------Update garage status by garage ID (not user ID)-------------
+  @HandleError('Failed to update garage status by garage ID', 'Garage')
+  async updateGarageStatusByGarageId(
+    garageId: string,
+    dto: UpdateGarageStatusDto,
+  ): Promise<TResponse<any>> {
+    // ----------- Find the specific garage-----------------
+    const garage = await this.prisma.garage.findUnique({
+      where: { id: garageId },
+      include: { user: true },
+    });
+    if (!garage) throw new NotFoundException('Garage not found');
+
+    //------------- Map User GarageStatus to Garage Status enum----------------
+    let garageRecordStatus: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING';
+    if (dto.garageStatus === 'APPROVE') {
+      garageRecordStatus = 'APPROVED';
+    } else if (dto.garageStatus === 'DECLINE') {
+      garageRecordStatus = 'REJECTED';
+    }
+
+    // ------------------Update the specific garage status-------------------
+    const updatedGarage = await this.prisma.garage.update({
+      where: { id: garageId },
+      data: { status: garageRecordStatus },
+    });
+
+    // ------------------Update user status and trial if first approval-------------------
+    if (dto.garageStatus === 'APPROVE') {
+      let trialData = {};
+      if (!garage.user.isTrialActive) {
+        const trialStart = new Date();
+        const trialEnd = new Date();
+        trialEnd.setMonth(trialEnd.getMonth() + 3);
+
+        trialData = {
+          trialStartDate: trialStart,
+          trialEndDate: trialEnd,
+          isTrialActive: true,
+          isSubscriptionTrialActive: true,
+          subscriptionTrialStartDate: trialStart,
+          subscriptionTrialEndDate: trialEnd,
+        };
+      }
+
+      await this.prisma.user.update({
+        where: { id: garage.userId },
+        data: {
+          garageStatus: dto.garageStatus,
+          isGarageVerified: true,
+          ...trialData,
+        },
+      });
+
+      // ------------------- Send email on approval -----------------------
+      if (garage.user.email) {
+        await this.mail.sendEmail(
+          garage.user.email,
+          'Your Garage Has Been Approved!',
+          GarageAcceptEmailTemplate({
+            name: garage.user.fullName ?? undefined,
+            garageName: garage.name ?? undefined,
+          }),
+        );
+      }
+    } else {
+      // Update user status for DECLINE/PENDING
+      await this.prisma.user.update({
+        where: { id: garage.userId },
+        data: { garageStatus: dto.garageStatus },
+      });
+    }
+
     return successResponse(updatedGarage, 'Garage status updated successfully');
   }
 
