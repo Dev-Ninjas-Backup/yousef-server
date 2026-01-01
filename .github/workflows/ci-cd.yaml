@@ -32,7 +32,7 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
       - name: Build Project
-        run: pnpm build
+        run: npm run build
 
   build-and-push:
     name: Build and Push Docker Image
