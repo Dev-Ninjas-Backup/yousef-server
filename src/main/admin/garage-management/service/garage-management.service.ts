@@ -274,90 +274,90 @@ export class GarageManagementService {
 
   // -------Update garage status by garage ID-------------
 
-  @HandleError('Failed to update garage status', 'Garage')
-  async updateStatus(
-    garageId: string,
-    dto: UpdateGarageStatusDto,
-  ): Promise<TResponse<any>> {
-    // ----------- Find the garage by ID-----------------
-    const garage = await this.prisma.garage.findUnique({
-      where: { id: garageId },
-      include: { user: true },
-    });
+  // @HandleError('Failed to update garage status', 'Garage')
+  // async updateStatus(
+  //   garageId: string,
+  //   dto: UpdateGarageStatusDto,
+  // ): Promise<TResponse<any>> {
+  //   // ----------- Find the garage by ID-----------------
+  //   const garage = await this.prisma.garage.findUnique({
+  //     where: { id: garageId },
+  //     include: { user: true },
+  //   });
 
-    if (!garage) {
-      throw new NotFoundException(`Garage with ID ${garageId} not found. Please verify the garage ID.`);
-    }
+  //   if (!garage) {
+  //     throw new NotFoundException(`Garage with ID ${garageId} not found. Please verify the garage ID.`);
+  //   }
 
-    //------------- Map User GarageStatus to Garage Status enum----------------
-    let garageRecordStatus: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING';
-    if (dto.garageStatus === 'APPROVE') {
-      garageRecordStatus = 'APPROVED';
-    } else if (dto.garageStatus === 'DECLINE') {
-      garageRecordStatus = 'REJECTED';
-    }
+  //   //------------- Map User GarageStatus to Garage Status enum----------------
+  //   let garageRecordStatus: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING';
+  //   if (dto.garageStatus === 'APPROVE') {
+  //     garageRecordStatus = 'APPROVED';
+  //   } else if (dto.garageStatus === 'DECLINE') {
+  //     garageRecordStatus = 'REJECTED';
+  //   }
 
-    // ------------------Update the garage status-------------------
-    const updatedGarage = await this.prisma.garage.update({
-      where: { id: garageId },
-      data: { status: garageRecordStatus },
-    });
+  //   // ------------------Update the garage status-------------------
+  //   const updatedGarage = await this.prisma.garage.update({
+  //     where: { id: garageId },
+  //     data: { status: garageRecordStatus },
+  //   });
 
-    //------------- Update garage owner information and trial if approved----------------
-    let trialData = {};
-    if (dto.garageStatus === 'APPROVE' && !garage.user.isTrialActive) {
-      const trialStart = new Date();
-      const trialEnd = new Date();
-      trialEnd.setMonth(trialEnd.getMonth() + 3);
+  //   //------------- Update garage owner information and trial if approved----------------
+  //   let trialData = {};
+  //   if (dto.garageStatus === 'APPROVE' && !garage.user.isTrialActive) {
+  //     const trialStart = new Date();
+  //     const trialEnd = new Date();
+  //     trialEnd.setMonth(trialEnd.getMonth() + 3);
 
-      trialData = {
-        trialStartDate: trialStart,
-        trialEndDate: trialEnd,
-        isTrialActive: true,
-        isSubscriptionTrialActive: true,
-        subscriptionTrialStartDate: trialStart,
-        subscriptionTrialEndDate: trialEnd,
-      };
-    }
+  //     trialData = {
+  //       trialStartDate: trialStart,
+  //       trialEndDate: trialEnd,
+  //       isTrialActive: true,
+  //       isSubscriptionTrialActive: true,
+  //       subscriptionTrialStartDate: trialStart,
+  //       subscriptionTrialEndDate: trialEnd,
+  //     };
+  //   }
 
-    // ------------------Update garage owner status + trial info if needed-------------------
-    const updatedUser = await this.prisma.user.update({
-      where: { id: garage.userId },
-      data: {
-        garageStatus: dto.garageStatus,
-        isGarageVerified: dto.garageStatus === 'APPROVE',
-        ...trialData,
-      },
-    });
+  //   // ------------------Update garage owner status + trial info if needed-------------------
+  //   const updatedUser = await this.prisma.user.update({
+  //     where: { id: garage.userId },
+  //     data: {
+  //       garageStatus: dto.garageStatus,
+  //       isGarageVerified: dto.garageStatus === 'APPROVE',
+  //       ...trialData,
+  //     },
+  //   });
 
-    // -------------------------------------
-    // ------------------- Send email on approval -----------------------
-    // -------------------------------------
-    if (dto.garageStatus === 'APPROVE' && updatedUser.email) {
-      await this.mail.sendEmail(
-        updatedUser.email,
-        'Your Garage Has Been Approved!',
-        GarageAcceptEmailTemplate({
-          name: updatedUser.fullName ?? undefined,
-          garageName: garage.name ?? undefined,
-        }),
-      );
-    }
+  //   // -------------------------------------
+  //   // ------------------- Send email on approval -----------------------
+  //   // -------------------------------------
+  //   if (dto.garageStatus === 'APPROVE' && updatedUser.email) {
+  //     await this.mail.sendEmail(
+  //       updatedUser.email,
+  //       'Your Garage Has Been Approved!',
+  //       GarageAcceptEmailTemplate({
+  //         name: updatedUser.fullName ?? undefined,
+  //         garageName: garage.name ?? undefined,
+  //       }),
+  //     );
+  //   }
 
-    return successResponse(
-      {
-        garage: updatedGarage,
-        owner: {
-          id: updatedUser.id,
-          fullName: updatedUser.fullName,
-          email: updatedUser.email,
-          garageStatus: updatedUser.garageStatus,
-          isGarageVerified: updatedUser.isGarageVerified,
-        },
-      },
-      'Garage status updated successfully',
-    );
-  }
+  //   return successResponse(
+  //     {
+  //       garage: updatedGarage,
+  //       owner: {
+  //         id: updatedUser.id,
+  //         fullName: updatedUser.fullName,
+  //         email: updatedUser.email,
+  //         garageStatus: updatedUser.garageStatus,
+  //         isGarageVerified: updatedUser.isGarageVerified,
+  //       },
+  //     },
+  //     'Garage status updated successfully',
+  //   );
+  // }
 
 
   // -------------------- updateGarageStatusByUserId -----------------------------
