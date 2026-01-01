@@ -24,7 +24,7 @@ services:
       - yousef-network
 
   app:
-    image: ${DOCKER_USERNAME}/yousef_server:latest
+    image: ${DOCKER_USERNAME}/yousef_server:sha-${GIT_SHA}
     container_name: yousef_server
     profiles:
       - prod

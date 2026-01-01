@@ -99,7 +99,9 @@ model User {
   // garage subscriptions
   garageSubscriptions      GarageSubscription[]
   garageAdminNotifications garageAdminNotification[]
-
+  clientReviews         ClientReview []
+ 
+  
   @@map("users")
 }
 
