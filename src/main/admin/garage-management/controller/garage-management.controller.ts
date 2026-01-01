@@ -94,6 +94,23 @@ export class GarageManagementController {
       updateGarageDto,
     );
   }
+  // --------------- update garage status by user ID -----------------
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({
+    summary:
+      'Update individual garage status (APPROVE | PENDING | DECLINE) by providing userId',
+  })
+  @Patch('user-garage-status/:userId')
+  updateGarageStatusByUserId(
+    @Param('userId') userId: string,
+  
+  ) {
+    return this.garageManagementService.updateGarageStatusByUserId(
+      userId,
+    );
+  }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -104,5 +121,5 @@ export class GarageManagementController {
     return this.garageManagementService.softDeleteGarage(id);
   }
 
-  
+
 }
