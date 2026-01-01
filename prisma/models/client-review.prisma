@@ -1,0 +1,9 @@
+model ClientReview {
+    id         String   @id @default(uuid())
+    reviewText String   @default("")
+    rating     String   @default("")
+    userId     String   @default("")
+    user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+}
