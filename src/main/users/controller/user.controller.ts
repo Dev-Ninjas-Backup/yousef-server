@@ -29,7 +29,7 @@ import { UserService } from '../service/user.service';
 @ApiTags('USER Profile Maintain')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   // ------------get all user for admin------------
   @ApiOperation({ summary: 'Get all users only admin or super admin access' })

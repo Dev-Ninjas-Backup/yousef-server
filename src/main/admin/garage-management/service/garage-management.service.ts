@@ -121,7 +121,7 @@ export class GarageManagementService {
 
     return successResponse(result, 'All garage fetched successfully');
   }
-  // ----------search garage-------------
+  // ---------- search garage -------------
 
   @HandleError('Failed to search garage', 'Garage')
   async searchGarages(dto: SearchGarageDto) {
@@ -129,7 +129,10 @@ export class GarageManagementService {
     const { page, limit, name, status } = dto;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = {
+      isDeleted: false,
+      role: 'GARAGE_OWNER',
+    };
 
     if (name) {
       where.garageName = { contains: name.trim(), mode: 'insensitive' };
@@ -153,12 +156,7 @@ export class GarageManagementService {
 
     //----------------------  Fetch paginated -----------------------
     const users = await this.prisma.user.findMany({
-      where: {
-        isDeleted: false,
-        role: 'GARAGE_OWNER',
-
-        ...where,
-      },
+      where,
       skip,
       take: limit,
       orderBy: { createdAt: 'desc' },
@@ -168,17 +166,37 @@ export class GarageManagementService {
         phone: true,
         isDeleted: true,
         garageName: true,
+        garageStatus: true,
         serviceCategories: true,
         tradeLicense: true,
         garageLogo: true,
         createdAt: true,
         updatedAt: true,
-        garageStatus: true,
         garages: {
           select: {
             id: true,
             name: true,
+            coverPhoto: true,
+            profileImage: true,
+            garagePhone: true,
+            email: true,
+            street: true,
+            city: true,
+            emirate: true,
             address: true,
+            formattedAddress: true,
+            placeId: true,
+            garageLat: true,
+            garageLng: true,
+            description: true,
+            certifications: true,
+            weekdaysHours: true,
+            weekendsHours: true,
+            brandExpertise: true,
+            status: true,
+            services: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
         Payment: { select: { amount: true } },
@@ -204,8 +222,27 @@ export class GarageManagementService {
       garages: u.garages.map((g) => ({
         garageId: g.id,
         garageName: g.name,
+        coverPhoto: g.coverPhoto,
+        profileImage: g.profileImage,
+        garagePhone: g.garagePhone,
+        email: g.email,
+        street: g.street,
+        city: g.city,
+        emirate: g.emirate,
         location: g.address,
-        garageStatus: u.garageStatus,
+        formattedAddress: g.formattedAddress,
+        placeId: g.placeId,
+        garageLat: g.garageLat,
+        garageLng: g.garageLng,
+        description: g.description,
+        certifications: g.certifications,
+        weekdaysHours: g.weekdaysHours,
+        weekendsHours: g.weekendsHours,
+        brandExpertise: g.brandExpertise,
+        garageStatus: g.status,
+        services: g.services,
+        createdAt: g.createdAt,
+        updatedAt: g.updatedAt,
       })),
     }));
 

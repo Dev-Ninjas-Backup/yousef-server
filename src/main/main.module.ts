@@ -19,6 +19,7 @@ import { GarageLocationModule } from './shared/garage-location/garage-location.m
 import { PromotionalAndFeaturedModule } from './promotional-and-featured/promotional-and-featured.module';
 import { NotificationSettingModule } from './shared/notification-setting/notification-setting.module';
 import { PrivateMessageModule } from './shared/private-message/private-message.module';
+import { ClientReviewModule } from './shared/client-review/client-review.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PrivateMessageModule } from './shared/private-message/private-message.m
     GarageLocationModule,
     PromotionalAndFeaturedModule,
     NotificationSettingModule,
+    ClientReviewModule,
   ],
   controllers: [],
   providers: [],
