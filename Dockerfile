@@ -7,24 +7,21 @@ WORKDIR /app
 # Install system dependencies for build
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install ALL dependencies
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Copy prisma files
 COPY prisma.config.ts ./
 COPY prisma ./prisma
 
-# Use dummy DATABASE_URL for prisma generate (won't be used for actual connection)
-ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
-
-# migrate 
-RUN npx prisma migrate deploy
-
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client (migration will run at container startup)
+RUN pnpm prisma generate
 
 # Copy source code
 COPY tsconfig*.json ./
@@ -32,7 +29,7 @@ COPY nest-cli.json ./
 COPY src ./src
 
 # Build the app
-RUN npm run build
+RUN pnpm run build
 
 # ====== PRODUCTION STAGE ======
 FROM node:20-slim AS production
@@ -43,25 +40,21 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y openssl curl && rm -rf /var/lib/apt/lists/*
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install ALL dependencies (removed --omit=dev)
-RUN npm ci --ignore-scripts
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy prisma files
 COPY prisma.config.ts ./
 COPY prisma ./prisma
 
-# Use dummy DATABASE_URL for prisma generate
-ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
-
-
-# migrate 
-RUN npx prisma migrate deploy
-
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client (migration will run at container startup)
+RUN pnpm prisma generate
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
@@ -82,4 +75,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
   CMD curl -f http://localhost:3000/health || exit 1
 
 # Start app
-CMD ["npm", "run", "start:docker"]
+CMD ["pnpm", "run", "start:docker"]
