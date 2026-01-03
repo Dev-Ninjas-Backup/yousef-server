@@ -46,8 +46,8 @@ RUN npm install -g pnpm
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install ALL dependencies (removed --omit=dev)
-RUN pnpm install --frozen-lockfile --ignore-scripts
+# Install ALL dependencies
+RUN pnpm install --frozen-lockfile
 
 # Copy prisma files
 COPY prisma.config.ts ./
@@ -57,10 +57,6 @@ RUN pnpm prisma generate
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
-
-# Copy entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
