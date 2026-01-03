@@ -44,7 +44,7 @@ RUN apt-get update && apt-get install -y openssl curl && rm -rf /var/lib/apt/lis
 COPY package*.json ./
 
 # Install ALL dependencies (removed --omit=dev)
-RUN npm ci --ignore-scripts
+RUN npm install --omit=dev --ignore-scripts
 
 # Copy prisma files
 COPY prisma.config.ts ./
