@@ -17,7 +17,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
-  ) {}
+  ) { }
 
   // ------------------------- Get All Users -----------------
 
@@ -145,4 +145,23 @@ export class UserService {
   //     `Review Alert has been ${updatedUser.ReviewAlerts ? 'enabled' : 'disabled'} successfully.`,
   //   );
   // }
+
+
+  // ----------testEmail-------------------
+  @HandleError('Failed to test user email', 'User')
+  async testEmail(userId: string): Promise<TResponse<any>> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    // For testing purposes, just return the user's email
+    return successResponse(
+      { email: user.email },
+      'User email retrieved successfully',
+    );
+  }
 }
