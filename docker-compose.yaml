@@ -48,11 +48,11 @@ services:
     volumes:
       - yousef-file_data:/app/uploads
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://0.0.0.0:3000"]
-      interval: 30s # ← Added for better monitoring
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
     networks:
       - yousef-network
 
