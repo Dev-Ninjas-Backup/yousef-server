@@ -52,12 +52,15 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 # Copy prisma files
 COPY prisma.config.ts ./
 COPY prisma ./prisma
-
 # Generate Prisma Client (migration will run at container startup)
 RUN pnpm prisma generate
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
@@ -74,5 +77,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
   CMD curl -f http://localhost:3000/ || exit 1
 
-# Start app
-CMD ["pnpm", "run", "start:docker"]
+# Start app using entrypoint script
+ENTRYPOINT ["docker-entrypoint.sh"]
