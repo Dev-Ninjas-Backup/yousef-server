@@ -8,7 +8,7 @@ import { AdminSettingService } from '../service/admin-setting.service';
 @ApiTags('Admin-Settings => Approval setting, parts category')
 @Controller('admin-setting')
 export class AdminSettingController {
-  constructor(private readonly adminSettingService: AdminSettingService) {}
+  constructor(private readonly adminSettingService: AdminSettingService) { }
 
   // ----------platform fee setting admin -----------
   @ApiBearerAuth()
@@ -40,7 +40,7 @@ export class AdminSettingController {
   GetApprovalSettings() {
     return this.adminSettingService.GetApprovalSettings();
   }
-
+  // ------------------ toggle settings --------------------
   @ApiBearerAuth()
   @ValidateSuperAdmin()
   @ApiOperation({ summary: 'Toggle auto approval setting for garages' })
@@ -65,7 +65,7 @@ export class AdminSettingController {
     return this.adminSettingService.updateEmailNotificationForUser(true);
   }
 
-  // --------------------- payment configure --
+  // --------------------- payment configure -----------------------
   @ApiBearerAuth()
   @ValidateSuperAdmin()
   @ApiOperation({ summary: 'Get payment configure' })
