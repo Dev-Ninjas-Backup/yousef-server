@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
 
 # Install ALL dependencies
-RUN npm install
+RUN npm ci
 
 # Copy prisma files
 COPY prisma.config.ts ./
@@ -19,6 +19,9 @@ COPY prisma ./prisma
 
 # Use dummy DATABASE_URL for prisma generate (won't be used for actual connection)
 ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+
+# migrate 
+RUN npx prisma migrate deploy
 
 # Generate Prisma Client
 RUN npx prisma generate
@@ -44,7 +47,7 @@ RUN apt-get update && apt-get install -y openssl curl && rm -rf /var/lib/apt/lis
 COPY package*.json ./
 
 # Install ALL dependencies (removed --omit=dev)
-RUN npm install --omit=dev --ignore-scripts
+RUN npm ci --ignore-scripts
 
 # Copy prisma files
 COPY prisma.config.ts ./
@@ -52,6 +55,10 @@ COPY prisma ./prisma
 
 # Use dummy DATABASE_URL for prisma generate
 ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+
+
+# migrate 
+RUN npx prisma migrate deploy
 
 # Generate Prisma Client
 RUN npx prisma generate

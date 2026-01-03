@@ -24,12 +24,12 @@ services:
       - yousef-network
 
   app:
-    image: ${DOCKER_USERNAME}/${PACKAGE_NAME}:latest  # ← Changed: use PACKAGE_NAME variable
+    image: ${DOCKER_USERNAME}/${PACKAGE_NAME}:latest # ← Changed: use PACKAGE_NAME variable
     container_name: yousef_server
     profiles:
       - prod
     platform: linux/amd64
-    pull_policy: always  # ← Added: force pull from Docker Hub
+    pull_policy: always # ← Added: force pull from Docker Hub
     # build:  # ← REMOVED: This was causing the problem!
     #   context: .
     #   dockerfile: Dockerfile
@@ -49,10 +49,18 @@ services:
       - yousef-file_data:/app/uploads
     healthcheck:
       test: ["CMD", "curl", "-f", "http://0.0.0.0:3000"]
-      interval: 30s  # ← Added for better monitoring
+      interval: 30s # ← Added for better monitoring
       timeout: 10s
       retries: 3
       start_period: 40s
+    command: >
+      sh -c "
+        echo '🏁 Waiting for DB...';
+        sleep 5;
+        npx prisma migrate deploy;
+        echo '🚀 Starting app...';
+        npm run start:dev;
+      "
     networks:
       - yousef-network
 
