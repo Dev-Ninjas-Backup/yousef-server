@@ -77,6 +77,9 @@ importers:
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
+      body-parser:
+        specifier: ^2.2.1
+        version: 2.2.1
       cache-manager:
         specifier: ^7.1.1
         version: 7.2.7
@@ -104,6 +107,9 @@ importers:
       google-auth-library:
         specifier: ^10.2.1
         version: 10.5.0
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
       mime-types:
         specifier: ^3.0.1
         version: 3.0.2
