@@ -77,8 +77,8 @@ export class UserController {
       //  Upload to S3
       s3Result = await uploadFileToS3(file.path);
       console.log(' Uploaded to S3:', s3Result.url);
-
-      // Remove local file after successful upload
+      console.log('the s3 uurl', s3Result)
+      // -------------- Remove local file after successful upload  -----------------
       try {
         const fs = await import('fs/promises');
         await fs.unlink(file.path);
@@ -87,8 +87,9 @@ export class UserController {
         console.warn(' Failed to delete local file:', err);
       }
     }
+    console.log('the file', file)
 
-    // Pass s3Result to service
+    // -------------- Pass s3-Result to service  -----------------
     return await this.userService.updateProfile(userId, dto, s3Result);
   }
 
