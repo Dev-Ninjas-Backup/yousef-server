@@ -42,7 +42,7 @@ export class UserController {
 
   // ----------------get profile--------------------
 
-  @ApiOperation({ summary: 'Get user there owner  data ' })
+  @ApiOperation({ summary: 'Get user there owner  data  fetching now' })
   @ValidateAuth()
   @ApiBearerAuth()
   @Get('me/profile')
@@ -50,7 +50,7 @@ export class UserController {
     return this.userService.getProfile(userId);
   }
 
-  @ApiOperation({ summary: 'Update user profile with user images now' })
+  @ApiOperation({ summary: 'Update user profile with user images now All data' })
   @ValidateAuth()
   @ApiBearerAuth()
   @Patch('profile')
@@ -69,7 +69,7 @@ export class UserController {
     @Body() dto: UpdateProfileDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log('The user id is', userId);
+    console.log('The user id is more than 1', userId);
 
     let s3Result: { url: string; key: string } | undefined;
 
@@ -90,9 +90,18 @@ export class UserController {
   // -------------hard delete user account----------------
   @ApiBearerAuth()
   @ValidateAuth()
-  @ApiOperation({ summary: 'Hard delete user account' })
+  @ApiOperation({ summary: 'Hard delete user account now with the fix now' })
   @Delete('hard-delete-user-account')
   hardDeleteUserAccount(@GetUser('userId') userId: string) {
     return this.userService.hardDeleteUserAccount(userId);
+  }
+
+  // -------------test user email now-------------------
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ApiOperation({ summary: 'Test user email now' })
+  @Get('test-email')
+  testEmail(@GetUser('userId') userId: string) {
+    return this.userService.testEmail(userId);
   }
 }
