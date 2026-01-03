@@ -78,4 +78,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
   CMD curl -f http://localhost:3000/ || exit 1
 
 # Start app using entrypoint script
-ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["pnpm", "run", "start:docker"]
