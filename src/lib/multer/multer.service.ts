@@ -37,7 +37,7 @@ export class MulterService {
   };
 
   public createMulterOptions(
-    destinationFolder: string = './uploads',
+    destinationFolder: string = './Uploads',
     prefix: string,
     fileType: FileType = FileType.IMAGE,
     fileSizeLimit = 500 * 1024 * 1024,

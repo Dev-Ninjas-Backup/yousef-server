@@ -52,7 +52,7 @@ export class GarageController {
       ],
       new MulterService().createMulterOptions(
         './Uploads',
-        'content',
+      
         FileType.IMAGE,
       ),
     ),
@@ -147,7 +147,7 @@ export class GarageController {
       ],
       new MulterService().createMulterOptions(
         './Uploads',
-        'content',
+       
         FileType.IMAGE,
       ),
     ),
