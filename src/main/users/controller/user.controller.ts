@@ -50,7 +50,7 @@ export class UserController {
     return this.userService.getProfile(userId);
   }
 
-  @ApiOperation({ summary: 'Update user profile' })
+  @ApiOperation({ summary: 'Update user profile with user images now' })
   @ValidateAuth()
   @ApiBearerAuth()
   @Patch('profile')
@@ -77,15 +77,8 @@ export class UserController {
       //  Upload to S3
       s3Result = await uploadFileToS3(file.path);
       console.log(' Uploaded to S3:', s3Result.url);
-      console.log('the s3 uurl', s3Result)
-      // -------------- Remove local file after successful upload  -----------------
-      try {
-        const fs = await import('fs/promises');
-        await fs.unlink(file.path);
-        console.log(' Local file deleted:', file.path);
-      } catch (err) {
-        console.warn(' Failed to delete local file:', err);
-      }
+      console.log('the s3 url', s3Result)
+
     }
     console.log('the file', file)
 
