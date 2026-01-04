@@ -29,6 +29,9 @@ enum PrivateChatEvents {
   LOAD_SINGLE_CONVERSATION = 'private:load_single_conversation',
   TYPING_STOP = 'private:typing_stop',
   USER_STOP_TYPING = 'private:user_stop_typing',
+  TYPING_START = 'private:typing_start',
+  USER_TYPING = 'private:user_typing',
+
 }
 
 @WebSocketGateway({
@@ -231,18 +234,32 @@ export class PrivateChatGateway
     this.server.to(userId).emit(PrivateChatEvents.NEW_MESSAGE, message);
   }
 
-  /** Handle typing stop */
-  @SubscribeMessage(PrivateChatEvents.TYPING_STOP)
-  async handleTypingStop(
-    @MessageBody() recipientId: string,
+
+  @SubscribeMessage(PrivateChatEvents.TYPING_START)
+  async handleTypingStart(
+    @MessageBody() data: { conversationId: string; recipientId: string },
     @ConnectedSocket() client: Socket,
   ) {
     const userId = this.getUserIdFromSocket(client);
     if (!userId) return;
 
-    this.server.to(recipientId).emit(PrivateChatEvents.USER_STOP_TYPING, {
+    this.server.to(data.recipientId).emit(PrivateChatEvents.TYPING_START, {
+      conversationId: data.conversationId,
       userId,
-      isTyping: false,
+    });
+  }
+
+  @SubscribeMessage(PrivateChatEvents.TYPING_STOP)
+  async handleTypingStop(
+    @MessageBody() data: { conversationId: string; recipientId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = this.getUserIdFromSocket(client);
+    if (!userId) return;
+
+    this.server.to(data.recipientId).emit(PrivateChatEvents.TYPING_STOP, {
+      conversationId: data.conversationId,
+      userId,
     });
   }
 
