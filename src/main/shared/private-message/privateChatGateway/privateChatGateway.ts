@@ -27,6 +27,8 @@ enum PrivateChatEvents {
   CONVERSATION_LIST = 'private:conversation_list',
   LOAD_CONVERSATIONS = 'private:load_conversations',
   LOAD_SINGLE_CONVERSATION = 'private:load_single_conversation',
+  TYPING_STOP = 'private:typing_stop',
+  USER_STOP_TYPING = 'private:user_stop_typing',
 }
 
 @WebSocketGateway({
@@ -34,15 +36,14 @@ enum PrivateChatEvents {
   namespace: '/pv/message',
 })
 export class PrivateChatGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(PrivateChatGateway.name);
 
   constructor(
     private readonly privateChatService: PrivateChatService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   @WebSocketServer()
   server: Server;
@@ -157,7 +158,6 @@ export class PrivateChatGateway
 
   /** Send a message (create conversation if new) */
   @SubscribeMessage(PrivateChatEvents.SEND_MESSAGE)
-  @SubscribeMessage(PrivateChatEvents.SEND_MESSAGE)
   async handleMessage(
     @MessageBody() payload: SendPrivateMessageDto,
     @ConnectedSocket() client: Socket,
@@ -231,6 +231,21 @@ export class PrivateChatGateway
     this.server.to(userId).emit(PrivateChatEvents.NEW_MESSAGE, message);
   }
 
+  /** Handle typing stop */
+  @SubscribeMessage(PrivateChatEvents.TYPING_STOP)
+  async handleTypingStop(
+    @MessageBody() recipientId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = this.getUserIdFromSocket(client);
+    if (!userId) return;
+
+    this.server.to(recipientId).emit(PrivateChatEvents.USER_STOP_TYPING, {
+      userId,
+      isTyping: false,
+    });
+  }
+
   private getUserIdFromSocket(client: Socket): string | null {
     const userId = client.data?.userId;
     if (!userId) {
@@ -243,4 +258,5 @@ export class PrivateChatGateway
     }
     return userId;
   }
+
 }
