@@ -12,7 +12,7 @@ async function bootstrap() {
     rawBody: true,
   });
 
-  // --------------Swagger config with Bearer Auth------------------
+  // -------------- Swagger config with Bearer Auth ------------------
   const config = new DocumentBuilder()
     .setTitle('yousef-backend')
     .setDescription('Team yousef-backend API description')
@@ -37,7 +37,6 @@ async function bootstrap() {
         'https://yousef-frontend-nine.vercel.app',
         'https://yousef-frontend-teal.vercel.app',
         "http://ec2-13-62-72-14.eu-north-1.compute.amazonaws.com:3000",
-
         'http://13.62.72.14:3000',
         'http://localhost:3000',
         'http://13.50.107.250:3000',

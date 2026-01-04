@@ -35,33 +35,66 @@ export class S3FileService {
       );
     }
 
+
     //-----  Validate file type and size ------
     const allowedTypes = [
       // Images
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-      'image/bmp',
-      'image/tiff',
-      'image/heic',
-      'image/heif',
-      'image/avif',
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'image/svg+xml', 'image/bmp', 'image/tiff', 'image/heic',
+      'image/heif', 'image/avif',
 
       // Videos
-      'video/mp4',
-      'video/webm',
-      'video/ogg',
-      'video/mov',
+      'video/mp4', 'video/webm', 'video/ogg', 'video/mov',
+      'video/avi', 'video/mkv', 'video/flv',
 
       // Audio
-      'audio/mpeg',
-      'audio/mp3',
-      'audio/wav',
-      'audio/ogg',
-      'audio/aac',
-      'audio/flac',
+      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg',
+      'audio/aac', 'audio/flac', 'audio/m4a',
+
+      // Documents
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain',
+      'text/csv',
+      'application/rtf',
+      'application/vnd.oasis.opendocument.text',
+      'application/vnd.oasis.opendocument.spreadsheet',
+      'application/vnd.oasis.opendocument.presentation',
+
+      // Compressed
+      'application/x-rar-compressed',
+      'application/zip',
+      'application/x-7z-compressed',
+      'application/x-tar',
+      'application/gzip',
+
+      // Archives
+      'application/zip',
+      'application/x-rar-compressed',
+      'application/x-7z-compressed',
+      'application/x-tar',
+      'application/gzip',
+      // xml
+      'application/xml',
+      'text/xml',
+      'text/html',
+      'text/css',
+      'text/javascript',
+      'application/javascript',
+
+      // Other common types
+      'application/json',
+      'application/xml',
+      'text/xml',
+      'text/html',
+      'text/css',
+      'text/javascript',
+      'application/javascript'
     ];
     const mimeType = file.mimetype;
     if (!allowedTypes.includes(mimeType)) {
