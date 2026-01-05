@@ -23,7 +23,7 @@ import { GarageManagementService } from '../service/garage-management.service';
 export class GarageManagementController {
   constructor(
     private readonly garageManagementService: GarageManagementService,
-  ) {}
+  ) { }
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -60,20 +60,56 @@ export class GarageManagementController {
     return this.garageManagementService.updateGarageInfo(id, updateGarageDto);
   }
 
-  // -----------only update garage status ---
+  // -----------update garage status by garage ID ---
+  // @ValidateAuth()
+  // @ApiBearerAuth()
+  // @ValidateSuperAdmin()
+  // @ApiOperation({
+  //   summary:
+  //     'Update garage status (APPROVE | PENDING | DECLINE) by providing garageId. This updates both the garage and its owner.',
+  // })
+  // @Patch('status/:garageId')
+  // updateStatus(
+  //   @Param('garageId') garageId: string,
+  //   @Body() updateGarageDto: UpdateGarageStatusDto,
+  // ) {
+  //   return this.garageManagementService.updateStatus(garageId, updateGarageDto);
+  // }
+
+  // -----------update garage status by garage ID (alternative endpoint) ------------------
   @ValidateAuth()
   @ApiBearerAuth()
   @ValidateSuperAdmin()
   @ApiOperation({
     summary:
-      'Update garage status (APPROVE | PENDING | DECLINE) by providing userId',
+      'Update individual garage status (APPROVE | PENDING | DECLINE) by providing garageId',
   })
-  @Patch('status/:id')
-  updateStatus(
-    @Param('id') id: string,
+  @Patch('garage-status/:garageId')
+  updateGarageStatus(
+    @Param('garageId') garageId: string,
     @Body() updateGarageDto: UpdateGarageStatusDto,
   ) {
-    return this.garageManagementService.updateStatus(id, updateGarageDto);
+    return this.garageManagementService.updateGarageStatusByGarageId(
+      garageId,
+      updateGarageDto,
+    );
+  }
+  // --------------- update garage status by user ID -----------------
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({
+    summary:
+      'Update individual garage status (APPROVE | PENDING | DECLINE) by providing userId',
+  })
+  @Patch('user-garage-status/:userId')
+  updateGarageStatusByUserId(
+    @Param('userId') userId: string,
+
+  ) {
+    return this.garageManagementService.updateGarageStatusByUserId(
+      userId,
+    );
   }
 
   @ValidateAuth()
@@ -84,4 +120,6 @@ export class GarageManagementController {
   deleteGarageInfo(@Param('id') id: string) {
     return this.garageManagementService.softDeleteGarage(id);
   }
+
+
 }

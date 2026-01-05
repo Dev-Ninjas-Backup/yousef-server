@@ -19,7 +19,7 @@ export class GarageManagementService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
-  ) {}
+  ) { }
 
   // ---------get all garage----------------
   @HandleError('Failed to get all garage', 'Garage')
@@ -27,7 +27,8 @@ export class GarageManagementService {
     const users = await this.prisma.user.findMany({
       where: {
         isDeleted: false,
-        role: 'GARAGE_OWNER',
+        role: 'GARAGE_OWNER'
+
       },
       select: {
         id: true,
@@ -52,10 +53,29 @@ export class GarageManagementService {
           select: {
             id: true,
             name: true,
+            coverPhoto: true,
+            profileImage: true,
+            garagePhone: true,
+            email: true,
+            street: true,
+            city: true,
+            emirate: true,
             address: true,
+            formattedAddress: true,
+            placeId: true,
+            garageLat: true,
+            garageLng: true,
+            description: true,
+            certifications: true,
+            weekdaysHours: true,
+            weekendsHours: true,
+            brandExpertise: true,
             status: true,
-          },
-        },
+            services: true,
+            createdAt: true,
+            updatedAt: true,
+          }
+        }
       },
     });
 
@@ -75,22 +95,44 @@ export class GarageManagementService {
       garages: u.garages.map((g) => ({
         garageId: g.id,
         garageName: g.name,
+        coverPhoto: g.coverPhoto,
+        profileImage: g.profileImage,
+        garagePhone: g.garagePhone,
+        email: g.email,
+        street: g.street,
+        city: g.city,
+        emirate: g.emirate,
         location: g.address,
+        formattedAddress: g.formattedAddress,
+        placeId: g.placeId,
+        garageLat: g.garageLat,
+        garageLng: g.garageLng,
+        description: g.description,
+        certifications: g.certifications,
+        weekdaysHours: g.weekdaysHours,
+        weekendsHours: g.weekendsHours,
+        brandExpertise: g.brandExpertise,
         garageStatus: g.status,
+        services: g.services,
+        createdAt: g.createdAt,
+        updatedAt: g.updatedAt,
       })),
     }));
 
     return successResponse(result, 'All garage fetched successfully');
   }
-
-  // ----------search garage-------------
+  // ---------- search garage -------------
 
   @HandleError('Failed to search garage', 'Garage')
   async searchGarages(dto: SearchGarageDto) {
+
     const { page, limit, name, status } = dto;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = {
+      isDeleted: false,
+      role: 'GARAGE_OWNER',
+    };
 
     if (name) {
       where.garageName = { contains: name.trim(), mode: 'insensitive' };
@@ -124,17 +166,37 @@ export class GarageManagementService {
         phone: true,
         isDeleted: true,
         garageName: true,
+        garageStatus: true,
         serviceCategories: true,
         tradeLicense: true,
         garageLogo: true,
         createdAt: true,
         updatedAt: true,
-        garageStatus: true,
         garages: {
           select: {
             id: true,
             name: true,
+            coverPhoto: true,
+            profileImage: true,
+            garagePhone: true,
+            email: true,
+            street: true,
+            city: true,
+            emirate: true,
             address: true,
+            formattedAddress: true,
+            placeId: true,
+            garageLat: true,
+            garageLng: true,
+            description: true,
+            certifications: true,
+            weekdaysHours: true,
+            weekendsHours: true,
+            brandExpertise: true,
+            status: true,
+            services: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
         Payment: { select: { amount: true } },
@@ -160,8 +222,27 @@ export class GarageManagementService {
       garages: u.garages.map((g) => ({
         garageId: g.id,
         garageName: g.name,
+        coverPhoto: g.coverPhoto,
+        profileImage: g.profileImage,
+        garagePhone: g.garagePhone,
+        email: g.email,
+        street: g.street,
+        city: g.city,
+        emirate: g.emirate,
         location: g.address,
-        garageStatus: u.garageStatus,
+        formattedAddress: g.formattedAddress,
+        placeId: g.placeId,
+        garageLat: g.garageLat,
+        garageLng: g.garageLng,
+        description: g.description,
+        certifications: g.certifications,
+        weekdaysHours: g.weekdaysHours,
+        weekendsHours: g.weekendsHours,
+        brandExpertise: g.brandExpertise,
+        garageStatus: g.status,
+        services: g.services,
+        createdAt: g.createdAt,
+        updatedAt: g.updatedAt,
       })),
     }));
 
@@ -191,20 +272,128 @@ export class GarageManagementService {
     });
   }
 
-  // -------Only update garage updateStatus-------------
+  // -------Update garage status by garage ID-------------
 
-  @HandleError('Failed to update garage status', 'Garage')
-  async updateStatus(
-    id: string,
-    dto: UpdateGarageStatusDto,
+  // @HandleError('Failed to update garage status', 'Garage')
+  // async updateStatus(
+  //   garageId: string,
+  //   dto: UpdateGarageStatusDto,
+  // ): Promise<TResponse<any>> {
+  //   // ----------- Find the garage by ID-----------------
+  //   const garage = await this.prisma.garage.findUnique({
+  //     where: { id: garageId },
+  //     include: { user: true },
+  //   });
+
+  //   if (!garage) {
+  //     throw new NotFoundException(`Garage with ID ${garageId} not found. Please verify the garage ID.`);
+  //   }
+
+  //   //------------- Map User GarageStatus to Garage Status enum----------------
+  //   let garageRecordStatus: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING';
+  //   if (dto.garageStatus === 'APPROVE') {
+  //     garageRecordStatus = 'APPROVED';
+  //   } else if (dto.garageStatus === 'DECLINE') {
+  //     garageRecordStatus = 'REJECTED';
+  //   }
+
+  //   // ------------------Update the garage status-------------------
+  //   const updatedGarage = await this.prisma.garage.update({
+  //     where: { id: garageId },
+  //     data: { status: garageRecordStatus },
+  //   });
+
+  //   //------------- Update garage owner information and trial if approved----------------
+  //   let trialData = {};
+  //   if (dto.garageStatus === 'APPROVE' && !garage.user.isTrialActive) {
+  //     const trialStart = new Date();
+  //     const trialEnd = new Date();
+  //     trialEnd.setMonth(trialEnd.getMonth() + 3);
+
+  //     trialData = {
+  //       trialStartDate: trialStart,
+  //       trialEndDate: trialEnd,
+  //       isTrialActive: true,
+  //       isSubscriptionTrialActive: true,
+  //       subscriptionTrialStartDate: trialStart,
+  //       subscriptionTrialEndDate: trialEnd,
+  //     };
+  //   }
+
+  //   // ------------------Update garage owner status + trial info if needed-------------------
+  //   const updatedUser = await this.prisma.user.update({
+  //     where: { id: garage.userId },
+  //     data: {
+  //       garageStatus: dto.garageStatus,
+  //       isGarageVerified: dto.garageStatus === 'APPROVE',
+  //       ...trialData,
+  //     },
+  //   });
+
+  //   // -------------------------------------
+  //   // ------------------- Send email on approval -----------------------
+  //   // -------------------------------------
+  //   if (dto.garageStatus === 'APPROVE' && updatedUser.email) {
+  //     await this.mail.sendEmail(
+  //       updatedUser.email,
+  //       'Your Garage Has Been Approved!',
+  //       GarageAcceptEmailTemplate({
+  //         name: updatedUser.fullName ?? undefined,
+  //         garageName: garage.name ?? undefined,
+  //       }),
+  //     );
+  //   }
+
+  //   return successResponse(
+  //     {
+  //       garage: updatedGarage,
+  //       owner: {
+  //         id: updatedUser.id,
+  //         fullName: updatedUser.fullName,
+  //         email: updatedUser.email,
+  //         garageStatus: updatedUser.garageStatus,
+  //         isGarageVerified: updatedUser.isGarageVerified,
+  //       },
+  //     },
+  //     'Garage status updated successfully',
+  //   );
+  // }
+
+
+  // -------------------- updateGarageStatusByUserId -----------------------------
+  @HandleError('Failed to approve garage by user ID', 'Garage')
+  async updateGarageStatusByUserId(
+    userId: string,
   ): Promise<TResponse<any>> {
-    // ----------- Find the garage user-----------------
-    const garage = await this.prisma.user.findUnique({ where: { id } });
-    if (!garage) throw new NotFoundException('Garage not found');
 
-    //------------- If status is being updated to APPROVE and trial hasn't started yet----------------
+    // -------- Find garage owner ----------
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        role: 'GARAGE_OWNER',
+        isDeleted: false,
+        isVerified: true,
+      },
+      include: {
+        garages: true,
+      },
+    });
+
+    if (!user || !user.garages?.length) {
+      throw new NotFoundException('Garage not found for this user');
+    }
+
+    const garage = user.garages[0];
+
+    // -------- Approve garage ----------
+    await this.prisma.garage.update({
+      where: { id: garage.id },
+      data: { status: 'APPROVED' },
+    });
+
+    // -------- Apply FREE TRIAL (only once) ----------
     let trialData = {};
-    if (dto.garageStatus === 'APPROVE' && !garage.isTrialActive) {
+    if (!user.isTrialActive) {
       const trialStart = new Date();
       const trialEnd = new Date();
       trialEnd.setMonth(trialEnd.getMonth() + 3);
@@ -219,34 +408,98 @@ export class GarageManagementService {
       };
     }
 
-    // ------------Update role to GARAGE_OWNER------------------
+    // -------- Update user ----------
     await this.prisma.user.update({
-      where: { id },
-      data: { role: 'GARAGE_OWNER', isGarageVerified: true },
-    });
-
-    // ------------------Update status + trial info if needed-------------------
-    const updatedGarage = await this.prisma.user.update({
-      where: { id },
+      where: { id: userId },
       data: {
-        ...dto,
+        garageStatus: 'APPROVE',
+        isGarageVerified: true,
         ...trialData,
       },
     });
 
-    // -------------------------------------
-    // ------------------- Send email on approval -----------------------
-    // -------------------------------------
-    if (dto.garageStatus === 'APPROVE' && updatedGarage.email) {
+    // -------- Send approval email ----------
+    if (user.email) {
       await this.mail.sendEmail(
-        updatedGarage.email,
+        user.email,
         'Your Garage Has Been Approved!',
         GarageAcceptEmailTemplate({
-          name: updatedGarage.fullName ?? undefined,
-          garageName: updatedGarage.garageName ?? undefined,
+          name: user.fullName ?? undefined,
+          garageName: garage.name ?? undefined,
         }),
       );
     }
+
+    return successResponse('Garage approved and free trial activated');
+  }
+
+
+  // ------- Update garage status by garage ID (NO free trial) -------------
+  @HandleError('Failed to update garage status by garage ID', 'Garage')
+  async updateGarageStatusByGarageId(
+    garageId: string,
+    dto: UpdateGarageStatusDto,
+  ): Promise<TResponse<any>> {
+
+    // -------- Find the specific garage ----------
+    const garage = await this.prisma.garage.findUnique({
+      where: { id: garageId },
+      include: { user: true },
+    });
+
+    if (!garage) {
+      throw new NotFoundException('Garage not found');
+    }
+
+    // -------- Map DTO status to Garage enum ----------
+    let garageRecordStatus: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING';
+
+    if (dto.garageStatus === 'APPROVE') {
+      garageRecordStatus = 'APPROVED';
+    } else if (dto.garageStatus === 'DECLINE') {
+      garageRecordStatus = 'REJECTED';
+    }
+
+    // -------- Update garage ----------
+    const updatedGarage = await this.prisma.garage.update({
+      where: { id: garageId },
+      data: {
+        status: garageRecordStatus,
+      },
+    });
+
+    // -------- Update user ----------
+    if (dto.garageStatus === 'APPROVE') {
+      await this.prisma.user.update({
+        where: { id: garage.userId },
+        data: {
+          garageStatus: dto.garageStatus,
+          isGarageVerified: true,
+        },
+      });
+
+      // -------- Send approval email ----------
+      if (garage.user.email) {
+        await this.mail.sendEmail(
+          garage.user.email,
+          'Your Garage Has Been Approved!',
+          GarageAcceptEmailTemplate({
+            name: garage.user.fullName ?? undefined,
+            garageName: garage.name ?? undefined,
+          }),
+        );
+      }
+    } else {
+      // PENDING or DECLINE
+      await this.prisma.user.update({
+        where: { id: garage.userId },
+        data: {
+          garageStatus: dto.garageStatus,
+          isGarageVerified: false,
+        },
+      });
+    }
+
     return successResponse(updatedGarage, 'Garage status updated successfully');
   }
 
@@ -258,7 +511,6 @@ export class GarageManagementService {
       select: {
         id: true,
         garageName: true,
-
         city: true,
         emirate: true,
         garageLogo: true,

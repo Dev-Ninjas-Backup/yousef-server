@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { diskStorage } from 'multer';
 import * as path from 'path';
-import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { v4 as uuid } from 'uuid';
 
 export enum FileType {
@@ -37,7 +37,7 @@ export class MulterService {
   };
 
   public createMulterOptions(
-    destinationFolder: string = './uploads',
+    destinationFolder: string = './Uploads',
     prefix: string,
     fileType: FileType = FileType.IMAGE,
     fileSizeLimit = 500 * 1024 * 1024,

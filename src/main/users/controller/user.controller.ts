@@ -29,7 +29,7 @@ import { UserService } from '../service/user.service';
 @ApiTags('USER Profile Maintain')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   // ------------get all user for admin------------
   @ApiOperation({ summary: 'Get all users only admin or super admin access' })
@@ -42,7 +42,7 @@ export class UserController {
 
   // ----------------get profile--------------------
 
-  @ApiOperation({ summary: 'Get user there owner  data ' })
+  @ApiOperation({ summary: 'Get user there owner  data  fetching now' })
   @ValidateAuth()
   @ApiBearerAuth()
   @Get('me/profile')
@@ -50,7 +50,7 @@ export class UserController {
     return this.userService.getProfile(userId);
   }
 
-  @ApiOperation({ summary: 'Update user profile' })
+  @ApiOperation({ summary: 'Update user profile with user images now All data' })
   @ValidateAuth()
   @ApiBearerAuth()
   @Patch('profile')
@@ -59,8 +59,7 @@ export class UserController {
     FileInterceptor(
       'file',
       new MulterService().createMulterOptions(
-        './uploads',
-        'content',
+        'user-profile',
         FileType.ANY,
       ),
     ),
@@ -70,7 +69,7 @@ export class UserController {
     @Body() dto: UpdateProfileDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    console.log('The user id is', userId);
+    console.log('The user id is more than 1', userId);
 
     let s3Result: { url: string; key: string } | undefined;
 
@@ -78,86 +77,31 @@ export class UserController {
       //  Upload to S3
       s3Result = await uploadFileToS3(file.path);
       console.log(' Uploaded to S3:', s3Result.url);
+      console.log('the s3 url', s3Result)
 
-      // Remove local file after successful upload
-      try {
-        const fs = await import('fs/promises');
-        await fs.unlink(file.path);
-        console.log(' Local file deleted:', file.path);
-      } catch (err) {
-        console.warn(' Failed to delete local file:', err);
-      }
     }
+    console.log('the file', file)
 
-    // Pass s3Result to service
+    // -------------- Pass s3-Result to service  -----------------
     return await this.userService.updateProfile(userId, dto, s3Result);
   }
 
-  // ----------------update password--------------------
-  // @ApiOperation({ summary: 'Change user password' })
-  // @ValidateAuth()
-  // @ApiBearerAuth()
-  // @Patch('me/change-password')
-  // async getProfile(
-  //   @GetUser('userId') userId: string,
-  //   @Body() body: UpdatePasswordDto,
-  // ) {
-  //   console.log('use id', userId);
-  //   return this.userService.updatePassword(userId, body);
-  // }
-
-  // ---------------------user report Contents----------------
-  // @ApiOperation({ summary: 'Create Report with multiple screenshots' })
-  // @ApiBearerAuth()
-  // @ValidateAuth()
-  // @Post('create-report')
-  // @ApiConsumes('multipart/form-data')
-  // @UseInterceptors(
-  //   FilesInterceptor(
-  //     'files', // note: plural for multiple files
-  //     5, // max files, adjust as needed
-  //     new MulterService().createMulterOptions(
-  //       './uploads',
-  //       'content',
-  //       FileType.ANY,
-  //     ),
-  //   ),
-  // )
-  // async create(
-  //   @Body() createReportDto: CreateReportDto,
-  //   @UploadedFiles() files: Express.Multer.File[],
-  //   @GetUser('userId') userId: string,
-  // ) {
-  //   let s3Files: { url: string; key: string }[] = [];
-
-  //   if (files && files.length) {
-  //     // Upload all files to S3 and delete local copies
-  //     for (const file of files) {
-  //       const s3Result = await uploadFileToS3(file.path);
-  //       s3Files.push(s3Result);
-
-  //       // Delete local file
-  //       try {
-  //         const fs = await import('fs/promises');
-  //         await fs.unlink(file.path);
-  //       } catch (err) {
-  //         console.warn('⚠️ Failed to delete local file:', err);
-  //       }
-  //     }
-
-  //     // Pass S3 URLs to DTO
-  //     createReportDto.files = s3Files.map((f) => ({ url: f.url, key: f.key }));
-  //   }
-
-  //   return this.userService.createReport(createReportDto, userId);
-  // }
 
   // -------------hard delete user account----------------
   @ApiBearerAuth()
   @ValidateAuth()
-  @ApiOperation({ summary: 'Hard delete user account' })
+  @ApiOperation({ summary: 'Hard delete user account now with the fix now' })
   @Delete('hard-delete-user-account')
   hardDeleteUserAccount(@GetUser('userId') userId: string) {
     return this.userService.hardDeleteUserAccount(userId);
+  }
+
+  // -------------test user email now-------------------
+  @ApiBearerAuth()
+  @ValidateAuth()
+  @ApiOperation({ summary: 'Test user email now' })
+  @Get('test-email')
+  testEmail(@GetUser('userId') userId: string) {
+    return this.userService.testEmail(userId);
   }
 }

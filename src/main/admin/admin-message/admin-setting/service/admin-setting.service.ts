@@ -7,7 +7,7 @@ import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 
 @Injectable()
 export class AdminSettingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ---------------platform setting create----
   @HandleError('Failed to create or update platform setting')
@@ -55,73 +55,6 @@ export class AdminSettingService {
     );
   }
 
-  // ----------------------- autoApprovalSettingGarage -------------
-  //  @HandleError('failed to auto approve garages')
-  //   async autoApprovalSettingGarage() {
-  //     // ---------------- Get all PENDING garages------------------
-  //     const garages = await this.prisma.user.findMany({
-  //       where: {
-  //         role: 'GARAGE_OWNER',
-  //         garageStatus: 'PENDING',
-  //         isGarageVerified: false,
-  //       },
-  //     });
-
-  //     let approvedCount = 0;
-
-  //     // -----------Approve each manually-----------------
-  //     for (const garage of garages) {
-  //       const updateData: any = {
-  //         garageStatus: 'APPROVE',
-  //         isGarageVerified: true,
-  //       };
-
-  //       // --- Add trial logic-------------------
-  //       if (!garage.isTrialActive) {
-  //         const trialStart = new Date();
-  //         const trialEnd = new Date();
-  //         trialEnd.setMonth(trialEnd.getMonth() + 2);
-
-  //         updateData.trialStartDate = trialStart;
-  //         updateData.trialEndDate = trialEnd;
-  //         updateData.isTrialActive = true;
-  //         updateData.isSubscriptionTrialActive = true;
-  //         updateData.subscriptionTrialStartDate = trialStart;
-  //         updateData.subscriptionTrialEndDate = trialEnd;
-  //       }
-
-  //       // --------------- Update--------------
-  //       await this.prisma.user.update({
-  //         where: { id: garage.id },
-  //         data: updateData,
-  //       });
-
-  //       approvedCount++;
-  //     }
-
-  //     // -----------Toggle the auto-approval garage setting-------------
-  //     let setting = await this.prisma.generalSetting.findFirst();
-
-  //     if (!setting) {
-  //       setting = await this.prisma.generalSetting.create({
-  //         data: {
-  //           isAutoApproveGarages: true,
-  //         },
-  //       });
-  //     } else {
-  //       setting = await this.prisma.generalSetting.update({
-  //         where: { id: setting.id },
-  //         data: {
-  //           isAutoApproveGarages: !setting.isAutoApproveGarages,
-  //         },
-  //       });
-  //     }
-  //     return {
-  //       success: true,
-  //       message: `${approvedCount} garages auto-approved.`,
-
-  //     };
-  //   }
 
   @HandleError('failed to auto approve garages')
   async autoApprovalSettingGarage() {
@@ -202,50 +135,7 @@ export class AdminSettingService {
     };
   }
 
-  // ---------- admin every user on of email notification ----
-  // @HandleError('Failed to update email notification for user setting')
-  // async updateEmailNotificationForUser(isEmailNotification: boolean) {
-  //   const user = await this.prisma.user.updateMany({
-  //     where: {
-  //       isDeleted: false,
-  //     },
-  //     data: {
-  //       isEmailNotification: true,
-  //     },
-  //   });
 
-  //     let setting = await this.prisma.generalSetting.findFirst();
-
-  //   if (!setting) {
-  //     setting = await this.prisma.generalSetting.create({
-  //       data: {
-  //         isEmailNotificationEnabled: false,
-  //       },
-  //     });
-  //   } else {
-  //     setting = await this.prisma.generalSetting.update({
-  //       where: { id: setting.id },
-  //       data: {
-  //         isEmailNotificationEnabled: !setting.isEmailNotificationEnabled,
-  //       },
-  //     });
-  //   }
-
-  //   // Update all users based on the toggle
-  //   await this.prisma.user.updateMany({
-  //     where: {
-  //       isDeleted: false,
-  //     },
-  //     data: {
-  //       isEmailNotification: setting.isEmailNotificationEnabled,
-  //     },
-  //   });
-  //   return {
-  //     success: true,
-  //     message: `Email notification turned ${isEmailNotification ? 'ON' : 'OFF'} for user.`,
-  //     data: user,
-  //   };
-  // }
 
   @HandleError('Failed to update email notification for user setting')
   async updateEmailNotificationForUser(isEmailNotification: boolean) {
@@ -306,44 +196,6 @@ export class AdminSettingService {
       data: user,
     };
   }
-  // -----------auto approve autoupdateApprovalSettingParts-------------
-
-  // @HandleError('failed to auto approve autoupdateApprovalSettingParts')
-  // async autoupdateApprovalSettingParts() {
-  //   const updated = await this.prisma.product.updateMany({
-  //     where: {
-  //       status: 'PENDING',
-  //     },
-  //     data: {
-  //       status: 'APPROVED',
-  //     },
-  //   });
-
-  //   let setting = await this.prisma.generalSetting.findFirst();
-
-  //   if (!setting) {
-  //     setting = await this.prisma.generalSetting.create({
-  //       data: {
-  //         isAutoApproveParts: true,
-  //       },
-  //     });
-  //   } else {
-  //     setting = await this.prisma.generalSetting.update({
-  //       where: { id: setting.id },
-  //       data: {
-  //         isAutoApproveParts: !setting.isAutoApproveParts,
-  //       },
-  //     });
-  //   }
-  //   return {
-  //     success: true,
-  //     message: `${updated.count} products parts were auto-approved.`,
-  //   };
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} adminSetting`;
-  // }
 
   @HandleError('failed to auto approve autoupdateApprovalSettingParts')
   async autoupdateApprovalSettingParts() {
@@ -391,30 +243,7 @@ export class AdminSettingService {
     };
   }
 
-  // @HandleError('Failed to get auto approve garages toggle')
-  // async getAutoApproveGaragesToggle() {
-  //   const setting = await this.prisma.generalSetting.findFirst();
 
-  //   return successResponse(
-  //     {
-  //       isEnabled: setting?.isAutoApproveGarages ?? false,
-  //     },
-  //     'Auto approve garages toggle retrieved successfully',
-  //   );
-  // }
-
-  // ---------- get email notification toggle ----
-  // @HandleError('Failed to get email notification toggle')
-  // async getEmailNotificationToggle() {
-  //   const setting = await this.prisma.generalSetting.findFirst();
-
-  //   return successResponse(
-  //     {
-  //       isEnabled: setting?.isEmailNotificationEnabled ?? true,
-  //     },
-  //     'Email notification toggle retrieved successfully',
-  //   );
-  // }
 
   // -----------get auto approval parts toggle-------------
   @HandleError('Failed to get auto approval parts toggle')
