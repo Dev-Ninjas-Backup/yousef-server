@@ -20,6 +20,7 @@ import { PromotionalAndFeaturedModule } from './promotional-and-featured/promoti
 import { NotificationSettingModule } from './shared/notification-setting/notification-setting.module';
 import { PrivateMessageModule } from './shared/private-message/private-message.module';
 import { ClientReviewModule } from './shared/client-review/client-review.module';
+import { PlatformSubscribeModule } from './shared/platform-subscribe/platform-subscribe.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ClientReviewModule } from './shared/client-review/client-review.module'
     PromotionalAndFeaturedModule,
     NotificationSettingModule,
     ClientReviewModule,
+    PlatformSubscribeModule,
   ],
   controllers: [],
   providers: [],

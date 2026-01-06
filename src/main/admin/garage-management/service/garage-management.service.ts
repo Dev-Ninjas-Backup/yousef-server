@@ -172,6 +172,7 @@ export class GarageManagementService {
         garageLogo: true,
         createdAt: true,
         updatedAt: true,
+        isGarageVerified: true,
         garages: {
           select: {
             id: true,
@@ -212,6 +213,7 @@ export class GarageManagementService {
       serviceCategories: u.serviceCategories,
       Contract: u.phone,
       isDeleted: u.isDeleted,
+      isGarageVerified: u.isGarageVerified,
       tradeLicense: u.tradeLicense,
       garageLogo: u.garageLogo,
       garageStatus: u.garageStatus,
@@ -374,22 +376,14 @@ export class GarageManagementService {
         isDeleted: false,
         isVerified: true,
       },
-      include: {
-        garages: true,
-      },
+     
     });
 
-    if (!user || !user.garages?.length) {
-      throw new NotFoundException('Garage not found for this user');
+    if (!user) {
+      throw new NotFoundException(`Garage owner with ID ${userId} not found. Please verify the user ID.`);
     }
 
-    const garage = user.garages[0];
 
-    // -------- Approve garage ----------
-    await this.prisma.garage.update({
-      where: { id: garage.id },
-      data: { status: 'APPROVED' },
-    });
 
     // -------- Apply FREE TRIAL (only once) ----------
     let trialData = {};
@@ -412,7 +406,6 @@ export class GarageManagementService {
     await this.prisma.user.update({
       where: { id: userId },
       data: {
-        garageStatus: 'APPROVE',
         isGarageVerified: true,
         ...trialData,
       },
@@ -422,10 +415,13 @@ export class GarageManagementService {
     if (user.email) {
       await this.mail.sendEmail(
         user.email,
+    
         'Your Garage Has Been Approved!',
         GarageAcceptEmailTemplate({
           name: user.fullName ?? undefined,
-          garageName: garage.name ?? undefined,
+          
+
+         
         }),
       );
     }
@@ -554,11 +550,5 @@ export class GarageManagementService {
     return successResponse(deletedGarage, 'Garage deleted successfully');
   }
 
-  findAll() {
-    return `This action returns all garageManagement`;
-  }
 
-  findOne(id: number) {
-    return `This action returns a #${id} garageManagement`;
-  }
 }

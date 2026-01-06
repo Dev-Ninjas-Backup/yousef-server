@@ -1,0 +1,19 @@
+model PlatformSubscribe {
+    id        String   @id @default(uuid())
+    email     String   @default("dibem65515@emaxasp.com")
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("platformsubscribe")
+}
+
+model AdminSendmail {
+    id        String   @id @default(uuid())
+    email     String   @default("")
+    subject   String   @default("")
+    message   String   @default("")
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("adminsendmail")
+}
