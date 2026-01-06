@@ -319,6 +319,7 @@ export class AdminDashboardOverviewService {
   }
 
   // ------------------------ Parts Category Statistics ------------------------
+  // ------------------------ Parts Category Statistics ------------------------
   @HandleError('Failed to fetch parts category statistics', 'Parts Category')
   async getStatistics(): Promise<TResponse<any>> {
     // Get total product count
@@ -336,19 +337,28 @@ export class AdminDashboardOverviewService {
         },
       },
     });
-    console.log(categoryStats);
+
+    // Fetch category names
+    const categoryIds = categoryStats.map((stat) => stat.categoryId);
+    const categories = await this.prisma.partsCategory.findMany({
+      where: { id: { in: categoryIds } },
+      select: { id: true, name: true },
+    });
+
+    const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
     // Calculate percentages and format data
     const statistics = categoryStats.map((stat) => ({
-      category: stat.categoryId,
+      categoryId: stat.categoryId,
+      categoryName: categoryMap.get(stat.categoryId) || 'Unknown',
       productCount: stat._count.categoryId || 0,
       percentage:
         totalProducts > 0
           ? parseFloat(
-              (((stat._count.categoryId || 0) / totalProducts) * 100).toFixed(
-                2,
-              ),
-            )
+            (((stat._count.categoryId || 0) / totalProducts) * 100).toFixed(
+              2,
+            ),
+          )
           : 0,
     }));
 
@@ -362,6 +372,7 @@ export class AdminDashboardOverviewService {
       'Parts category statistics retrieved successfully',
     );
   }
+
 
   // ------------getRevenueTrends for monthly revenue trend---------
   @HandleError('Failed to fetch revenue trends', 'Revenue Trends')
