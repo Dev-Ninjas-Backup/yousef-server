@@ -168,7 +168,7 @@ export class PrivateChatGateway
     const { recipientId } = payload;
 
     const userId = this.getUserIdFromSocket(client);
-    if (!userId) return; // already handled
+    if (!userId) return; 
 
     // Validate sender matches token
     if (client.data.userId !== userId) {
