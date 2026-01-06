@@ -23,7 +23,7 @@ export class ProductService {
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
     private mailService: MailService,
-  ) { }
+  ) {}
 
   async create(
     userId: string,

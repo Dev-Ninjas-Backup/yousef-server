@@ -29,7 +29,7 @@ import { UserService } from '../service/user.service';
 @ApiTags('USER Profile Maintain')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   // ------------get all user for admin------------
   @ApiOperation({ summary: 'Get all users only admin or super admin access' })
@@ -50,7 +50,9 @@ export class UserController {
     return this.userService.getProfile(userId);
   }
 
-  @ApiOperation({ summary: 'Update user profile with user images now All data' })
+  @ApiOperation({
+    summary: 'Update user profile with user images now All data',
+  })
   @ValidateAuth()
   @ApiBearerAuth()
   @Patch('profile')
@@ -58,10 +60,7 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor(
       'file',
-      new MulterService().createMulterOptions(
-        'user-profile',
-        FileType.ANY,
-      ),
+      new MulterService().createMulterOptions('user-profile', FileType.ANY),
     ),
   )
   async updateProfile(
@@ -77,15 +76,13 @@ export class UserController {
       //  Upload to S3
       s3Result = await uploadFileToS3(file.path);
       console.log(' Uploaded to S3:', s3Result.url);
-      console.log('the s3 url', s3Result)
-
+      console.log('the s3 url', s3Result);
     }
-    console.log('the file', file)
+    console.log('the file', file);
 
     // -------------- Pass s3-Result to service  -----------------
     return await this.userService.updateProfile(userId, dto, s3Result);
   }
-
 
   // -------------hard delete user account----------------
   @ApiBearerAuth()

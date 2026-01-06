@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { CreateClientReviewDto } from './dto/create-client-review.dto';
@@ -6,26 +10,24 @@ import { UpdateClientReviewDto } from './dto/update-client-review.dto';
 
 @Injectable()
 export class ClientReviewService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  @HandleError("Error Creating Client Review")
+  @HandleError('Error Creating Client Review')
   async createClientReview(dto: CreateClientReviewDto, userId: string) {
     const CreateReview = await this.prisma.clientReview.create({
-
       data: {
         reviewText: dto.reviewText,
         rating: dto.rating,
         userId: userId,
       },
     });
-    return ({
-
-      message: "Client Review Created Successfully",
+    return {
+      message: 'Client Review Created Successfully',
       data: CreateReview,
-    })
+    };
   }
 
-  @HandleError("Error Fetching Client Reviews")
+  @HandleError('Error Fetching Client Reviews')
   async findAll() {
     return await this.prisma.clientReview.findMany({
       include: {
@@ -48,7 +50,7 @@ export class ClientReviewService {
     });
   }
 
-  @HandleError("Error Fetching Client Review")
+  @HandleError('Error Fetching Client Review')
   async findOne(id: string) {
     const review = await this.prisma.clientReview.findUnique({
       where: { id },
@@ -75,8 +77,7 @@ export class ClientReviewService {
     return review;
   }
 
-
-  @HandleError("Error Updating Client Review")
+  @HandleError('Error Updating Client Review')
   async update(id: string, dto: UpdateClientReviewDto, userId: string) {
     const review = await this.prisma.clientReview.findUnique({
       where: { id },
@@ -110,7 +111,7 @@ export class ClientReviewService {
     });
   }
 
-  @HandleError("Error Deleting Client Review")
+  @HandleError('Error Deleting Client Review')
   async removeSpecific(id: string, userId: string) {
     const review = await this.prisma.clientReview.findUnique({
       where: { id },
@@ -131,7 +132,7 @@ export class ClientReviewService {
     return { message: 'Client review deleted successfully' };
   }
 
-  @HandleError("Error Deleting All Client Reviews")
+  @HandleError('Error Deleting All Client Reviews')
   async removeReviewAdmin(id: string) {
     await this.prisma.clientReview.delete({
       where: { id },

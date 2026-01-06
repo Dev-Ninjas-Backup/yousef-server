@@ -1,6 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GetUser, ValidateAdmin, ValidateUser } from 'src/common/jwt/jwt.decorator';
+import {
+  GetUser,
+  ValidateAdmin,
+  ValidateUser,
+} from 'src/common/jwt/jwt.decorator';
 import { ClientReviewService } from './client-review.service';
 import { CreateClientReviewDto } from './dto/create-client-review.dto';
 import { UpdateClientReviewDto } from './dto/update-client-review.dto';
@@ -8,14 +20,16 @@ import { UpdateClientReviewDto } from './dto/update-client-review.dto';
 @ApiTags('What Our beloved Clients Says')
 @Controller('client-review')
 export class ClientReviewController {
-  constructor(private readonly clientReviewService: ClientReviewService) { }
+  constructor(private readonly clientReviewService: ClientReviewService) {}
 
   @ApiOperation({ summary: 'Create a new client review' })
   @ApiBearerAuth()
   @ValidateUser()
   @Post()
-  createClientReview(@Body() dto: CreateClientReviewDto,
-    @GetUser('userId') userId: string) {
+  createClientReview(
+    @Body() dto: CreateClientReviewDto,
+    @GetUser('userId') userId: string,
+  ) {
     return this.clientReviewService.createClientReview(dto, userId);
   }
 
@@ -35,11 +49,18 @@ export class ClientReviewController {
   @ApiBearerAuth()
   @ValidateUser()
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateClientReviewDto: UpdateClientReviewDto, @GetUser('userId') userId: string) {
+  update(
+    @Param('id') id: string,
+    @Body() updateClientReviewDto: UpdateClientReviewDto,
+    @GetUser('userId') userId: string,
+  ) {
     return this.clientReviewService.update(id, updateClientReviewDto, userId);
   }
 
-  @ApiOperation({ summary: 'Delete a client review (only the user can delete their own review)' })
+  @ApiOperation({
+    summary:
+      'Delete a client review (only the user can delete their own review)',
+  })
   @ApiBearerAuth()
   @ValidateUser()
   @Delete(':id')

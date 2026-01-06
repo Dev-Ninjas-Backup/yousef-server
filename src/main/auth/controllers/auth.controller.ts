@@ -42,7 +42,7 @@ export class AuthController {
       ],
       new MulterService().createMulterOptions(
         './uploads',
-       
+
         FileType.ANY,
       ),
     ),

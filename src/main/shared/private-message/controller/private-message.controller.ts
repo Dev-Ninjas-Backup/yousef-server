@@ -78,7 +78,7 @@ export class PrivateChatController implements OnModuleInit {
       5,
       new MulterService().createMulterOptions(
         './uploads',
-       
+
         FileType.ANY,
       ),
     ),

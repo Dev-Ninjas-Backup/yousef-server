@@ -7,7 +7,7 @@ import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 
 @Injectable()
 export class AdminSettingService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // ---------------platform setting create----
   @HandleError('Failed to create or update platform setting')
@@ -54,7 +54,6 @@ export class AdminSettingService {
       'Platform fee retrieved successfully',
     );
   }
-
 
   @HandleError('failed to auto approve garages')
   async autoApprovalSettingGarage() {
@@ -134,8 +133,6 @@ export class AdminSettingService {
       message: `${approvedCount} garages auto-approved and setting toggled.`,
     };
   }
-
-
 
   @HandleError('Failed to update email notification for user setting')
   async updateEmailNotificationForUser(isEmailNotification: boolean) {
@@ -242,8 +239,6 @@ export class AdminSettingService {
       message: `${updated.count} product parts were auto-approved and setting toggled.`,
     };
   }
-
-
 
   // -----------get auto approval parts toggle-------------
   @HandleError('Failed to get auto approval parts toggle')

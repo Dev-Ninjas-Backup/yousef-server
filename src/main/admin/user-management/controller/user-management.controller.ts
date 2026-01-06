@@ -1,12 +1,16 @@
 import { Controller, Delete, Get, Param } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ValidateAuth, ValidateSuperAdmin, ValidateUser } from 'src/common/jwt/jwt.decorator';
+import {
+  ValidateAuth,
+  ValidateSuperAdmin,
+  ValidateUser,
+} from 'src/common/jwt/jwt.decorator';
 import { UserManagementService } from '../service/user-management.service';
 
 @Controller('user-management')
 @ApiTags('Admin-User-Management')
 export class UserManagementController {
-  constructor(private readonly userManagementService: UserManagementService) { }
+  constructor(private readonly userManagementService: UserManagementService) {}
 
   // ------------get all user ---
   @ValidateAuth()
@@ -31,8 +35,6 @@ export class UserManagementController {
     return this.userManagementService.getUser(id);
   }
 
-
-
   // ---------soft delete user ---
   @ValidateAuth()
   @ApiBearerAuth()
@@ -42,10 +44,8 @@ export class UserManagementController {
   })
   @Delete('user/:id')
   remove(@Param('id') id: string) {
-
     return this.userManagementService.remove(id);
   }
-
 
   // --------admin role  any user ------------
   @ValidateAuth()

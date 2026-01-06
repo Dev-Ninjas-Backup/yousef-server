@@ -17,7 +17,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
-  ) { }
+  ) {}
 
   // ------------------------- Get All Users -----------------
 
@@ -145,7 +145,6 @@ export class UserService {
   //     `Review Alert has been ${updatedUser.ReviewAlerts ? 'enabled' : 'disabled'} successfully.`,
   //   );
   // }
-
 
   // ----------testEmail-------------------
   @HandleError('Failed to test user email', 'User')

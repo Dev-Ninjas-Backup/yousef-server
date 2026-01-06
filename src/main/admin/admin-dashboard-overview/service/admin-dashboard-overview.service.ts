@@ -336,11 +336,20 @@ export class AdminDashboardOverviewService {
         },
       },
     });
-    console.log(categoryStats);
+
+    // Fetch category names
+    const categoryIds = categoryStats.map((stat) => stat.categoryId);
+    const categories = await this.prisma.partsCategory.findMany({
+      where: { id: { in: categoryIds } },
+      select: { id: true, name: true },
+    });
+
+    const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
     // Calculate percentages and format data
     const statistics = categoryStats.map((stat) => ({
-      category: stat.categoryId,
+      categoryId: stat.categoryId,
+      categoryName: categoryMap.get(stat.categoryId) || 'Unknown',
       productCount: stat._count.categoryId || 0,
       percentage:
         totalProducts > 0

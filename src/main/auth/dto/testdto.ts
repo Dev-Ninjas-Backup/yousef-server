@@ -1,3 +1,3 @@
 export class LoginneweUserDto {
-    // Define properties here
+  // Define properties here
 }
