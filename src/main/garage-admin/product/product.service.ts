@@ -263,6 +263,7 @@ export class ProductService {
     search?: string;
     category?: string;
     condition?: string;
+    status?: string;
   }) {
     const page = query?.page || 1;
     const limit = query?.limit || 20;
@@ -295,6 +296,11 @@ export class ProductService {
     // Filtering: condition (exact match)
     if (query?.condition) {
       where.condition = query.condition;
+    }
+
+    // Filtering: status (exact match)
+    if (query?.status) {
+      where.status = query.status;
     }
 
     const [products, total] = await Promise.all([
