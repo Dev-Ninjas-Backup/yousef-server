@@ -46,7 +46,6 @@ export class ProductFilterDto {
   @Transform(({ value }) => value?.trim())
   category?: string;
 
-<<<<<<< HEAD
   @ApiPropertyOptional({
     description: 'Filter by product condition',
     example: 'New',
@@ -58,28 +57,15 @@ export class ProductFilterDto {
     message: 'Condition must be one of: New, Used, Refurbished',
   })
   condition?: string;
-=======
-    @ApiPropertyOptional({
-        description: 'Filter by product condition',
-        example: 'New',
-        enum: ['New', 'Used', 'Refurbished'],
-    })
-    @IsOptional()
-    @IsString()
-    @IsIn(['New', 'Used', 'Refurbished'], {
-        message: 'Condition must be one of: New, Used, Refurbished',
-    })
-    condition?: string;
 
-    @ApiPropertyOptional({
-        description: 'Filter by product status',
-        example: 'APPROVED',
-        enum: ProductStatus,
-    })
-    @IsOptional()
-    @IsEnum(ProductStatus, {
-        message: 'Status must be one of: DRAFT, PENDING, APPROVED, REJECTED',
-    })
-    status?: ProductStatus;
->>>>>>> ef93e7082015245ac0367398e48544f329721d19
+  @ApiPropertyOptional({
+    description: 'Filter by product status',
+    example: 'APPROVED',
+    enum: ProductStatus,
+  })
+  @IsOptional()
+  @IsEnum(ProductStatus, {
+    message: 'Status must be one of: DRAFT, PENDING, APPROVED, REJECTED',
+  })
+  status?: ProductStatus;
 }
