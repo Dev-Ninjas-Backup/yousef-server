@@ -60,21 +60,7 @@ export class GarageManagementController {
     return this.garageManagementService.updateGarageInfo(id, updateGarageDto);
   }
 
-  // -----------update garage status by garage ID ---
-  // @ValidateAuth()
-  // @ApiBearerAuth()
-  // @ValidateSuperAdmin()
-  // @ApiOperation({
-  //   summary:
-  //     'Update garage status (APPROVE | PENDING | DECLINE) by providing garageId. This updates both the garage and its owner.',
-  // })
-  // @Patch('status/:garageId')
-  // updateStatus(
-  //   @Param('garageId') garageId: string,
-  //   @Body() updateGarageDto: UpdateGarageStatusDto,
-  // ) {
-  //   return this.garageManagementService.updateStatus(garageId, updateGarageDto);
-  // }
+
 
   // -----------update garage status by garage ID (alternative endpoint) ------------------
   @ValidateAuth()
@@ -100,12 +86,14 @@ export class GarageManagementController {
   @ValidateSuperAdmin()
   @ApiOperation({
     summary:
-      'Update individual garage status (APPROVE | PENDING | DECLINE) by providing userId',
+      'Update individual garage status change (APPROVE | PENDING | DECLINE) by providing userId',
   })
   @Patch('user-garage-status/:userId')
   updateGarageStatusByUserId(@Param('userId') userId: string) {
     return this.garageManagementService.updateGarageStatusByUserId(userId);
   }
+
+  // ------------------soft delete garage info by ID -----------------
 
   @ValidateAuth()
   @ApiBearerAuth()

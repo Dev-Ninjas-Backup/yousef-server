@@ -319,6 +319,7 @@ export class AdminDashboardOverviewService {
   }
 
   // ------------------------ Parts Category Statistics ------------------------
+  // ------------------------ Parts Category Statistics ------------------------
   @HandleError('Failed to fetch parts category statistics', 'Parts Category')
   async getStatistics(): Promise<TResponse<any>> {
     // Get total product count
@@ -354,10 +355,10 @@ export class AdminDashboardOverviewService {
       percentage:
         totalProducts > 0
           ? parseFloat(
-              (((stat._count.categoryId || 0) / totalProducts) * 100).toFixed(
-                2,
-              ),
-            )
+            (((stat._count.categoryId || 0) / totalProducts) * 100).toFixed(
+              2,
+            ),
+          )
           : 0,
     }));
 
@@ -371,6 +372,7 @@ export class AdminDashboardOverviewService {
       'Parts category statistics retrieved successfully',
     );
   }
+
 
   // ------------getRevenueTrends for monthly revenue trend---------
   @HandleError('Failed to fetch revenue trends', 'Revenue Trends')

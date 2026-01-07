@@ -8,11 +8,38 @@ export class UserManagementService {
   constructor(private readonly prisma: PrismaService) {}
 
   @HandleError('Failed to get all users', 'User')
-  async getAllUsers() {
+  async getAllUsers(query: { page?: number; limit?: number; search?: string; role?: string }) {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    // Build where clause for search
+    const whereClause: any = {
+      isDeleted: false,
+    };
+
+    // Add role filter if provided
+    if (query.role) {
+      whereClause.role = query.role;
+    }
+
+    if (query.search) {
+      whereClause.OR = [
+        { fullName: { contains: query.search, mode: 'insensitive' } },
+        { email: { contains: query.search, mode: 'insensitive' } },
+        { phone: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Get total count for pagination
+    const total = await this.prisma.user.count({
+      where: whereClause,
+    });
+
     const users = await this.prisma.user.findMany({
-      where: {
-        isDeleted: false,
-      },
+      where: whereClause,
+      skip,
+      take: limit,
       orderBy: {
         createdAt: 'desc',
       },
@@ -45,7 +72,18 @@ export class UserManagementService {
       vehicles: user._count.garages,
     }));
 
-    return successResponse(formattedUsers, 'All users retrieved successfully');
+    return successResponse(
+      {
+        data: formattedUsers,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+      'All users retrieved successfully'
+    );
   }
   // -------------get specific user access admin only--------
   @HandleError('Failed to get user', 'User')
