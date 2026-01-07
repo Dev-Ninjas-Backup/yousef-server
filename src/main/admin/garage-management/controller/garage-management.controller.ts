@@ -23,7 +23,7 @@ import { GarageManagementService } from '../service/garage-management.service';
 export class GarageManagementController {
   constructor(
     private readonly garageManagementService: GarageManagementService,
-  ) { }
+  ) {}
 
   @ValidateAuth()
   @ApiBearerAuth()
@@ -89,13 +89,8 @@ export class GarageManagementController {
       'Update individual garage status change (APPROVE | PENDING | DECLINE) by providing userId',
   })
   @Patch('user-garage-status/:userId')
-  updateGarageStatusByUserId(
-    @Param('userId') userId: string,
-
-  ) {
-    return this.garageManagementService.updateGarageStatusByUserId(
-      userId,
-    );
+  updateGarageStatusByUserId(@Param('userId') userId: string) {
+    return this.garageManagementService.updateGarageStatusByUserId(userId);
   }
 
   // ------------------soft delete garage info by ID -----------------
@@ -108,6 +103,4 @@ export class GarageManagementController {
   deleteGarageInfo(@Param('id') id: string) {
     return this.garageManagementService.softDeleteGarage(id);
   }
-
-
 }

@@ -1,5 +1,3 @@
-// src/garage-location/service/location.garage.service.ts
-
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { NearbyGarageQueryDto } from '../dto/nearby-garage.dto';

@@ -5,7 +5,7 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 
 @Injectable()
 export class UserManagementService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   @HandleError('Failed to get all users', 'User')
   async getAllUsers(query: { page?: number; limit?: number; search?: string; role?: string }) {
@@ -154,5 +154,4 @@ export class UserManagementService {
 
     return successResponse(null, 'User role changed to ADMIN successfully');
   }
-
 }
