@@ -8,7 +8,10 @@ export class UserSearchDto extends PaginationDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by role', enum: ['CAR_OWNER', 'GARAGE_OWNER', 'SUPER_ADMIN', 'MEMBER'] })
+  @ApiPropertyOptional({
+    description: 'Filter by role',
+    enum: ['CAR_OWNER', 'GARAGE_OWNER', 'SUPER_ADMIN', 'MEMBER'],
+  })
   @IsOptional()
   @IsString()
   role?: string;

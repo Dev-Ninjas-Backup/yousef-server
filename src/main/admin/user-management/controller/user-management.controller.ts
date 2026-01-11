@@ -8,8 +8,6 @@ import {
 import { UserManagementService } from '../service/user-management.service';
 import { UserSearchDto } from '../dto/pagination.user.dto';
 
-
-
 @Controller('user-management')
 @ApiTags('Admin-User-Management')
 export class UserManagementController {
