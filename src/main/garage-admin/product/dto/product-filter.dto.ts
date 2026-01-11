@@ -1,7 +1,15 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class ProductFilterDto {
   @ApiPropertyOptional({

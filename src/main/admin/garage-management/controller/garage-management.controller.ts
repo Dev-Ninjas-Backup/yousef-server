@@ -60,8 +60,6 @@ export class GarageManagementController {
     return this.garageManagementService.updateGarageInfo(id, updateGarageDto);
   }
 
-
-
   // -----------update garage status by garage ID (alternative endpoint) ------------------
   @ValidateAuth()
   @ApiBearerAuth()

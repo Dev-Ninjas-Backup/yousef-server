@@ -20,7 +20,7 @@ export class PlatformSubscribeService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
   @HandleError('Failed to create subscribe', 'subscribe')
   async create(payload: CreatePlatformSubscribeDto): Promise<TResponse<any>> {
     const subscribe = await this.prisma.subscribe.create({
@@ -86,7 +86,10 @@ export class PlatformSubscribeService {
   }
   // ------------------ update subscribe by id for admin----------------
   @HandleError('Failed to update subscribe', 'subscribe')
-  async update(id: string, dto: UpdatePlatformSubscribeDto): Promise<TResponse<any>> {
+  async update(
+    id: string,
+    dto: UpdatePlatformSubscribeDto,
+  ): Promise<TResponse<any>> {
     await this.ensureExists(id);
     const subscribe = await this.prisma.subscribe.update({
       where: { id },
@@ -124,17 +127,11 @@ export class PlatformSubscribeService {
     const emailTemplate = NewsletterEmailTemplate({ subject, message });
 
     for (const subscribe of subscribes) {
-      await this.mailService.sendEmail(
-        subscribe.email,
-        subject,
-        emailTemplate,
-      );
+      await this.mailService.sendEmail(subscribe.email, subject, emailTemplate);
     }
 
     return successResponse(null, 'Emails sent to all subscribe successfully');
   }
 
   // ---------------send email all users -----------------
- 
 }
-

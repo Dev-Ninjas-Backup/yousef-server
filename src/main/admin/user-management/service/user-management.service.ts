@@ -8,7 +8,12 @@ export class UserManagementService {
   constructor(private readonly prisma: PrismaService) {}
 
   @HandleError('Failed to get all users', 'User')
-  async getAllUsers(query: { page?: number; limit?: number; search?: string; role?: string }) {
+  async getAllUsers(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+  }) {
     const page = query.page || 1;
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
@@ -82,7 +87,7 @@ export class UserManagementService {
           totalPages: Math.ceil(total / limit),
         },
       },
-      'All users retrieved successfully'
+      'All users retrieved successfully',
     );
   }
   // -------------get specific user access admin only--------
