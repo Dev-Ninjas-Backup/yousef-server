@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { PaginationDto } from 'src/common/dto/pagination';
 import { ValidateAdmin } from 'src/common/jwt/jwt.decorator';
@@ -8,7 +17,9 @@ import { PlatformSubscribeService } from './platform-subscribe.service';
 
 @Controller('platform-subscribe')
 export class PlatformSubscribeController {
-  constructor(private readonly platformSubscribeService: PlatformSubscribeService) { }
+  constructor(
+    private readonly platformSubscribeService: PlatformSubscribeService,
+  ) {}
 
   @ApiOperation({ summary: 'Create a new contact' })
   @Post()
@@ -33,7 +44,6 @@ export class PlatformSubscribeController {
     return this.platformSubscribeService.findOne(id);
   }
 
-
   @ApiOperation({ summary: 'Delete a subscribe by ID' })
   @ValidateAdmin()
   @ApiBearerAuth()
@@ -43,13 +53,14 @@ export class PlatformSubscribeController {
   }
 
   // ---------------send email all subscribe  user -----------------
-  @ApiOperation({ summary: 'Send email to all subscribers on the platform subscribe || admin access need' })
+  @ApiOperation({
+    summary:
+      'Send email to all subscribers on the platform subscribe || admin access need',
+  })
   @ValidateAdmin()
   @ApiBearerAuth()
   @Post('admin/send-email')
   sendEmailAdmin(@Body() dto: CreateAdminSendmailDto) {
     return this.platformSubscribeService.sendEmailAdmin(dto);
   }
-
-
 }

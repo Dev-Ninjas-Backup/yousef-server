@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Payment</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <h2>Test Payment Intent</h2>
+    
+    <div id="payment-form">
+        <div id="card-element"></div>
+        <button id="submit-btn">Pay Now</button>
+        <div id="error-message"></div>
+        <div id="success-message"></div>
+    </div>
+
+    <script>
+        // আপনার Stripe Publishable Key দিন
+        const stripe = Stripe('pk_test_51Qhl7xP3Cjs6shL6g2VkrrEcujh5n7hxqw4kRXraLWvRqwyq1SJA4ieQ2TornHsbkpCxxnPK4J6ByTTAbeUfLOrU00lTAbxSHv');
+        
+        // আপনার API থেকে পাওয়া clientSecret
+        const clientSecret = 'pi_3SoCAqP3Cjs6shL61Xm4OhnL_secret_i2acFg3jiTE89XRgHfkUYFdMH';
+        
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+
+        document.getElementById('submit-btn').addEventListener('click', async () => {
+            const {error, paymentIntent} = await stripe.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                }
+            });
+
+            if (error) {
+                document.getElementById('error-message').textContent = error.message;
+            } else if (paymentIntent.status === 'succeeded') {
+                document.getElementById('success-message').textContent = 'Payment successful!';
+                console.log('Payment Intent:', paymentIntent);
+            }
+        });
+    </script>
+
+    <style>
+        body { font-family: Arial; padding: 50px; }
+        #card-element { border: 1px solid #ccc; padding: 10px; margin: 20px 0; }
+        #submit-btn { background: #5469d4; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        #error-message { color: red; margin-top: 10px; }
+        #success-message { color: green; margin-top: 10px; }
+    </style>
+</body>
+</html>

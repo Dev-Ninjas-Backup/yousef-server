@@ -370,14 +370,13 @@ export class GarageManagementService {
         isDeleted: false,
         isVerified: true,
       },
-     
     });
 
     if (!user) {
-      throw new NotFoundException(`Garage owner with ID ${userId} not found. Please verify the user ID.`);
+      throw new NotFoundException(
+        `Garage owner with ID ${userId} not found. Please verify the user ID.`,
+      );
     }
-
-
 
     // -------- Apply FREE TRIAL (only once) ----------
     let trialData = {};
@@ -409,13 +408,10 @@ export class GarageManagementService {
     if (user.email) {
       await this.mail.sendEmail(
         user.email,
-    
+
         'Your Garage Has Been Approved!',
         GarageAcceptEmailTemplate({
           name: user.fullName ?? undefined,
-          
-
-         
         }),
       );
     }
@@ -541,6 +537,4 @@ export class GarageManagementService {
 
     return successResponse(deletedGarage, 'Garage deleted successfully');
   }
-
-
 }
