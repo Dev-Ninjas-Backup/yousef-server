@@ -23,7 +23,7 @@ import {
   ApiConsumes,
   ApiOperation,
   ApiResponse,
-  ApiTags
+  ApiTags,
 } from '@nestjs/swagger';
 import { GetUser, ValidateAuth } from 'src/common/jwt/jwt.decorator';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
@@ -38,7 +38,7 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly paymentService: PaymentService,
-  ) { }
+  ) {}
 
   @ValidateAuth()
   @ApiBearerAuth()

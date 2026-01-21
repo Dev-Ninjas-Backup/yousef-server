@@ -31,7 +31,6 @@ enum PrivateChatEvents {
   USER_STOP_TYPING = 'private:user_stop_typing',
   TYPING_START = 'private:typing_start',
   USER_TYPING = 'private:user_typing',
-
 }
 
 @WebSocketGateway({
@@ -39,14 +38,15 @@ enum PrivateChatEvents {
   namespace: '/pv/message',
 })
 export class PrivateChatGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(PrivateChatGateway.name);
 
   constructor(
     private readonly privateChatService: PrivateChatService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   @WebSocketServer()
   server: Server;
@@ -168,7 +168,7 @@ export class PrivateChatGateway
     const { recipientId } = payload;
 
     const userId = this.getUserIdFromSocket(client);
-    if (!userId) return; 
+    if (!userId) return;
 
     // Validate sender matches token
     if (client.data.userId !== userId) {
@@ -234,7 +234,6 @@ export class PrivateChatGateway
     this.server.to(userId).emit(PrivateChatEvents.NEW_MESSAGE, message);
   }
 
-
   @SubscribeMessage(PrivateChatEvents.TYPING_START)
   async handleTypingStart(
     @MessageBody() data: { conversationId: string; recipientId: string },
@@ -275,5 +274,4 @@ export class PrivateChatGateway
     }
     return userId;
   }
-
 }

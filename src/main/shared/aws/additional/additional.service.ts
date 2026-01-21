@@ -125,6 +125,7 @@ export class AdditionalS3Service implements OnModuleInit {
       try {
         await fs.unlink(absolutePath);
       } catch (unlinkError) {
+        console.log(unlinkError);
         console.error(
           ` Failed to delete local file after error: ${absolutePath}`,
         );

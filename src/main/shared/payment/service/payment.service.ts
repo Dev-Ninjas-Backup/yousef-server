@@ -574,11 +574,7 @@ export class PaymentService {
     const { userId, type } = paymentIntent.metadata;
     console.log(userId, type);
 
-    console.log('ken asena event', paymentIntent, paymentIntent.metadata);
-
     if (type === 'product_creation') {
-      console.log('ami to true na ');
-
       // Create payment record
       await this.prisma.payment.create({
         data: {

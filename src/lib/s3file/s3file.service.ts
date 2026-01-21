@@ -35,21 +35,37 @@ export class S3FileService {
       );
     }
 
-
     //-----  Validate file type and size ------
     const allowedTypes = [
       // Images
-      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-      'image/svg+xml', 'image/bmp', 'image/tiff', 'image/heic',
-      'image/heif', 'image/avif',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+      'image/bmp',
+      'image/tiff',
+      'image/heic',
+      'image/heif',
+      'image/avif',
 
       // Videos
-      'video/mp4', 'video/webm', 'video/ogg', 'video/mov',
-      'video/avi', 'video/mkv', 'video/flv',
+      'video/mp4',
+      'video/webm',
+      'video/ogg',
+      'video/mov',
+      'video/avi',
+      'video/mkv',
+      'video/flv',
 
       // Audio
-      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg',
-      'audio/aac', 'audio/flac', 'audio/m4a',
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/ogg',
+      'audio/aac',
+      'audio/flac',
+      'audio/m4a',
 
       // Documents
       'application/pdf',
@@ -94,7 +110,7 @@ export class S3FileService {
       'text/html',
       'text/css',
       'text/javascript',
-      'application/javascript'
+      'application/javascript',
     ];
     const mimeType = file.mimetype;
     if (!allowedTypes.includes(mimeType)) {

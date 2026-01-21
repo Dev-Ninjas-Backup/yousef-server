@@ -19,7 +19,7 @@ export class GarageManagementService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
-  ) { }
+  ) {}
 
   // ---------get all garage----------------
   @HandleError('Failed to get all garage', 'Garage')
@@ -27,8 +27,7 @@ export class GarageManagementService {
     const users = await this.prisma.user.findMany({
       where: {
         isDeleted: false,
-        role: 'GARAGE_OWNER'
-
+        role: 'GARAGE_OWNER',
       },
       select: {
         id: true,
@@ -74,8 +73,8 @@ export class GarageManagementService {
             services: true,
             createdAt: true,
             updatedAt: true,
-          }
-        }
+          },
+        },
       },
     });
 
@@ -125,7 +124,6 @@ export class GarageManagementService {
 
   @HandleError('Failed to search garage', 'Garage')
   async searchGarages(dto: SearchGarageDto) {
-
     const { page, limit, name, status } = dto;
     const skip = (page - 1) * limit;
 
@@ -361,13 +359,9 @@ export class GarageManagementService {
   //   );
   // }
 
-
   // -------------------- updateGarageStatusByUserId -----------------------------
   @HandleError('Failed to approve garage by user ID', 'Garage')
-  async updateGarageStatusByUserId(
-    userId: string,
-  ): Promise<TResponse<any>> {
-
+  async updateGarageStatusByUserId(userId: string): Promise<TResponse<any>> {
     // -------- Find garage owner ----------
     const user = await this.prisma.user.findFirst({
       where: {
@@ -376,14 +370,13 @@ export class GarageManagementService {
         isDeleted: false,
         isVerified: true,
       },
-     
     });
 
     if (!user) {
-      throw new NotFoundException(`Garage owner with ID ${userId} not found. Please verify the user ID.`);
+      throw new NotFoundException(
+        `Garage owner with ID ${userId} not found. Please verify the user ID.`,
+      );
     }
-
-
 
     // -------- Apply FREE TRIAL (only once) ----------
     let trialData = {};
@@ -415,13 +408,10 @@ export class GarageManagementService {
     if (user.email) {
       await this.mail.sendEmail(
         user.email,
-    
+
         'Your Garage Has Been Approved!',
         GarageAcceptEmailTemplate({
           name: user.fullName ?? undefined,
-          
-
-         
         }),
       );
     }
@@ -429,14 +419,12 @@ export class GarageManagementService {
     return successResponse('Garage approved and free trial activated');
   }
 
-
   // ------- Update garage status by garage ID (NO free trial) -------------
   @HandleError('Failed to update garage status by garage ID', 'Garage')
   async updateGarageStatusByGarageId(
     garageId: string,
     dto: UpdateGarageStatusDto,
   ): Promise<TResponse<any>> {
-
     // -------- Find the specific garage ----------
     const garage = await this.prisma.garage.findUnique({
       where: { id: garageId },
@@ -549,6 +537,4 @@ export class GarageManagementService {
 
     return successResponse(deletedGarage, 'Garage deleted successfully');
   }
-
-
 }
