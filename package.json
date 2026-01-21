@@ -27,7 +27,6 @@
     "db:studio": "npx prisma studio",
     "db:validate": "npx prisma validate",
     "db:format": "npx prisma format",
-    "prepare": "husky",
     "webhook:listen": "stripe listen --forward-to localhost:5050/payment/webhook",
     "webhook:test": "node test-webhook.js"
   },
@@ -108,7 +107,6 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
-    "husky": "^9.1.7",
     "jest": "^30.0.0",
     "node-emoji": "^2.2.0",
     "prettier": "^3.4.2",
