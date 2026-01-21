@@ -97,7 +97,7 @@ export class SubscriptionService {
   // Create monthly subscription session ($100)
   async createMonthlySubscriptionSession(
     userId: string,
-  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  ): Promise<{ url: string }> {
     return this.paymentService.createMonthlyPlanSession(userId);
   }
 

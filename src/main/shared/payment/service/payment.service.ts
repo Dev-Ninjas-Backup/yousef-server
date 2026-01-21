@@ -28,7 +28,7 @@ export class PaymentService {
   async createCheckoutSession(
     userId: string,
     payload: CreateCheckoutPlanDto,
-  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  ): Promise<{ url: string }> {
     // 1. Find plan from DB
     const plan = await this.prisma.paymentPlan.findUnique({
       where: { id: payload.planId },
@@ -36,20 +36,33 @@ export class PaymentService {
 
     if (!plan) throw new NotFoundException('Payment plan not found...');
 
-    // 2. Create Stripe PaymentIntent
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: plan.Price * 100,
-      currency: 'usd',
-      automatic_payment_methods: { enabled: true },
+    // 2. Create Stripe checkout session
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: plan.name || 'Payment Plan',
+              description: plan.shortBio ?? '',
+              metadata: {
+                billingCycle: plan.billingCycle,
+                features: plan.features.join(','),
+              },
+            },
+            unit_amount: plan.Price * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL}/success-payment`,
+      cancel_url: `${process.env.FRONTEND_URL}/cancel-payment`,
       metadata: { userId, planId: plan.id },
     });
 
-    console.log('Payment Intent...', paymentIntent);
-
-    return {
-      clientSecret: paymentIntent.client_secret!,
-      paymentIntentId: paymentIntent.id,
-    };
+    return { url: session.url! };
   }
 
   @HandleError('Failed to fetch user payments')
@@ -160,10 +173,10 @@ export class PaymentService {
     }
 
     switch (event.type) {
-      case 'payment_intent.succeeded':
-        console.log('💰 Processing payment_intent.succeeded');
-        await this.handlePaymentSuccess(
-          event.data.object as Stripe.PaymentIntent,
+      case 'checkout.session.completed':
+        console.log('💰 Processing checkout.session.completed');
+        await this.handleCheckoutSuccess(
+          event.data.object as Stripe.Checkout.Session,
         );
         break;
       case 'payment_intent.payment_failed':
@@ -174,381 +187,6 @@ export class PaymentService {
         break;
       default:
         console.log(`⚠️ Unhandled event type: ${event.type}`);
-    }
-  }
-
-  private async handlePaymentSuccess(
-    paymentIntent: Stripe.PaymentIntent,
-  ): Promise<void> {
-    console.log('🔥 Webhook received - handlePaymentSuccess');
-    console.log('PaymentIntent metadata:', paymentIntent.metadata);
-
-    const { userId, type, productId, productName } = paymentIntent.metadata;
-
-    if (type === 'monthly_subscription') {
-      console.log('💰 Processing monthly subscription for user:', userId);
-      const now = new Date();
-      const subscriptionEndDate = new Date(now);
-      subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
-
-      const garageSub = await this.prisma.garageSubscription.create({
-        data: {
-          userId,
-          type: 'PAID',
-          amount: paymentIntent.amount,
-          currency: 'usd',
-          stripeSessionId: paymentIntent.id,
-          stripePaymentId: paymentIntent.id,
-          startDate: now,
-          endDate: subscriptionEndDate,
-          billingCycle: 'MONTHLY',
-          status: 'ACTIVE',
-        },
-      });
-
-      await this.prisma.payment.create({
-        data: {
-          sessionId: paymentIntent.id,
-          transactionId: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: 'usd',
-          status: 'COMPLETED',
-          paymentMethod: 'card',
-          paymentType: 'GARAGE_SUBSCRIPTION',
-          userId,
-          garageSubscriptionId: garageSub.id,
-        },
-      });
-
-      const updatedUser = await this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          isSubscribed: true,
-          subscriptionStartDate: now,
-          subscriptionEndDate: subscriptionEndDate,
-          nextSubscriptionBillingDate: subscriptionEndDate,
-          garageStatus: 'GARAGE_PAID_OWNER',
-          isSubscriptionTrialActive: false,
-        },
-      });
-      console.log(
-        '✅ User subscription activated:',
-        updatedUser.isSubscribed,
-        updatedUser.subscriptionEndDate,
-      );
-
-      const notification = await this.prisma.garageAdminNotification.findUnique(
-        {
-          where: {
-            userId: userId,
-          },
-        },
-      );
-
-      console.log('Email Notification: ', notification?.emailNotification);
-
-      try {
-        if (notification?.emailNotification) {
-          await this.mailService.sendPaymentConfirmationEmail(
-            updatedUser.email,
-            {
-              userName: updatedUser.fullName || 'Valued Customer',
-              paymentType: 'garage_monthly',
-              amount: paymentIntent.amount,
-              transactionId: paymentIntent.id,
-              garageName: updatedUser.garageName as string,
-              startDate: now,
-              endDate: subscriptionEndDate,
-            },
-          );
-        }
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-      }
-    } else if (type === 'pay_per_product') {
-      console.log('💳 Processing pay-per product for user:', userId);
-      await this.prisma.payment.create({
-        data: {
-          sessionId: paymentIntent.id,
-          transactionId: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: 'usd',
-          status: 'COMPLETED',
-          paymentMethod: 'card',
-          paymentType: 'PAY_PER_PRODUCT',
-          userId,
-        },
-      });
-
-      const updatedUser = await this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          hasPaid: true,
-          freeProductsListing: {
-            increment: 1,
-          },
-        },
-      });
-      console.log(
-        '✅ User updated with credit:',
-        updatedUser.freeProductsListing,
-      );
-
-      const notification = await this.prisma.garageAdminNotification.findUnique(
-        {
-          where: {
-            userId: userId,
-          },
-        },
-      );
-
-      try {
-        if (
-          updatedUser?.role === UserRole.GARAGE_OWNER &&
-          notification?.emailNotification
-        ) {
-          await this.mailService.sendPaymentConfirmationEmail(
-            updatedUser.email,
-            {
-              userName: updatedUser.fullName || 'Valued Customer',
-              paymentType: 'pay_per_product',
-              amount: paymentIntent.amount,
-              transactionId: paymentIntent.id,
-            },
-          );
-        } else if (updatedUser?.isEmailNotification) {
-          await this.mailService.sendPaymentConfirmationEmail(
-            updatedUser.email,
-            {
-              userName: updatedUser.fullName || 'Valued Customer',
-              paymentType: 'pay_per_product',
-              amount: paymentIntent.amount,
-              transactionId: paymentIntent.id,
-            },
-          );
-        }
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-      }
-    } else if (type === 'product_monthly_subscription') {
-      console.log('Processing PRODUCT MONTHLY subscription for user:', userId);
-
-      const now = new Date();
-      const endDate = new Date(now);
-      endDate.setMonth(endDate.getMonth() + 1);
-
-      await this.prisma.payment.create({
-        data: {
-          sessionId: paymentIntent.id,
-          transactionId: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: 'usd',
-          status: 'COMPLETED',
-          paymentMethod: 'card',
-          paymentType: 'MONTHLY_PEY_PRODUCT',
-          userId,
-        },
-      });
-
-      const updatedUser = await this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          hasPaid: true,
-          productMonthlyActive: true,
-          productMonthlyStartDate: now,
-          productMonthlyEndDate: endDate,
-        },
-      });
-
-      console.log('Product Monthly Subscription activated for user:', userId);
-
-      const notification = await this.prisma.garageAdminNotification.findUnique(
-        {
-          where: {
-            userId: userId,
-          },
-        },
-      );
-      console.log(
-        'Product monthly subscription email',
-        updatedUser?.isEmailNotification,
-      );
-
-      try {
-        if (
-          updatedUser?.role === UserRole.GARAGE_OWNER &&
-          notification?.emailNotification
-        ) {
-          await this.mailService.sendPaymentConfirmationEmail(
-            updatedUser.email,
-            {
-              userName: updatedUser.fullName || 'Valued Customer',
-              paymentType: 'product_monthly',
-              amount: paymentIntent.amount,
-              transactionId: paymentIntent.id,
-              startDate: now,
-              endDate: endDate,
-            },
-          );
-        } else if (updatedUser?.isEmailNotification) {
-          await this.mailService.sendPaymentConfirmationEmail(
-            updatedUser.email,
-            {
-              userName: updatedUser.fullName || 'Valued Customer',
-              paymentType: 'product_monthly',
-              amount: paymentIntent.amount,
-              transactionId: paymentIntent.id,
-              startDate: now,
-              endDate: endDate,
-            },
-          );
-        }
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-      }
-    } else if (type === 'product_promotion_credit') {
-      console.log('🎯 Processing promotion credit for user:', userId);
-      await this.prisma.payment.create({
-        data: {
-          sessionId: paymentIntent.id,
-          transactionId: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: 'usd',
-          status: 'COMPLETED',
-          paymentMethod: 'card',
-          paymentType: 'PRODUCT_PROMOTION_CREDIT',
-          userId,
-        },
-      });
-
-      const updatedUser = await this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          hasPaid: true,
-          promotionCredits: {
-            increment: 1,
-          },
-        },
-      });
-      console.log(
-        '✅ User updated with promotion credit:',
-        updatedUser.promotionCredits,
-      );
-
-      const notification = await this.prisma.garageAdminNotification.findUnique(
-        {
-          where: {
-            userId: userId,
-          },
-        },
-      );
-
-      try {
-        if (
-          updatedUser?.role === UserRole.GARAGE_OWNER &&
-          notification?.emailNotification
-        ) {
-          await this.mailService.sendPaymentConfirmationEmail(
-            updatedUser.email,
-            {
-              userName: updatedUser.fullName || 'Valued Customer',
-              paymentType: 'promotional',
-              amount: paymentIntent.amount,
-              transactionId: paymentIntent.id,
-            },
-          );
-        } else if (
-          updatedUser?.isEmailNotification &&
-          updatedUser?.isEmailPromotional
-        ) {
-          await this.mailService.sendPaymentConfirmationEmail(
-            updatedUser.email,
-            {
-              userName: updatedUser.fullName || 'Valued Customer',
-              paymentType: 'promotional',
-              amount: paymentIntent.amount,
-              transactionId: paymentIntent.id,
-            },
-          );
-        }
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-      }
-    } else if (type === 'product_promotion' && productId) {
-      await this.prisma.payment.create({
-        data: {
-          sessionId: paymentIntent.id,
-          transactionId: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: 'usd',
-          status: 'COMPLETED',
-          paymentMethod: 'card',
-          paymentType: 'PRODUCT_PROMOTION',
-          userId,
-          productId,
-        },
-      });
-
-      const product = await this.prisma.product.update({
-        where: { id: productId },
-        data: {
-          status: 'APPROVED',
-          isPromoted: true,
-        },
-      });
-
-      const updatedUser = await this.prisma.user.update({
-        where: { id: userId },
-        data: { hasPaid: true },
-      });
-
-      try {
-        await this.mailService.sendPaymentConfirmationEmail(updatedUser.email, {
-          userName: updatedUser.fullName || 'Valued Customer',
-          paymentType: 'promotional',
-          amount: paymentIntent.amount,
-          transactionId: paymentIntent.id,
-          productName: product.partName || productName || 'Your Product',
-        });
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-      }
-    } else if (type === 'product_purchase') {
-      await this.prisma.payment.create({
-        data: {
-          sessionId: paymentIntent.id,
-          transactionId: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: 'usd',
-          status: 'COMPLETED',
-          paymentMethod: 'card',
-          paymentType: 'GENERAL',
-          userId,
-        },
-      });
-
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { hasPaid: true },
-      });
-    } else if (type === 'product_creation') {
-      await this.prisma.payment.create({
-        data: {
-          sessionId: paymentIntent.id,
-          transactionId: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: paymentIntent.currency,
-          status: 'COMPLETED',
-          paymentMethod: 'card',
-          paymentType: 'PAY_PER_PRODUCT',
-          userId,
-        },
-      });
-
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { hasPaid: true },
-      });
     }
   }
 
@@ -564,8 +202,9 @@ export class PaymentService {
       console.log('💰 Processing monthly subscription for user:', userId);
       const now = new Date();
       const subscriptionEndDate = new Date(now);
-      subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
+      subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // Add 1 month
 
+      // Create GarageSubscription record
       const garageSub = await this.prisma.garageSubscription.create({
         data: {
           userId,
@@ -581,6 +220,7 @@ export class PaymentService {
         },
       });
 
+      // Create payment record
       await this.prisma.payment.create({
         data: {
           sessionId: session.id,
@@ -595,6 +235,7 @@ export class PaymentService {
         },
       });
 
+      // Update user's subscription status with new columns
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: {
@@ -603,7 +244,7 @@ export class PaymentService {
           subscriptionEndDate: subscriptionEndDate,
           nextSubscriptionBillingDate: subscriptionEndDate,
           garageStatus: 'GARAGE_PAID_OWNER',
-          isSubscriptionTrialActive: false,
+          isSubscriptionTrialActive: false, // End trial if active
         },
       });
       console.log(
@@ -622,6 +263,7 @@ export class PaymentService {
 
       console.log('Email Notification: ', notification?.emailNotification);
 
+      // Send email notification
       try {
         if (notification?.emailNotification) {
           await this.mailService.sendPaymentConfirmationEmail(
@@ -642,6 +284,7 @@ export class PaymentService {
       }
     } else if (type === 'pay_per_product') {
       console.log('💳 Processing pay-per product for user:', userId);
+      // Create payment record for pay-per product
       await this.prisma.payment.create({
         data: {
           sessionId: session.id,
@@ -655,10 +298,12 @@ export class PaymentService {
         },
       });
 
+      // Give user 1 product creation credit
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: {
           hasPaid: true,
+          // Add 1 to available product credits (we'll track this)
           freeProductsListing: {
             increment: 1,
           },
@@ -923,6 +568,35 @@ export class PaymentService {
     }
   }
 
+  private async handlePaymentSuccess(
+    paymentIntent: Stripe.PaymentIntent,
+  ): Promise<void> {
+    const { userId, type } = paymentIntent.metadata;
+    console.log(userId, type);
+
+    if (type === 'product_creation') {
+      // Create payment record
+      await this.prisma.payment.create({
+        data: {
+          sessionId: paymentIntent.id,
+          transactionId: paymentIntent.id,
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+          status: 'COMPLETED',
+          paymentMethod: 'card',
+          paymentType: 'PAY_PER_PRODUCT',
+          userId,
+        },
+      });
+
+      // Update user's payment status
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { hasPaid: true },
+      });
+    }
+  }
+
   private async handlePaymentFailed(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
@@ -967,15 +641,28 @@ export class PaymentService {
 
   // Create checkout session for monthly plan ($100)
   @HandleError('Failed to create monthly plan session')
-  async createMonthlyPlanSession(
-    userId: string,
-  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  async createMonthlyPlanSession(userId: string): Promise<{ url: string }> {
     console.log('💰 Creating monthly plan session for user:', userId);
 
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: 10000,
-      currency: 'usd',
-      automatic_payment_methods: { enabled: true },
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Monthly Subscription Plan',
+              description: 'Unlimited product listings for 30 days',
+            },
+            unit_amount: 10000,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL}/payment-success`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=monthly`,
+
       metadata: {
         userId,
         type: 'monthly_subscription',
@@ -983,17 +670,12 @@ export class PaymentService {
       },
     });
 
-    return {
-      clientSecret: paymentIntent.client_secret!,
-      paymentIntentId: paymentIntent.id,
-    };
+    return { url: session.url! };
   }
 
   // Create checkout session for Product Monthly Plan ($100) - ONLY for product listings
   @HandleError('Failed to create product monthly session')
-  async createProductMonthlySession(
-    userId: string,
-  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  async createProductMonthlySession(userId: string): Promise<{ url: string }> {
     console.log('Creating PRODUCT MONTHLY session for user:', userId);
 
     const paymentConfig = await this.prisma.paymentConfigure.findFirst();
@@ -1008,10 +690,25 @@ export class PaymentService {
       paymentConfig?.sparePartsMonthly || 0,
     );
 
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: sparePartsMonthlySubscription * 100,
-      currency: 'usd',
-      automatic_payment_methods: { enabled: true },
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Product Monthly Plan',
+              description:
+                'Unlimited product listings for 30 days (Product-only plan)',
+            },
+            unit_amount: sparePartsMonthlySubscription * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL}/payment-success`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=product_monthly`,
       metadata: {
         userId,
         type: 'product_monthly_subscription',
@@ -1019,17 +716,12 @@ export class PaymentService {
       },
     });
 
-    return {
-      clientSecret: paymentIntent.client_secret!,
-      paymentIntentId: paymentIntent.id,
-    };
+    return { url: session.url! };
   }
 
   // Create checkout session for pay-per product ($20)
   @HandleError('Failed to create pay-per session')
-  async createPayPerProductSession(
-    userId: string,
-  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  async createPayPerProductSession(userId: string): Promise<{ url: string }> {
     console.log('💳 Creating pay-per session for user:', userId);
 
     const paymentConfig = await this.prisma.paymentConfigure.findFirst();
@@ -1042,10 +734,24 @@ export class PaymentService {
 
     const perPerListingPrice = Number(paymentConfig?.perListingPrice || 0);
 
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: perPerListingPrice * 100,
-      currency: 'usd',
-      automatic_payment_methods: { enabled: true },
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Pay Per Product',
+              description: 'Single product listing fee',
+            },
+            unit_amount: perPerListingPrice * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL}/payment-success`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=pay_per`,
       metadata: {
         userId,
         type: 'pay_per_product',
@@ -1053,10 +759,7 @@ export class PaymentService {
       },
     });
 
-    return {
-      clientSecret: paymentIntent.client_secret!,
-      paymentIntentId: paymentIntent.id,
-    };
+    return { url: session.url! };
   }
 
   // Check if user has product creation credits from pay-per payments
@@ -1115,7 +818,7 @@ export class PaymentService {
   @HandleError('Failed to create promotion session')
   async createPromotionPaymentSession(
     userId: string,
-  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  ): Promise<{ url: string }> {
     console.log('🎯 Creating promotion session for user:', userId);
 
     const paymentConfig = await this.prisma.paymentConfigure.findFirst();
@@ -1128,10 +831,24 @@ export class PaymentService {
 
     const promotionalAdPrice = Number(paymentConfig?.promotionalAdPrice || 0);
 
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: promotionalAdPrice * 100,
-      currency: 'usd',
-      automatic_payment_methods: { enabled: true },
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Product Promotion',
+              description: 'Promote your product listing',
+            },
+            unit_amount: promotionalAdPrice * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.FRONTEND_URL}/payment-success`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment-cancel?type=promotion`,
       metadata: {
         userId,
         type: 'product_promotion_credit',
@@ -1139,10 +856,7 @@ export class PaymentService {
       },
     });
 
-    return {
-      clientSecret: paymentIntent.client_secret!,
-      paymentIntentId: paymentIntent.id,
-    };
+    return { url: session.url! };
   }
 
   // Check if user has ACTIVE Product Monthly Plan ($100)
