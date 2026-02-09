@@ -29,7 +29,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly authGoogleService: AuthGoogleService,
-  ) {}
+  ) { }
 
   //  -------------- User Registration --------------
   @Post('register')
@@ -37,12 +37,12 @@ export class AuthController {
   @UseInterceptors(
     FileFieldsInterceptor(
       [
-        { name: 'garageLogo', maxCount: 1 },
-        { name: 'tradeLicense', maxCount: 1 },
+        { name: 'garageLogo', maxCount: 3 },
+        { name: 'tradeLicense', maxCount: 3 },
       ],
       new MulterService().createMulterOptions(
-        './uploads',
-
+        './Uploads',
+        'content',
         FileType.ANY,
       ),
     ),
