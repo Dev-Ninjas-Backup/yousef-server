@@ -101,8 +101,8 @@ export class ProductController {
   async findAll(@Query() filterDto: ProductFilterDto) {
     return this.productService.findAll(filterDto);
   }
-
-  // My products
+ 
+//---------------- Get my products for authenticated user----------------
 
   @ApiBearerAuth()
   @ValidateAuth()
@@ -113,6 +113,7 @@ export class ProductController {
     return this.productService.findMyProducts(userId);
   }
 
+  // ---------------------- Get Product By ID ----------------------
   @Get(':id')
   @ApiOperation({ summary: 'Get a product by ID' })
   @ApiResponse({ status: 200, description: 'Product details.' })
@@ -121,7 +122,7 @@ export class ProductController {
     return this.productService.findOne(id);
   }
 
-  // -------------------------------
+  // ------------------------------- update product by ID with photos and verification image -------------------------------
 
   @ValidateAuth()
   @ApiBearerAuth()
