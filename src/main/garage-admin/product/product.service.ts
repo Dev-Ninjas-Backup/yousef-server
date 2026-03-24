@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { AppError } from 'src/common/error/handle-error.app';
+import { HandleError } from 'src/common/error/handle-error.decorator';
 import { successResponse } from 'src/common/utilsResponse/response.util';
 import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
@@ -23,7 +24,7 @@ export class ProductService {
     private s3FileService: S3FileService,
     private paymentService: PaymentService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   async create(
     userId: string,
@@ -363,6 +364,8 @@ export class ProductService {
     });
   }
 
+  // --------------update product by id----------------
+  @HandleError('Failed to update product')
   async update(
     id: string,
     updateProductDto: UpdateProductDto,
@@ -386,7 +389,7 @@ export class ProductService {
       ...productData
     } = updateProductDto;
 
-    // Validate verificationImage for VERIFIED_SUPPLIER
+    // ----------- Validate verificationImage for VERIFIED_SUPPLIER ---------------
     if (
       sellerType === 'VERIFIED_SUPPLIER' &&
       !verificationImageFile &&
@@ -397,10 +400,10 @@ export class ProductService {
       );
     }
 
-    // Upload new photos to S3
+    //-----------------  Upload new photos to S3 ----------------
     const photoUrls: string[] = [];
     if (files && files.length > 0) {
-      // Delete old photos from S3
+      //  ---------- Delete old photos from S3 ----------
       if (product.photos && product.photos.length > 0) {
         await Promise.all(
           product.photos.map((photoUrl) =>
@@ -419,7 +422,7 @@ export class ProductService {
       }
     }
 
-    // Update seller if provided
+    // ----------------- Update seller if provided ----------------
     if (
       sellerName ||
       sellerEmail ||
@@ -433,7 +436,7 @@ export class ProductService {
       if (sellerPhoneNumber) sellerUpdateData.phoneNumber = sellerPhoneNumber;
       if (sellerType) sellerUpdateData.sellerType = sellerType;
 
-      // Upload verification image if provided
+      //  -------------- Upload verification image if provided -------------------
       if (verificationImageFile) {
         const { url } = await this.s3FileService.processUploadedFile(
           verificationImageFile,
@@ -447,7 +450,7 @@ export class ProductService {
       });
     }
 
-    // Update product with new photos array
+    // ---------------- Update product with new photos array ----------------
     const updateData: any = {
       ...productData,
     };
@@ -471,6 +474,9 @@ export class ProductService {
     });
   }
 
+  // --------------delete product by id----------------
+
+  @HandleError('Failed to delete product')
   async remove(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
