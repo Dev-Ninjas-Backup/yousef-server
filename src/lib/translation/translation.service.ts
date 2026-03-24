@@ -1,5 +1,6 @@
 import { v2 } from '@google-cloud/translate';
 import { Injectable, Logger } from '@nestjs/common';
+import e from 'express';
 
 interface TranslationCache {
   [key: string]: {
@@ -135,7 +136,7 @@ export class TranslationService {
     try {
       const [detection] = await this.translate.detect(text);
       return detection.language || process.env.DEFAULT_LANGUAGE || 'en';
-    } catch (error) {
+    } catch (error: any) {
       this.logger.warn(
         `Failed to detect language for "${text}", using default`,
       );

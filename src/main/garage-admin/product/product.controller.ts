@@ -101,8 +101,8 @@ export class ProductController {
   async findAll(@Query() filterDto: ProductFilterDto) {
     return this.productService.findAll(filterDto);
   }
- 
-//---------------- Get my products for authenticated user----------------
+
+  //---------------- Get my products for authenticated user----------------
 
   @ApiBearerAuth()
   @ValidateAuth()
