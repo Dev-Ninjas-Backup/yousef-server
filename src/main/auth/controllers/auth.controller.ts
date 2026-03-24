@@ -29,7 +29,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly authGoogleService: AuthGoogleService,
-  ) { }
+  ) {}
 
   //  -------------- User Registration --------------
   @Post('register')
