@@ -102,6 +102,7 @@ export class UserManagementService {
         id: true,
         role: true,
         fullName: true,
+        phone: true,
         profilePhoto: true,
         bio: true,
         email: true,
