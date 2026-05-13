@@ -59,4 +59,3 @@ SECRETS.md
 #  --------- folder gitignore for upload files ---------------
 .Uploads
 .uploads
-config.bat
