@@ -73,7 +73,7 @@ export class AdditionalS3Service implements OnModuleInit {
 
       // Try one more time with sudo-like approach (read with different strategy)
       try {
-        const fsSync = require('fs');
+        const fsSync = await import('fs');
         fileContent = fsSync.readFileSync(absolutePath);
         console.log(
           `✅ Read file using sync method: ${fileContent.length} bytes`,

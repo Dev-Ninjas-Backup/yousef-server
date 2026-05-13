@@ -1,6 +1,5 @@
 import { v2 } from '@google-cloud/translate';
 import { Injectable, Logger } from '@nestjs/common';
-import e from 'express';
 
 interface TranslationCache {
   [key: string]: {
@@ -76,7 +75,7 @@ export class TranslationService {
             translation,
             timestamp: Date.now(),
           };
-        } catch (error) {
+        } catch {
           this.logger.warn(
             `Failed to translate "${t}" to ${targetLanguage}, returning original`,
           );
@@ -136,7 +135,7 @@ export class TranslationService {
     try {
       const [detection] = await this.translate.detect(text);
       return detection.language || process.env.DEFAULT_LANGUAGE || 'en';
-    } catch (error: any) {
+    } catch {
       this.logger.warn(
         `Failed to detect language for "${text}", using default`,
       );
@@ -150,8 +149,8 @@ export class TranslationService {
   ): Promise<string[]> {
     try {
       return this.translateText(texts, targetLanguage) as Promise<string[]>;
-    } catch (error) {
-      this.logger.error('Batch translation error:', error);
+    } catch {
+      this.logger.error('Batch translation error');
       return texts;
     }
   }
