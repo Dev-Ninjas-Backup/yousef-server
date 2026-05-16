@@ -28,6 +28,14 @@ export class UpdateProductDto {
   partName?: string;
 
   @ApiPropertyOptional({
+    description: 'Category ID of the product',
+    example: 'uuid-string',
+  })
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @ApiPropertyOptional({
     description: 'Brand of the product',
     example: 'Bosch',
   })
