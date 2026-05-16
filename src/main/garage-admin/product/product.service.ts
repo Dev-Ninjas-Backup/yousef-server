@@ -209,6 +209,7 @@ export class ProductService {
       include: {
         seller: true,
         createdBy: { select: { id: true, email: true, fullName: true } },
+        category: true,
       },
     });
 
@@ -338,6 +339,7 @@ export class ProductService {
       include: {
         seller: true,
         createdBy: { select: { id: true, email: true, fullName: true } },
+        category: true,
       },
     });
 
@@ -360,6 +362,7 @@ export class ProductService {
       include: {
         seller: true,
         createdBy: { select: { id: true, email: true, fullName: true } },
+        category: true,
       },
     });
   }
@@ -470,6 +473,7 @@ export class ProductService {
             fullName: true,
           },
         },
+        category: true,
       },
     });
   }
@@ -497,6 +501,7 @@ export class ProductService {
             fullName: true,
           },
         },
+        category: true,
       },
     });
 
