@@ -105,6 +105,31 @@ export class ServiceTypeService {
   }
 
   async getAllCombinedUniqueServiceCategories() {
+    // Canonical service list — single source of truth
+    const CANONICAL_SERVICES = [
+      'Oil Change',
+      'Brake Repair',
+      'AC Service',
+      'Electrical Repair',
+      'Engine Repair',
+      'Tire Service',
+      'Body Work',
+      'Diagnostics',
+      'Towing',
+      'Emergency Towing',
+      'Van Doorstep Repair',
+      'Battery Replacement',
+      'Transmission Service',
+      'Suspension Repair',
+    ];
+
+    // Normalize map — old names → canonical names
+    const NORMALIZE_MAP: Record<string, string> = {
+      Electrical: 'Electrical Repair',
+      'Tire Rotation': 'Tire Service',
+      'Tyre Service': 'Tire Service',
+    };
+
     const users = await this.prisma.user.findMany({
       select: {
         serviceCategories: true,
@@ -121,10 +146,14 @@ export class ServiceTypeService {
       ...(user.garages?.flatMap((garage) => garage.services || []) || []),
     ]);
 
-    // unique + sort
-    const uniqueCategories = [...new Set(allCategories)].sort((a, b) =>
-      a.localeCompare(b),
-    );
+    // Normalize + unique + only canonical
+    const normalized = allCategories.map((s) => NORMALIZE_MAP[s] || s);
+
+    const uniqueCategories = [
+      ...new Set([...CANONICAL_SERVICES, ...normalized]),
+    ]
+      .filter((s) => CANONICAL_SERVICES.includes(s))
+      .sort((a, b) => a.localeCompare(b));
 
     return {
       serviceCategories: uniqueCategories,
