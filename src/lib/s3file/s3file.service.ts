@@ -161,4 +161,20 @@ export class S3FileService {
       throw new BadRequestException('Failed to upload file to S3');
     }
   }
+
+  async deleteFile(fileUrl: string): Promise<void> {
+    if (!fileUrl) return;
+    try {
+      const url = new URL(fileUrl);
+      const key = decodeURIComponent(url.pathname.substring(1));
+
+      await this.s3.deleteObject({
+        Bucket: process.env.BUCKET_NAME as string,
+        Key: key,
+      });
+      console.log(`Successfully deleted file from S3: ${key}`);
+    } catch (error) {
+      console.error(`Failed to delete file from S3 (${fileUrl}):`, error);
+    }
+  }
 }
