@@ -266,6 +266,7 @@ export class ProductService {
     category?: string;
     condition?: string;
     status?: string;
+    sortBy?: string;
   }) {
     const page = query?.page || 1;
     const limit = query?.limit || 20;
@@ -279,7 +280,6 @@ export class ProductService {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     where.createdAt = { gte: thirtyDaysAgo };
 
-    // Searching: partName, description, brand
     if (query?.search) {
       where.OR = [
         { partName: { contains: query.search, mode: 'insensitive' } },
@@ -288,21 +288,34 @@ export class ProductService {
       ];
     }
 
-    // Filtering: category by name from partsCategory table
     if (query?.category) {
       where.category = {
         name: { contains: query.category, mode: 'insensitive' },
       };
     }
 
-    // Filtering: condition (exact match)
     if (query?.condition) {
       where.condition = query.condition;
     }
 
-    // Filtering: status (exact match)
     if (query?.status) {
       where.status = query.status;
+    }
+
+    // Build orderBy based on sortBy
+    let orderBy: any[];
+    switch (query?.sortBy) {
+      case 'price_asc':
+        orderBy = [{ isPromoted: 'desc' }, { price: 'asc' }];
+        break;
+      case 'price_desc':
+        orderBy = [{ isPromoted: 'desc' }, { price: 'desc' }];
+        break;
+      case 'newest':
+        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
+        break;
+      default: // relevance — promoted first, then newest
+        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
     }
 
     const [products, total] = await Promise.all([
@@ -315,7 +328,7 @@ export class ProductService {
         },
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
       }),
       this.prisma.product.count({ where }),
     ]);
