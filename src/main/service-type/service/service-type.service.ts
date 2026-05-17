@@ -18,7 +18,6 @@ export class ServiceTypeService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
     if (user.serviceCategories.includes(serviceCategory)) {
       throw new BadRequestException('Service category already exists');
     }
@@ -51,6 +50,58 @@ export class ServiceTypeService {
     }
 
     return user;
+  }
+
+  async updateServiceCategory(
+    oldName: string,
+    newName: string,
+    userId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { serviceCategories: true },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!user.serviceCategories.includes(oldName)) {
+      throw new BadRequestException(`Service "${oldName}" not found`);
+    }
+
+    if (user.serviceCategories.includes(newName)) {
+      throw new BadRequestException(`Service "${newName}" already exists`);
+    }
+
+    const updated = user.serviceCategories.map((s) =>
+      s === oldName ? newName : s,
+    );
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { serviceCategories: updated },
+      select: { id: true, serviceCategories: true },
+    });
+  }
+
+  async removeServiceCategory(serviceName: string, userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { serviceCategories: true },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!user.serviceCategories.includes(serviceName)) {
+      throw new BadRequestException(`Service "${serviceName}" not found`);
+    }
+
+    const updated = user.serviceCategories.filter((s) => s !== serviceName);
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { serviceCategories: updated },
+      select: { id: true, serviceCategories: true },
+    });
   }
 
   async getAllCombinedUniqueServiceCategories() {

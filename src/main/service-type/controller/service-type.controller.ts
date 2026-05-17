@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetUser, ValidateGarageOwner } from 'src/common/jwt/jwt.decorator';
 import { CreateServiceTypeDto } from '../dto/create-service.dto';
@@ -35,5 +43,35 @@ export class ServiceTypeController {
   @ApiOperation({ summary: 'Get user service categories' })
   findAll(@GetUser('userId') userId: string) {
     return this.serviceTypeService.getUserServiceCategories(userId);
+  }
+
+  @ValidateGarageOwner()
+  @ApiBearerAuth()
+  @Patch(':serviceName')
+  @ApiOperation({ summary: 'Update a service category name' })
+  async update(
+    @Param('serviceName') serviceName: string,
+    @Body() dto: CreateServiceTypeDto,
+    @GetUser('userId') userId: string,
+  ) {
+    return this.serviceTypeService.updateServiceCategory(
+      decodeURIComponent(serviceName),
+      dto.serviceCategory,
+      userId,
+    );
+  }
+
+  @ValidateGarageOwner()
+  @ApiBearerAuth()
+  @Delete(':serviceName')
+  @ApiOperation({ summary: 'Delete a service category' })
+  async remove(
+    @Param('serviceName') serviceName: string,
+    @GetUser('userId') userId: string,
+  ) {
+    return this.serviceTypeService.removeServiceCategory(
+      decodeURIComponent(serviceName),
+      userId,
+    );
   }
 }
