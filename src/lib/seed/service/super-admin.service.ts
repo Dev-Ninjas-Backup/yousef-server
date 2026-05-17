@@ -6,6 +6,23 @@ import { ENVEnum } from 'src/common/enum/env.enum';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { UtilsService } from 'src/lib/utils/utils.service';
 
+const DEFAULT_SERVICE_CATEGORIES = [
+  'Oil Change',
+  'Brake Repair',
+  'AC Service',
+  'Electrical Repair',
+  'Engine Repair',
+  'Tire Service',
+  'Body Work',
+  'Diagnostics',
+  'Towing',
+  'Emergency Towing',
+  'Van Doorstep Repair',
+  'Battery Replacement',
+  'Transmission Service',
+  'Suspension Repair',
+];
+
 @Injectable()
 export class SuperAdminService implements OnModuleInit {
   constructor(
@@ -42,6 +59,7 @@ export class SuperAdminService implements OnModuleInit {
           role: 'SUPER_ADMIN',
           isVerified: true,
           isActive: true,
+          serviceCategories: DEFAULT_SERVICE_CATEGORIES,
         },
       });
       console.info(
@@ -61,6 +79,7 @@ export class SuperAdminService implements OnModuleInit {
         isActive: true,
         isVerified: true,
         role: 'SUPER_ADMIN',
+        serviceCategories: DEFAULT_SERVICE_CATEGORIES,
       },
     });
     console.info(
