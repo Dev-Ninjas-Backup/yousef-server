@@ -76,4 +76,13 @@ export class ProductFilterDto {
     message: 'Status must be one of: DRAFT, PENDING, APPROVED, REJECTED',
   })
   status?: ProductStatus;
+
+  @ApiPropertyOptional({
+    description: 'Sort products',
+    example: 'price_asc',
+    enum: ['relevance', 'price_asc', 'price_desc', 'newest'],
+  })
+  @IsOptional()
+  @IsIn(['relevance', 'price_asc', 'price_desc', 'newest'])
+  sortBy?: string;
 }
