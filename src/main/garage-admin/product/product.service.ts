@@ -306,10 +306,10 @@ export class ProductService {
     let orderBy: any[];
     switch (query?.sortBy) {
       case 'price_asc':
-        orderBy = [{ isPromoted: 'desc' }, { price: 'asc' }];
-        break;
       case 'price_desc':
-        orderBy = [{ isPromoted: 'desc' }, { price: 'desc' }];
+        // Price is stored as string, so we can't sort directly in DB
+        // We'll fetch all and sort in memory
+        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
         break;
       case 'newest':
         orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
@@ -332,6 +332,22 @@ export class ProductService {
       }),
       this.prisma.product.count({ where }),
     ]);
+
+    // Sort by price in memory if needed
+    if (query?.sortBy === 'price_asc' || query?.sortBy === 'price_desc') {
+      products.sort((a, b) => {
+        const priceA = parseFloat(a.price) || 0;
+        const priceB = parseFloat(b.price) || 0;
+
+        // Promoted products always come first
+        if (a.isPromoted !== b.isPromoted) {
+          return a.isPromoted ? -1 : 1;
+        }
+
+        // Then sort by price
+        return query.sortBy === 'price_asc' ? priceA - priceB : priceB - priceA;
+      });
+    }
 
     return {
       success: true,
