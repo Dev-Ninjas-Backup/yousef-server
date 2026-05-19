@@ -336,8 +336,8 @@ export class ProductService {
     // Sort by price in memory if needed
     if (query?.sortBy === 'price_asc' || query?.sortBy === 'price_desc') {
       products.sort((a, b) => {
-        const priceA = parseFloat(a.price) || 0;
-        const priceB = parseFloat(b.price) || 0;
+        const priceA = Number(a.price) || 0;
+        const priceB = Number(b.price) || 0;
 
         // Promoted products always come first
         if (a.isPromoted !== b.isPromoted) {
