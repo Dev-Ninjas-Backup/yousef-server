@@ -86,7 +86,7 @@ export class PromotionalAndFeaturedService {
         }
         return b.totalReviews - a.totalReviews;
       })
-      .slice(0, 3);
+      .slice(0, 10);
 
     const transformedGarages = sortedGarages.map((garage) => ({
       ...garage,
