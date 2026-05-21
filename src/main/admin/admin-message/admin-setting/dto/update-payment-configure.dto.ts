@@ -21,4 +21,35 @@ export class UpdatePaymentConfigureDto {
   @IsOptional()
   @IsString()
   freePromotionalListings?: string;
+
+  @ApiProperty({
+    example: '29',
+    description: 'Basic seller monthly plan price',
+  })
+  @IsOptional()
+  @IsString()
+  monthlyBasicPrice?: string;
+
+  @ApiProperty({ example: '59', description: 'Pro seller monthly plan price' })
+  @IsOptional()
+  @IsString()
+  monthlyProPrice?: string;
+
+  @ApiProperty({
+    example: '99',
+    description: 'Garage/Business monthly plan price',
+  })
+  @IsOptional()
+  @IsString()
+  monthlyGaragePrice?: string;
+
+  @ApiProperty({ example: '49', description: '3 Days product promotion price' })
+  @IsOptional()
+  @IsString()
+  promotionalAdPrice3Days?: string;
+
+  @ApiProperty({ example: '99', description: '7 Days product promotion price' })
+  @IsOptional()
+  @IsString()
+  promotionalAdPrice7Days?: string;
 }
