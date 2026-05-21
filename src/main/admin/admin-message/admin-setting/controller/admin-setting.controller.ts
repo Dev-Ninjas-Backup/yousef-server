@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
+import { ValidateAuth, ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
 import { GeneralSettingDtoPlatform } from '../dto/platform.setting.dto';
 import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
 import { AdminSettingService } from '../service/admin-setting.service';
@@ -66,7 +66,7 @@ export class AdminSettingController {
 
   // --------------------- payment configure -----------------------
   @ApiBearerAuth()
-  @ValidateSuperAdmin()
+  @ValidateAuth()
   @ApiOperation({ summary: 'Get payment configure' })
   @Get('payment-config')
   getPaymentConfig() {
