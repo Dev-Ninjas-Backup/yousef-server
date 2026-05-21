@@ -239,13 +239,7 @@ export class SparepartsFinancialsService {
   // ----------------Last30AllDataExport-----------------
   @HandleError('Failed to export last 30 days data')
   async Last30AllDataExport() {
-    const last30Days = new Date();
-    last30Days.setDate(last30Days.getDate() - 30);
-
     const payments = await this.prisma.payment.findMany({
-      where: {
-        createdAt: { gte: last30Days },
-      },
       select: {
         id: true,
         amount: true,
