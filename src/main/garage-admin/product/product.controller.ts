@@ -212,8 +212,12 @@ export class ProductController {
   @ApiOperation({
     summary: 'Create checkout session for Product Monthly Plan ',
   })
-  async createProductMonthlyPayment(@GetUser('userId') userId: string) {
-    return this.paymentService.createProductMonthlySession(userId);
+  async createProductMonthlyPayment(
+    @GetUser('userId') userId: string,
+    @Body() body: { planType?: string },
+  ) {
+    const planType = body?.planType || 'PRO';
+    return this.paymentService.createProductMonthlySession(userId, planType);
   }
 
   // Create checkout session for pay-per product
@@ -242,7 +246,11 @@ export class ProductController {
     status: 200,
     description: 'Product promotion checkout session created',
   })
-  async createPromotionPayment(@GetUser('userId') userId: string) {
-    return this.paymentService.createPromotionPaymentSession(userId);
+  async createPromotionPayment(
+    @GetUser('userId') userId: string,
+    @Body() body: { duration?: string },
+  ) {
+    const duration = body?.duration || '7';
+    return this.paymentService.createPromotionPaymentSession(userId, duration);
   }
 }

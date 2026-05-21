@@ -673,10 +673,16 @@ export class PaymentService {
     return { url: session.url! };
   }
 
-  // Create checkout session for Product Monthly Plan ($100) - ONLY for product listings
+  // Create checkout session for Product Monthly Plan (Basic/Pro/Garage) - ONLY for product listings
   @HandleError('Failed to create product monthly session')
-  async createProductMonthlySession(userId: string): Promise<{ url: string }> {
-    console.log('Creating PRODUCT MONTHLY session for user:', userId);
+  async createProductMonthlySession(
+    userId: string,
+    planType: string = 'PRO',
+  ): Promise<{ url: string }> {
+    console.log(
+      `Creating PRODUCT MONTHLY ${planType} session for user:`,
+      userId,
+    );
 
     const paymentConfig = await this.prisma.paymentConfigure.findFirst();
 
@@ -686,9 +692,23 @@ export class PaymentService {
       );
     }
 
-    const sparePartsMonthlySubscription = Number(
-      paymentConfig?.sparePartsMonthly || 0,
-    );
+    let price = 59;
+    let description = 'Unlimited product listings for 30 days (Pro Seller)';
+    let planLabel = 'Pro Seller Plan';
+
+    const normalizedPlan = planType.toUpperCase();
+    if (normalizedPlan === 'BASIC') {
+      price = Number(paymentConfig.monthlyBasicPrice || 29);
+      description = 'Up to 10 product listings for 30 days (Basic Seller)';
+      planLabel = 'Basic Seller Plan';
+    } else if (normalizedPlan === 'GARAGE' || normalizedPlan === 'BUSINESS') {
+      price = Number(paymentConfig.monthlyGaragePrice || 99);
+      description =
+        'Unlimited product listings with priority ranking for 30 days (Garage Partner)';
+      planLabel = 'Garage/Business Plan';
+    } else {
+      price = Number(paymentConfig.monthlyProPrice || 59);
+    }
 
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
@@ -698,11 +718,10 @@ export class PaymentService {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Product Monthly Plan',
-              description:
-                'Unlimited product listings for 30 days (Product-only plan)',
+              name: `Product Monthly Plan - ${planLabel}`,
+              description: description,
             },
-            unit_amount: sparePartsMonthlySubscription * 100,
+            unit_amount: price * 100,
           },
           quantity: 1,
         },
@@ -712,7 +731,8 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'product_monthly_subscription',
-        amount: `${sparePartsMonthlySubscription}`,
+        planType: normalizedPlan,
+        amount: `${price}`,
       },
     });
 
@@ -814,12 +834,16 @@ export class PaymentService {
     });
   }
 
-  // Create checkout session for product promotion ($20)
+  // Create checkout session for product promotion (3 days or 7 days)
   @HandleError('Failed to create promotion session')
   async createPromotionPaymentSession(
     userId: string,
+    duration: string = '7',
   ): Promise<{ url: string }> {
-    console.log('🎯 Creating promotion session for user:', userId);
+    console.log(
+      `🎯 Creating promotion session (${duration} days) for user:`,
+      userId,
+    );
 
     const paymentConfig = await this.prisma.paymentConfigure.findFirst();
 
@@ -829,7 +853,15 @@ export class PaymentService {
       );
     }
 
-    const promotionalAdPrice = Number(paymentConfig?.promotionalAdPrice || 0);
+    let price = 99;
+    let description = 'Promote your product listing for 7 days';
+
+    if (duration === '3') {
+      price = Number(paymentConfig.promotionalAdPrice3Days || 49);
+      description = 'Promote your product listing for 3 days';
+    } else {
+      price = Number(paymentConfig.promotionalAdPrice7Days || 99);
+    }
 
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
@@ -839,10 +871,10 @@ export class PaymentService {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Product Promotion',
-              description: 'Promote your product listing',
+              name: `Product Promotion - ${duration} Days`,
+              description: description,
             },
-            unit_amount: promotionalAdPrice * 100,
+            unit_amount: price * 100,
           },
           quantity: 1,
         },
@@ -852,7 +884,8 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'product_promotion_credit',
-        amount: `${promotionalAdPrice}`,
+        duration,
+        amount: `${price}`,
       },
     });
 

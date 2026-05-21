@@ -76,6 +76,7 @@ model User {
   productMonthlyActive    Boolean   @default(false)
   productMonthlyStartDate DateTime?
   productMonthlyEndDate   DateTime?
+  productMonthlyPlanType  String?
 
   // ------------------ Relations ------------------------------
   UserNotification     UserNotification[]

@@ -65,6 +65,10 @@ model Product {
   status     ProductStatus @default(PENDING)
   isPromoted Boolean       @default(false)
   promoCost  Decimal?      @db.Decimal(10, 2)
+  promotedUntil DateTime?
+
+  listingPlan String?
+  expiresAt   DateTime?
 
   views     Int @default(0)
   inquiries Int @default(0)

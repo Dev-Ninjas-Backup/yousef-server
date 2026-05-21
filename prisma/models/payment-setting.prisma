@@ -11,4 +11,11 @@ model PaymentConfigure {
   promotionalAdPrice           String?
   freePromotionalListings      String?
   freePromotionalListingStatus Boolean @default(true)
+
+  // New fields for client requirements
+  monthlyBasicPrice            String? @default("29")
+  monthlyProPrice              String? @default("59")
+  monthlyGaragePrice           String? @default("99")
+  promotionalAdPrice3Days      String? @default("49")
+  promotionalAdPrice7Days      String? @default("99")
 }

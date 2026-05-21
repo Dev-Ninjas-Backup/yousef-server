@@ -113,6 +113,22 @@ export class UpdateProductDto {
   sellerType?: SellerType;
 
   @ApiPropertyOptional({
+    description: 'Specific plan card under which this product is listed',
+    example: 'FREE',
+  })
+  @IsOptional()
+  @IsString()
+  listingPlan?: string;
+
+  @ApiPropertyOptional({
+    description: 'Promotion duration in days (3 or 7)',
+    example: '7',
+  })
+  @IsOptional()
+  @IsString()
+  promotedDuration?: string;
+
+  @ApiPropertyOptional({
     type: 'array',
     items: { type: 'string', format: 'binary' },
     description: 'Product photos (max 5 files)',
