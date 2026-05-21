@@ -102,15 +102,20 @@ export class ProductService {
       await this.paymentService.hasProductCreationCredits(userId);
     const hasProductMonthlyPlan =
       await this.paymentService.hasActiveProductMonthly(userId);
+    const hasGarageMonthlyPlan =
+      await this.paymentService.hasActiveMonthlySubscription(userId);
 
     const canCreateWithoutPayment =
-      canUseFreeSlot || hasPayPerCredit || hasProductMonthlyPlan;
+      canUseFreeSlot ||
+      hasPayPerCredit ||
+      hasProductMonthlyPlan ||
+      hasGarageMonthlyPlan;
 
     // Validate plan selection against user's subscription status
-    if (hasProductMonthlyPlan && plan === 'PAY_PER') {
+    if ((hasProductMonthlyPlan || hasGarageMonthlyPlan) && plan === 'PAY_PER') {
       throw new BadRequestException({
         message:
-          'You have an active Product Monthly subscription. Cannot use PAY_PER plan.',
+          'You have an active Monthly subscription. Cannot use PAY_PER plan.',
         code: 'INVALID_PLAN_SELECTION',
       });
     }
