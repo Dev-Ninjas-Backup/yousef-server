@@ -35,6 +35,7 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # dotenv environment variable files
+.env*
 .env.development.local
 .env.test.local
 .env.production.local
@@ -58,7 +59,3 @@ SECRETS.md
 #  --------- folder gitignore for upload files ---------------
 .Uploads
 .uploads
-config.bat
-branch_structure.json
-temp_auto_push.bat
-temp_interactive_push.bat
