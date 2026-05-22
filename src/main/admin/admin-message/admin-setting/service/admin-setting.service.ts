@@ -4,10 +4,14 @@ import { successResponse } from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { GeneralSettingDtoPlatform } from '../dto/platform.setting.dto';
 import { UpdatePaymentConfigureDto } from '../dto/update-payment-configure.dto';
+import { NotificationGateway } from 'src/lib/notificaton/notification.gateway';
 
 @Injectable()
 export class AdminSettingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationGateway: NotificationGateway,
+  ) {}
 
   // ---------------platform setting create----
   @HandleError('Failed to create or update platform setting')
@@ -278,6 +282,63 @@ export class AdminSettingService {
       where: { id: existing.id },
       data: dto,
     });
+
+    try {
+      const nextMonthName = new Date(
+        new Date().getFullYear(),
+        new Date().getMonth() + 1,
+        1,
+      ).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+      let priceDetails = '';
+      if (dto.monthlyBasicPrice !== undefined)
+        priceDetails += `\n• Basic Seller: ${dto.monthlyBasicPrice} AED/month`;
+      if (dto.monthlyProPrice !== undefined)
+        priceDetails += `\n• Pro Seller: ${dto.monthlyProPrice} AED/month`;
+      if (dto.monthlyGaragePrice !== undefined)
+        priceDetails += `\n• Garage / Business: ${dto.monthlyGaragePrice} AED/month`;
+      if (dto.perListingPrice !== undefined)
+        priceDetails += `\n• Pay Per Listing: ${dto.perListingPrice} AED/listing`;
+
+      const message = `Please note that starting next month (${nextMonthName}), our subscription rates will be updated. The new rates will be active automatically:${priceDetails || '\nPlan pricing updated.'}`;
+
+      const notif = await this.prisma.notification.create({
+        data: {
+          title: 'Upcoming Subscription Rate Update',
+          message: message,
+          type: 'ProductApproveUpdate',
+          meta: {
+            effectiveDate: nextMonthName,
+            ...dto,
+          },
+        },
+      });
+
+      const users = await this.prisma.user.findMany({
+        select: { id: true },
+      });
+
+      if (users.length > 0) {
+        await this.prisma.userNotification.createMany({
+          data: users.map((u) => ({
+            userId: u.id,
+            notificationId: notif.id,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      await this.notificationGateway.notifyAllUsers('product-approve-update', {
+        title: notif.title,
+        message: notif.message,
+        meta: notif.meta,
+      });
+    } catch (e) {
+      console.error(
+        'Failed to broadcast subscription price change notifications:',
+        e,
+      );
+    }
 
     return successResponse(
       { Udated: updated },
