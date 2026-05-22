@@ -28,6 +28,13 @@ export class AdminSettingController {
     return this.adminSettingService.getPlatformSetting();
   }
 
+  // ------------------getPlatformSettingPublic (Public)------------
+  @ApiOperation({ summary: 'get platform setting public' })
+  @Get('public-setting')
+  getPlatformSettingPublic() {
+    return this.adminSettingService.getPlatformSetting();
+  }
+
   // ---------------------- Approval Settings-----------------
   @ApiBearerAuth()
   @ValidateSuperAdmin()

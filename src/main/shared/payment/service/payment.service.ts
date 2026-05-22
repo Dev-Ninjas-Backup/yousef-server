@@ -11,6 +11,7 @@ import { MailService } from 'src/lib/mail/mail.service';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import Stripe from 'stripe';
 import { CreateCheckoutPlanDto } from '../dto/checkout-plan.dto';
+import { NotificationGateway } from 'src/lib/notificaton/notification.gateway';
 @Injectable()
 export class PaymentService {
   private stripe: Stripe;
@@ -18,6 +19,7 @@ export class PaymentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly notificationGateway: NotificationGateway,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
   }
@@ -253,6 +255,45 @@ export class PaymentService {
         updatedUser.subscriptionEndDate,
       );
 
+      try {
+        const notif = await this.prisma.notification.create({
+          data: {
+            title: 'Subscription Updated',
+            message: `Your subscription has been updated to Garage Partner (${amount} AED/month).`,
+            type: 'ProductApproveUpdate',
+            meta: {
+              planName: 'Garage / Business Plan',
+              price: `${amount} AED`,
+              effectiveDate: now.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              }),
+            },
+          },
+        });
+        await this.prisma.userNotification.create({
+          data: {
+            userId,
+            notificationId: notif.id,
+          },
+        });
+        await this.notificationGateway.notifySingleUser(
+          userId,
+          'product-approve-update',
+          {
+            title: notif.title,
+            message: notif.message,
+            meta: notif.meta,
+          },
+        );
+      } catch (err) {
+        console.error(
+          'Failed to send real-time notification for monthly_subscription:',
+          err,
+        );
+      }
+
       const notification = await this.prisma.garageAdminNotification.findUnique(
         {
           where: {
@@ -313,6 +354,45 @@ export class PaymentService {
         '✅ User updated with credit:',
         updatedUser.freeProductsListing,
       );
+
+      try {
+        const notif = await this.prisma.notification.create({
+          data: {
+            title: 'Listing Credit Purchased',
+            message: `Your subscription has been updated to Pay Per Listing (${amount} AED/listing).`,
+            type: 'ProductApproveUpdate',
+            meta: {
+              planName: 'Pay Per Listing Plan',
+              price: `${amount} AED`,
+              effectiveDate: new Date().toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              }),
+            },
+          },
+        });
+        await this.prisma.userNotification.create({
+          data: {
+            userId,
+            notificationId: notif.id,
+          },
+        });
+        await this.notificationGateway.notifySingleUser(
+          userId,
+          'product-approve-update',
+          {
+            title: notif.title,
+            message: notif.message,
+            meta: notif.meta,
+          },
+        );
+      } catch (err) {
+        console.error(
+          'Failed to send real-time notification for pay_per_product:',
+          err,
+        );
+      }
 
       const notification = await this.prisma.garageAdminNotification.findUnique(
         {
@@ -384,6 +464,51 @@ export class PaymentService {
       });
 
       console.log('Product Monthly Subscription activated for user:', userId);
+
+      try {
+        const planNameParam = session.metadata?.planType || 'PRO';
+        let friendlyPlan = 'Pro Seller Plan';
+        if (planNameParam === 'BASIC') friendlyPlan = 'Basic Seller Plan';
+        else if (planNameParam === 'GARAGE' || planNameParam === 'BUSINESS')
+          friendlyPlan = 'Garage / Business Plan';
+
+        const notif = await this.prisma.notification.create({
+          data: {
+            title: 'Subscription Updated',
+            message: `Your subscription has been updated to ${friendlyPlan} (${amount} AED/month).`,
+            type: 'ProductApproveUpdate',
+            meta: {
+              planName: friendlyPlan,
+              price: `${amount} AED`,
+              effectiveDate: now.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              }),
+            },
+          },
+        });
+        await this.prisma.userNotification.create({
+          data: {
+            userId,
+            notificationId: notif.id,
+          },
+        });
+        await this.notificationGateway.notifySingleUser(
+          userId,
+          'product-approve-update',
+          {
+            title: notif.title,
+            message: notif.message,
+            meta: notif.meta,
+          },
+        );
+      } catch (err) {
+        console.error(
+          'Failed to send real-time notification for product_monthly_subscription:',
+          err,
+        );
+      }
 
       const notification = await this.prisma.garageAdminNotification.findUnique(
         {
