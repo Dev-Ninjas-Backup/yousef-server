@@ -117,14 +117,26 @@ export class PrivateChatGateway
     }
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     const userId = client.data.userId;
     if (userId) {
-      // Broadcast offline status to all users
-      this.server.emit('private:user_status', {
-        userId,
-        isOnline: false,
-      });
+      try {
+        // Check if there are other active sockets for this user
+        const socketsInRoom = await this.server.in(userId).fetchSockets();
+        const otherSockets = socketsInRoom.filter((s) => s.id !== client.id);
+
+        if (otherSockets.length === 0) {
+          // Broadcast offline status only if no other socket is connected
+          this.server.emit('private:user_status', {
+            userId,
+            isOnline: false,
+          });
+        }
+      } catch (err) {
+        this.logger.error(
+          `Error in handleDisconnect status check: ${err.message}`,
+        );
+      }
       client.leave(userId);
     }
     client.emit(PrivateChatEvents.ERROR, { message: 'Disconnected' });
@@ -136,11 +148,20 @@ export class PrivateChatGateway
     @MessageBody() recipientId: string,
     @ConnectedSocket() client: Socket,
   ) {
-    const isOnline = this.server.sockets.adapter.rooms.has(recipientId);
-    client.emit('private:user_status', {
-      userId: recipientId,
-      isOnline,
-    });
+    try {
+      const socketsInRoom = await this.server.in(recipientId).fetchSockets();
+      const isOnline = socketsInRoom.length > 0;
+      client.emit('private:user_status', {
+        userId: recipientId,
+        isOnline,
+      });
+    } catch (err) {
+      this.logger.error(`Error in handleGetUserStatus: ${err.message}`);
+      client.emit('private:user_status', {
+        userId: recipientId,
+        isOnline: false,
+      });
+    }
   }
 
   /** Load all conversations for the connected user */
