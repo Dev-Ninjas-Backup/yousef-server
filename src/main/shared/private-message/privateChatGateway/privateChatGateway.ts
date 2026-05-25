@@ -104,6 +104,12 @@ export class PrivateChatGateway
       this.logger.log(
         `Private chat: User ${userId} connected, socket ${client.id}`,
       );
+
+      // Broadcast online status to all users
+      this.server.emit('private:user_status', {
+        userId,
+        isOnline: true,
+      });
     } catch (err) {
       client.emit(PrivateChatEvents.ERROR, { message: err.message });
       client.disconnect(true);
@@ -112,9 +118,29 @@ export class PrivateChatGateway
   }
 
   handleDisconnect(client: Socket) {
-    client.leave(client.data.userId);
+    const userId = client.data.userId;
+    if (userId) {
+      // Broadcast offline status to all users
+      this.server.emit('private:user_status', {
+        userId,
+        isOnline: false,
+      });
+      client.leave(userId);
+    }
     client.emit(PrivateChatEvents.ERROR, { message: 'Disconnected' });
     this.logger.log(`Private chat disconnected: ${client.id}`);
+  }
+
+  @SubscribeMessage('private:get_user_status')
+  async handleGetUserStatus(
+    @MessageBody() recipientId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const isOnline = this.server.sockets.adapter.rooms.has(recipientId);
+    client.emit('private:user_status', {
+      userId: recipientId,
+      isOnline,
+    });
   }
 
   /** Load all conversations for the connected user */
