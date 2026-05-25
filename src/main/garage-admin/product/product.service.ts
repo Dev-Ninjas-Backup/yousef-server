@@ -32,6 +32,11 @@ export class ProductService {
     files: Express.Multer.File[] = [],
     verificationImageFile?: Express.Multer.File,
   ) {
+    const dto = createProductDto as any;
+    delete dto.promotedDuration;
+    delete dto.photos;
+    delete dto.verificationImage;
+
     const {
       sellerEmail,
       sellerName,
@@ -40,7 +45,7 @@ export class ProductService {
       plan,
       categoryId,
       ...productData
-    } = createProductDto;
+    } = dto;
     console.log('create', createProductDto);
 
     // Validate seller email
@@ -418,16 +423,18 @@ export class ProductService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
+    const dto = updateProductDto as any;
+    delete dto.promotedDuration;
+    delete dto.photos;
+    delete dto.verificationImage;
+
     const {
       sellerName,
       sellerEmail,
       sellerPhoneNumber,
       sellerType,
       ...productData
-    } = updateProductDto;
-
-    delete productData.verificationImage;
-    delete productData.photos;
+    } = dto;
 
     // ----------- Validate verificationImage for VERIFIED_SUPPLIER ---------------
     if (
