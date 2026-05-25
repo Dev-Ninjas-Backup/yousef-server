@@ -204,6 +204,19 @@ export class ProductService {
       }
     }
 
+    const expiresAt = new Date();
+    if (productData.listingPlan === 'PAY_PER') {
+      expiresAt.setDate(expiresAt.getDate() + 45);
+    } else if (
+      productData.listingPlan === 'MONTHLY_BASIC' ||
+      productData.listingPlan === 'MONTHLY_PRO' ||
+      productData.listingPlan === 'MONTHLY_GARAGE'
+    ) {
+      expiresAt.setDate(expiresAt.getDate() + 60);
+    } else {
+      expiresAt.setDate(expiresAt.getDate() + 30);
+    }
+
     // Create product
     const product = await this.prisma.product.create({
       data: {
@@ -214,6 +227,7 @@ export class ProductService {
         views: 0,
         promoCost: productData.isPromoted ? promotionalAdPrice : null,
         categoryId,
+        expiresAt,
         ...productData,
       },
       include: {
@@ -284,19 +298,72 @@ export class ProductService {
 
     const where: any = {};
 
-    // Date filter: only products from last 30 days
+    const now = new Date();
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setHours(0, 0, 0, 0);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    where.createdAt = { gte: thirtyDaysAgo };
+
+    const fortyFiveDaysAgo = new Date();
+    fortyFiveDaysAgo.setHours(0, 0, 0, 0);
+    fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
+
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setHours(0, 0, 0, 0);
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    const andConditions: any[] = [];
+
+    // Expiry / active listings filter
+    andConditions.push({
+      OR: [
+        {
+          expiresAt: { gte: now },
+        },
+        {
+          expiresAt: null,
+          OR: [
+            {
+              listingPlan: 'PAY_PER',
+              createdAt: { gte: fortyFiveDaysAgo },
+            },
+            {
+              listingPlan: {
+                in: ['MONTHLY_BASIC', 'MONTHLY_PRO', 'MONTHLY_GARAGE'],
+              },
+              createdAt: { gte: sixtyDaysAgo },
+            },
+            {
+              listingPlan: {
+                notIn: [
+                  'PAY_PER',
+                  'MONTHLY_BASIC',
+                  'MONTHLY_PRO',
+                  'MONTHLY_GARAGE',
+                ],
+              },
+              createdAt: { gte: thirtyDaysAgo },
+            },
+            {
+              listingPlan: null,
+              createdAt: { gte: thirtyDaysAgo },
+            },
+          ],
+        },
+      ],
+    });
 
     if (query?.search) {
-      where.OR = [
-        { partName: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
-        { brand: { contains: query.search, mode: 'insensitive' } },
-      ];
+      andConditions.push({
+        OR: [
+          { partName: { contains: query.search, mode: 'insensitive' } },
+          { description: { contains: query.search, mode: 'insensitive' } },
+          { brand: { contains: query.search, mode: 'insensitive' } },
+        ],
+      });
     }
+
+    where.AND = andConditions;
 
     if (query?.category) {
       where.category = {
