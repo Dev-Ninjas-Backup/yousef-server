@@ -204,7 +204,7 @@ export class PaymentService {
       console.log('💰 Processing monthly subscription for user:', userId);
       const now = new Date();
       const subscriptionEndDate = new Date(now);
-      subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1); // Add 1 month
+      subscriptionEndDate.setDate(subscriptionEndDate.getDate() + 30); // Strictly 30 days subscription
 
       // Create GarageSubscription record
       const garageSub = await this.prisma.garageSubscription.create({
@@ -434,9 +434,12 @@ export class PaymentService {
     } else if (type === 'product_monthly_subscription') {
       console.log('Processing PRODUCT MONTHLY subscription for user:', userId);
 
+      const planNameParam = session.metadata?.planType || 'PRO';
+      const daysToAdd = planNameParam.toUpperCase() === 'BASIC' ? 60 : 30;
+
       const now = new Date();
       const endDate = new Date(now);
-      endDate.setMonth(endDate.getMonth() + 1);
+      endDate.setDate(endDate.getDate() + daysToAdd); // Dynamically set 30 or 60 days subscription
 
       // Payment record
       await this.prisma.payment.create({
@@ -460,6 +463,7 @@ export class PaymentService {
           productMonthlyActive: true,
           productMonthlyStartDate: now,
           productMonthlyEndDate: endDate,
+          productMonthlyPlanType: planNameParam,
         },
       });
 
