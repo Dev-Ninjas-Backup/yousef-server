@@ -120,37 +120,50 @@ export class PrivateChatService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    const formattedPrivateChats = await Promise.all(
-      privateChats.map(async (chat: any) => {
-        const otherUser = chat.user1Id === userId ? chat.user2 : chat.user1;
-        const unreadCount = await this.prisma.privateMessage.count({
-          where: {
-            conversationId: chat.id,
-            NOT: {
-              senderId: userId,
-            },
-            isRead: false,
-          },
-        });
-        return {
-          type: 'private',
-          chatId: chat.id,
-          participant: otherUser,
-          lastMessage: chat.lastMessage
-            ? {
-                id: chat.lastMessage.id,
-                content: chat.lastMessage.content,
-                createdAt: chat.lastMessage.createdAt,
-                sender: chat.lastMessage.sender,
-                file: chat.lastMessage.file,
-                isRead: chat.lastMessage.isRead || false,
-              }
-            : null,
-          updatedAt: chat.updatedAt,
-          unreadCount,
-        };
-      }),
-    );
+    if (privateChats.length === 0) {
+      return successResponse([], 'Chats fetched successfully');
+    }
+
+    const unreadCounts = await this.prisma.privateMessage.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: privateChats.map((c) => c.id) },
+        NOT: {
+          senderId: userId,
+        },
+        isRead: false,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    const unreadCountMap = new Map<string, number>();
+    unreadCounts.forEach((group) => {
+      unreadCountMap.set(group.conversationId, group._count.id);
+    });
+
+    const formattedPrivateChats = privateChats.map((chat: any) => {
+      const otherUser = chat.user1Id === userId ? chat.user2 : chat.user1;
+      const unreadCount = unreadCountMap.get(chat.id) || 0;
+      return {
+        type: 'private',
+        chatId: chat.id,
+        participant: otherUser,
+        lastMessage: chat.lastMessage
+          ? {
+              id: chat.lastMessage.id,
+              content: chat.lastMessage.content,
+              createdAt: chat.lastMessage.createdAt,
+              sender: chat.lastMessage.sender,
+              file: chat.lastMessage.file,
+              isRead: chat.lastMessage.isRead || false,
+            }
+          : null,
+        updatedAt: chat.updatedAt,
+        unreadCount,
+      };
+    });
 
     // ------------ Merge & sort-------------------
     const allChats = [...formattedPrivateChats].sort(
@@ -239,30 +252,43 @@ export class PrivateChatService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    const result = await Promise.all(
-      conversations.map(async (chat: any) => {
-        const otherUser = chat.user1Id === userId ? chat.user2 : chat.user1;
-        const unreadCount = await this.prisma.privateMessage.count({
-          where: {
-            conversationId: chat.id,
-            NOT: {
-              senderId: userId,
-            },
-            isRead: false,
-          },
-        });
+    if (conversations.length === 0) {
+      return [];
+    }
 
-        return {
-          type: 'private',
-          chatId: chat.id,
-          participant: otherUser,
-          lastMessage: chat.lastMessage || null,
-          updatedAt: chat.updatedAt,
-          isRead: chat.lastMessage?.isRead || false,
-          unreadCount,
-        };
-      }),
-    );
+    const unreadCounts = await this.prisma.privateMessage.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: conversations.map((c) => c.id) },
+        NOT: {
+          senderId: userId,
+        },
+        isRead: false,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    const unreadCountMap = new Map<string, number>();
+    unreadCounts.forEach((group) => {
+      unreadCountMap.set(group.conversationId, group._count.id);
+    });
+
+    const result = conversations.map((chat: any) => {
+      const otherUser = chat.user1Id === userId ? chat.user2 : chat.user1;
+      const unreadCount = unreadCountMap.get(chat.id) || 0;
+
+      return {
+        type: 'private',
+        chatId: chat.id,
+        participant: otherUser,
+        lastMessage: chat.lastMessage || null,
+        updatedAt: chat.updatedAt,
+        isRead: chat.lastMessage?.isRead || false,
+        unreadCount,
+      };
+    });
 
     return result;
   }
