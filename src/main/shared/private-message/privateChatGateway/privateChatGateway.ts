@@ -31,6 +31,8 @@ enum PrivateChatEvents {
   USER_STOP_TYPING = 'private:user_stop_typing',
   TYPING_START = 'private:typing_start',
   USER_TYPING = 'private:user_typing',
+  MARK_AS_READ = 'private:mark_as_read',
+  MESSAGE_READ = 'private:message_read',
 }
 
 @WebSocketGateway({
@@ -307,6 +309,40 @@ export class PrivateChatGateway
       conversationId: data.conversationId,
       userId,
     });
+  }
+
+  @SubscribeMessage(PrivateChatEvents.MARK_AS_READ)
+  async handleMarkAsRead(
+    @MessageBody() data: { messageId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = this.getUserIdFromSocket(client);
+    if (!userId) return;
+
+    try {
+      const message = await this.prisma.privateMessage.findUnique({
+        where: { id: data.messageId },
+        include: { conversation: true },
+      });
+
+      if (message) {
+        // Mark read in DB
+        await this.privateChatService.makePrivateMassageReadTrue(
+          data.messageId,
+        );
+
+        // Find recipient (the original sender of the message)
+        const originalSenderId = message.senderId;
+
+        // Emit message read event to the original sender
+        this.server.to(originalSenderId).emit(PrivateChatEvents.MESSAGE_READ, {
+          messageId: data.messageId,
+          conversationId: message.conversationId,
+        });
+      }
+    } catch (err) {
+      this.logger.error(`Error in handleMarkAsRead: ${err.message}`);
+    }
   }
 
   private getUserIdFromSocket(client: Socket): string | null {
