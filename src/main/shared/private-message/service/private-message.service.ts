@@ -116,24 +116,37 @@ export class PrivateChatService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    const formattedPrivateChats = privateChats.map((chat: any) => {
-      const otherUser = chat.user1Id === userId ? chat.user2 : chat.user1;
-      return {
-        type: 'private',
-        chatId: chat.id,
-        participant: otherUser,
-        lastMessage: chat.lastMessage
-          ? {
-              id: chat.lastMessage.id,
-              content: chat.lastMessage.content,
-              createdAt: chat.lastMessage.createdAt,
-              sender: chat.lastMessage.sender,
-              file: chat.lastMessage.file,
-            }
-          : null,
-        updatedAt: chat.updatedAt,
-      };
-    });
+    const formattedPrivateChats = await Promise.all(
+      privateChats.map(async (chat: any) => {
+        const otherUser = chat.user1Id === userId ? chat.user2 : chat.user1;
+        const unreadCount = await this.prisma.privateMessage.count({
+          where: {
+            conversationId: chat.id,
+            NOT: {
+              senderId: userId,
+            },
+            isRead: false,
+          },
+        });
+        return {
+          type: 'private',
+          chatId: chat.id,
+          participant: otherUser,
+          lastMessage: chat.lastMessage
+            ? {
+                id: chat.lastMessage.id,
+                content: chat.lastMessage.content,
+                createdAt: chat.lastMessage.createdAt,
+                sender: chat.lastMessage.sender,
+                file: chat.lastMessage.file,
+                isRead: chat.lastMessage.isRead || false,
+              }
+            : null,
+          updatedAt: chat.updatedAt,
+          unreadCount,
+        };
+      }),
+    );
 
     // ------------ Merge & sort-------------------
     const allChats = [...formattedPrivateChats].sort(
@@ -222,17 +235,32 @@ export class PrivateChatService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return conversations.map((chat: any) => {
-      const otherUser = chat.user1Id === userId ? chat.user2 : chat.user1;
-      return {
-        type: 'private',
-        chatId: chat.id,
-        participant: otherUser,
-        lastMessage: chat.lastMessage || null,
-        updatedAt: chat.updatedAt,
-        isRead: chat.lastMessage?.isRead || false,
-      };
-    });
+    const result = await Promise.all(
+      conversations.map(async (chat: any) => {
+        const otherUser = chat.user1Id === userId ? chat.user2 : chat.user1;
+        const unreadCount = await this.prisma.privateMessage.count({
+          where: {
+            conversationId: chat.id,
+            NOT: {
+              senderId: userId,
+            },
+            isRead: false,
+          },
+        });
+
+        return {
+          type: 'private',
+          chatId: chat.id,
+          participant: otherUser,
+          lastMessage: chat.lastMessage || null,
+          updatedAt: chat.updatedAt,
+          isRead: chat.lastMessage?.isRead || false,
+          unreadCount,
+        };
+      }),
+    );
+
+    return result;
   }
 
   /**

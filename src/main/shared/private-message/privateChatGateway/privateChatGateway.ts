@@ -331,11 +331,13 @@ export class PrivateChatGateway
           data.messageId,
         );
 
-        // Find recipient (the original sender of the message)
+        // Emit message read event to both original sender and reader
         const originalSenderId = message.senderId;
-
-        // Emit message read event to the original sender
         this.server.to(originalSenderId).emit(PrivateChatEvents.MESSAGE_READ, {
+          messageId: data.messageId,
+          conversationId: message.conversationId,
+        });
+        this.server.to(userId).emit(PrivateChatEvents.MESSAGE_READ, {
           messageId: data.messageId,
           conversationId: message.conversationId,
         });
