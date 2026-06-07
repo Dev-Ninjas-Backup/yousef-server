@@ -86,7 +86,8 @@ export class GarageService {
       certifications: certificationsArray,
       weekdaysHours: createGarageDto.weekdaysHours,
       weekendsHours: createGarageDto.weekendsHours,
-      brandExpertise: brandArray,
+      brandExpertise: [],
+      requestedBrandExpertise: brandArray,
       services: servicesArray,
       userId: userId,
     };
@@ -136,9 +137,18 @@ export class GarageService {
       };
     }
 
+    if (query?.brandExpertise) {
+      where.brandExpertise = {
+        has: query.brandExpertise,
+      };
+    }
+
     if (query?.status) {
       where.status = query.status;
     }
+
+    const needsInMemorySorting =
+      query?.sortBy === 'distance' || query?.sortBy === 'rating';
 
     const [garages, total] = await Promise.all([
       this.prisma.garage.findMany({
@@ -167,8 +177,7 @@ export class GarageService {
             },
           },
         },
-        skip,
-        take: limit,
+        ...(needsInMemorySorting ? {} : { skip, take: limit }),
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.garage.count({ where }),
@@ -193,16 +202,51 @@ export class GarageService {
             )
           : 0;
 
+      let distanceValue = Infinity;
+      let distanceText = '2.5 km away';
+      if (query?.userLat && query?.userLng) {
+        const uLat = parseFloat(query.userLat);
+        const uLng = parseFloat(query.userLng);
+        if (!isNaN(uLat) && !isNaN(uLng)) {
+          const dist = getDistance(
+            uLat,
+            uLng,
+            garage.garageLat,
+            garage.garageLng,
+          );
+          distanceValue = dist;
+          distanceText = `${dist.toFixed(1)} km away`;
+        }
+      }
+
       return {
         ...garage,
         averageRating,
         totalReviews: garage.reviews.length,
+        distance: distanceText,
+        distanceValue,
         reviews: undefined,
       };
     });
 
+    let finalData: any[] = transformedGarages;
+    if (needsInMemorySorting) {
+      if (query?.sortBy === 'distance') {
+        finalData.sort((a, b) => a.distanceValue - b.distanceValue);
+      } else if (query?.sortBy === 'rating') {
+        finalData.sort((a, b) => b.averageRating - a.averageRating);
+      }
+      finalData = finalData.slice(skip, skip + limit);
+    }
+
+    finalData = finalData.map((g) => {
+      const temp = { ...g };
+      delete temp.distanceValue;
+      return temp;
+    });
+
     const result = {
-      data: transformedGarages,
+      data: finalData,
       pagination: {
         page,
         limit,
@@ -375,7 +419,19 @@ export class GarageService {
       updateData.weekdaysHours = updateGarageDto.weekdaysHours;
     if (updateGarageDto.weekendsHours)
       updateData.weekendsHours = updateGarageDto.weekendsHours;
-    if (brandArray) updateData.brandExpertise = brandArray;
+
+    if (brandArray !== undefined) {
+      const existingApproved = garage.brandExpertise || [];
+      const newApproved = brandArray.filter((brand) =>
+        existingApproved.includes(brand),
+      );
+      const newRequested = brandArray.filter(
+        (brand) => !existingApproved.includes(brand),
+      );
+      updateData.brandExpertise = newApproved;
+      updateData.requestedBrandExpertise = newRequested;
+    }
+
     if (servicesArray) updateData.services = servicesArray;
 
     const updatedGarage = await this.prisma.garage.update({
@@ -420,4 +476,28 @@ export class GarageService {
 
     return successResponse(null, 'Garage deleted successfully');
   }
+}
+
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180);
+}
+
+function getDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) *
+      Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+  return d;
 }
