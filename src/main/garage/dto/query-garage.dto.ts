@@ -58,4 +58,36 @@ export class QueryGarageDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by brand expertise (e.g. American cars)',
+    example: 'American cars',
+  })
+  @IsOptional()
+  @IsString()
+  brandExpertise?: string;
+
+  @ApiPropertyOptional({
+    description: 'Sort field (e.g. distance, rating)',
+    example: 'distance',
+  })
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
+
+  @ApiPropertyOptional({
+    description: 'User latitude for distance sorting',
+    example: '25.2048',
+  })
+  @IsOptional()
+  @IsString()
+  userLat?: string;
+
+  @ApiPropertyOptional({
+    description: 'User longitude for distance sorting',
+    example: '55.2708',
+  })
+  @IsOptional()
+  @IsString()
+  userLng?: string;
 }

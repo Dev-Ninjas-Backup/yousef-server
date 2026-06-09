@@ -15,6 +15,7 @@ import { SearchGarageDto } from '../dto/filter.grage.dto';
 import {
   UpdateGarageDto,
   UpdateGarageStatusDto,
+  ReviewBrandExpertiseDto,
 } from '../dto/garage-management.dto';
 import { GarageManagementService } from '../service/garage-management.service';
 
@@ -89,6 +90,36 @@ export class GarageManagementController {
   @Patch('user-garage-status/:userId')
   updateGarageStatusByUserId(@Param('userId') userId: string) {
     return this.garageManagementService.updateGarageStatusByUserId(userId);
+  }
+
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'Approve brand expertise requests' })
+  @Patch('approve-brands/:garageId')
+  approveBrandExpertise(
+    @Param('garageId') garageId: string,
+    @Body() dto: ReviewBrandExpertiseDto,
+  ) {
+    return this.garageManagementService.approveBrandExpertise(
+      garageId,
+      dto.brands,
+    );
+  }
+
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({ summary: 'Reject brand expertise requests' })
+  @Patch('reject-brands/:garageId')
+  rejectBrandExpertise(
+    @Param('garageId') garageId: string,
+    @Body() dto: ReviewBrandExpertiseDto,
+  ) {
+    return this.garageManagementService.rejectBrandExpertise(
+      garageId,
+      dto.brands,
+    );
   }
 
   // ------------------soft delete garage info by ID -----------------

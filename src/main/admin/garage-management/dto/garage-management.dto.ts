@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsArray } from 'class-validator';
 import { GarageStatus } from '@prisma/client';
 
 export class UpdateGarageDto {
@@ -41,4 +41,15 @@ export class UpdateGarageStatusDto {
     message: 'garageStatus must be APPROVE, PENDING, or DECLINE',
   })
   garageStatus: GarageStatus;
+}
+
+export class ReviewBrandExpertiseDto {
+  @ApiProperty({
+    description: 'Array of brand expertise strings to approve/reject',
+    example: ['American cars', 'Japanese cars'],
+    type: [String],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  brands: string[];
 }

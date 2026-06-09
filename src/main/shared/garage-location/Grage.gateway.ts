@@ -60,7 +60,7 @@ export class GarageLocationGateway
       userLng < -180 ||
       userLng > 180 ||
       radius < 1 ||
-      radius > 100
+      radius > 100000
     ) {
       return client.emit('error', { message: 'Invalid location or radius' });
     }

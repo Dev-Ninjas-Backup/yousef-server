@@ -73,7 +73,10 @@ export class PrivateChatService {
       skipDuplicates: true,
     });
 
-    const recipientId = senderId === conversation.user1Id ? conversation.user2Id : conversation.user1Id;
+    const recipientId =
+      senderId === conversation.user1Id
+        ? conversation.user2Id
+        : conversation.user1Id;
     return {
       ...message,
       recipientId,
@@ -360,7 +363,10 @@ export class PrivateChatService {
       conversationId: conversation.id,
       participants: [conversation.user1, conversation.user2],
       messages: conversation.messages.map((msg) => {
-        const recipientId = msg.senderId === conversation.user1Id ? conversation.user2Id : conversation.user1Id;
+        const recipientId =
+          msg.senderId === conversation.user1Id
+            ? conversation.user2Id
+            : conversation.user1Id;
         return {
           ...msg,
           recipientId,

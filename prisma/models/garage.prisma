@@ -32,6 +32,8 @@ model Garage {
   services String[]
   reviews  Review[]
 
+  requestedBrandExpertise String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

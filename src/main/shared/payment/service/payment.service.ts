@@ -45,7 +45,7 @@ export class PaymentService {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'aed',
             product_data: {
               name: plan.name || 'Payment Plan',
               description: plan.shortBio ?? '',
@@ -212,7 +212,7 @@ export class PaymentService {
           userId,
           type: 'PAID',
           amount: parseInt(amount) * 100,
-          currency: 'usd',
+          currency: 'aed',
           stripeSessionId: session.id,
           stripePaymentId: session.payment_intent as string,
           startDate: now,
@@ -228,7 +228,7 @@ export class PaymentService {
           sessionId: session.id,
           transactionId: session.payment_intent as string,
           amount: parseInt(amount) * 100,
-          currency: 'usd',
+          currency: 'aed',
           status: 'COMPLETED',
           paymentMethod: 'card',
           paymentType: 'GARAGE_SUBSCRIPTION',
@@ -331,7 +331,7 @@ export class PaymentService {
           sessionId: session.id,
           transactionId: session.payment_intent as string,
           amount: parseInt(amount) * 100,
-          currency: 'usd',
+          currency: 'aed',
           status: 'COMPLETED',
           paymentMethod: 'card',
           paymentType: 'PAY_PER_PRODUCT',
@@ -447,7 +447,7 @@ export class PaymentService {
           sessionId: session.id,
           transactionId: session.payment_intent as string,
           amount: parseInt(amount) * 100,
-          currency: 'usd',
+          currency: 'aed',
           status: 'COMPLETED',
           paymentMethod: 'card',
           paymentType: 'MONTHLY_PEY_PRODUCT',
@@ -567,7 +567,7 @@ export class PaymentService {
           sessionId: session.id,
           transactionId: session.payment_intent as string,
           amount: parseInt(amount) * 100,
-          currency: 'usd',
+          currency: 'aed',
           status: 'COMPLETED',
           paymentMethod: 'card',
           paymentType: 'PRODUCT_PROMOTION_CREDIT',
@@ -638,7 +638,7 @@ export class PaymentService {
           sessionId: session.id,
           transactionId: session.payment_intent as string,
           amount: parseInt(amount) * 100,
-          currency: 'usd',
+          currency: 'aed',
           status: 'COMPLETED',
           paymentMethod: 'card',
           paymentType: 'PRODUCT_PROMOTION',
@@ -682,7 +682,7 @@ export class PaymentService {
           sessionId: session.id,
           transactionId: session.payment_intent as string,
           amount: parseInt(amount) * 100,
-          currency: 'usd',
+          currency: 'aed',
           status: 'COMPLETED',
           paymentMethod: 'card',
           paymentType: 'GENERAL',
@@ -779,7 +779,7 @@ export class PaymentService {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'aed',
             product_data: {
               name: 'Monthly Subscription Plan',
               description: 'Unlimited product listings for 30 days',
@@ -845,7 +845,7 @@ export class PaymentService {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'aed',
             product_data: {
               name: `Product Monthly Plan - ${planLabel}`,
               description: description,
@@ -889,7 +889,7 @@ export class PaymentService {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'aed',
             product_data: {
               name: 'Pay Per Product',
               description: 'Single product listing fee',
@@ -998,7 +998,7 @@ export class PaymentService {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'aed',
             product_data: {
               name: `Product Promotion - ${duration} Days`,
               description: description,
