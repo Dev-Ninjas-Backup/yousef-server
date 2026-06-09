@@ -69,6 +69,7 @@ export class GarageManagementService {
             weekdaysHours: true,
             weekendsHours: true,
             brandExpertise: true,
+            requestedBrandExpertise: true,
             status: true,
             services: true,
             createdAt: true,
@@ -111,6 +112,7 @@ export class GarageManagementService {
         weekdaysHours: g.weekdaysHours,
         weekendsHours: g.weekendsHours,
         brandExpertise: g.brandExpertise,
+        requestedBrandExpertise: g.requestedBrandExpertise,
         garageStatus: g.status,
         services: g.services,
         createdAt: g.createdAt,
@@ -192,6 +194,7 @@ export class GarageManagementService {
             weekdaysHours: true,
             weekendsHours: true,
             brandExpertise: true,
+            requestedBrandExpertise: true,
             status: true,
             services: true,
             createdAt: true,
@@ -239,6 +242,7 @@ export class GarageManagementService {
         weekdaysHours: g.weekdaysHours,
         weekendsHours: g.weekendsHours,
         brandExpertise: g.brandExpertise,
+        requestedBrandExpertise: g.requestedBrandExpertise,
         garageStatus: g.status,
         services: g.services,
         createdAt: g.createdAt,
@@ -536,5 +540,59 @@ export class GarageManagementService {
     });
 
     return successResponse(deletedGarage, 'Garage deleted successfully');
+  }
+
+  @HandleError('Failed to approve brand expertise', 'Garage')
+  async approveBrandExpertise(
+    garageId: string,
+    brands: string[],
+  ): Promise<TResponse<any>> {
+    const garage = await this.prisma.garage.findUnique({
+      where: { id: garageId },
+    });
+
+    if (!garage) throw new NotFoundException('Garage not found');
+
+    const updatedRequested = (garage.requestedBrandExpertise || []).filter(
+      (b) => !brands.includes(b),
+    );
+    const updatedApproved = Array.from(
+      new Set([...(garage.brandExpertise || []), ...brands]),
+    );
+
+    const updated = await this.prisma.garage.update({
+      where: { id: garageId },
+      data: {
+        brandExpertise: updatedApproved,
+        requestedBrandExpertise: updatedRequested,
+      },
+    });
+
+    return successResponse(updated, 'Brand expertise approved successfully');
+  }
+
+  @HandleError('Failed to reject brand expertise', 'Garage')
+  async rejectBrandExpertise(
+    garageId: string,
+    brands: string[],
+  ): Promise<TResponse<any>> {
+    const garage = await this.prisma.garage.findUnique({
+      where: { id: garageId },
+    });
+
+    if (!garage) throw new NotFoundException('Garage not found');
+
+    const updatedRequested = (garage.requestedBrandExpertise || []).filter(
+      (b) => !brands.includes(b),
+    );
+
+    const updated = await this.prisma.garage.update({
+      where: { id: garageId },
+      data: {
+        requestedBrandExpertise: updatedRequested,
+      },
+    });
+
+    return successResponse(updated, 'Brand expertise rejected successfully');
   }
 }

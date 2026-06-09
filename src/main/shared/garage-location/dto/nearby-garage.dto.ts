@@ -40,6 +40,6 @@ export class NearbyGarageQueryDto {
   @Type(() => Number)
   @IsNumber()
   @Min(1)
-  @Max(100)
+  @Max(100000)
   radius?: number = 10;
 }
