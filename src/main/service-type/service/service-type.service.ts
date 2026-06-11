@@ -117,7 +117,7 @@ export class ServiceTypeService {
       'Diagnostics',
       'Towing',
       'Emergency Towing',
-      'Van Doorstep Repair',
+      'Mobile Van Repair Service',
       'Battery Replacement',
       'Transmission Service',
       'Suspension Repair',
@@ -128,6 +128,7 @@ export class ServiceTypeService {
       Electrical: 'Electrical Repair',
       'Tire Rotation': 'Tire Service',
       'Tyre Service': 'Tire Service',
+      'Van Doorstep Repair': 'Mobile Van Repair Service',
     };
 
     const users = await this.prisma.user.findMany({
