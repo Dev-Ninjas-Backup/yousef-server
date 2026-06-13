@@ -63,6 +63,7 @@ export class UserManagementService {
         updatedAt: true,
         isVerified: true,
         isDeleted: true,
+        promotionCredits: true,
         _count: {
           select: {
             garages: true,
@@ -114,6 +115,7 @@ export class UserManagementService {
         isGarageVerified: true,
         isVerified: true,
         isDeleted: true,
+        promotionCredits: true,
       },
     });
     return successResponse(user, 'User retrieved successfully');
@@ -159,5 +161,15 @@ export class UserManagementService {
     });
 
     return successResponse(null, 'User role changed to ADMIN successfully');
+  }
+
+  // ------------Update promotion credits--------------
+  async updatePromotionCredits(id: string, credits: number) {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { promotionCredits: Number(credits) },
+    });
+
+    return successResponse(user, 'User promotion credits updated successfully');
   }
 }

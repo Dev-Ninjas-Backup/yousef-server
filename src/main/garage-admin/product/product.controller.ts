@@ -14,6 +14,7 @@ import {
   Query,
   UploadedFiles,
   UseInterceptors,
+  HttpException,
 } from '@nestjs/common';
 
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
@@ -78,13 +79,16 @@ export class ProductController {
         verificationImageFile,
       );
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException ||
-        error.message.includes('validation') ||
-        error.message.includes('Payment required') ||
-        error.message.includes('subscription required') ||
-        error.message.includes('User not found')
+        error.message?.includes('validation') ||
+        error.message?.includes('Payment required') ||
+        error.message?.includes('subscription required') ||
+        error.message?.includes('User not found')
       ) {
         throw new BadRequestException(error.message || error);
       }
