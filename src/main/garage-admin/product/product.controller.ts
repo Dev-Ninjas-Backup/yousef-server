@@ -124,6 +124,14 @@ export class ProductController {
     return this.productService.getProductStats({ search, userId });
   }
 
+  @Get('sellers')
+  @ApiOperation({
+    summary: 'Get list of unique users who have active listings',
+  })
+  async getActiveSellers() {
+    return this.productService.getActiveSellers();
+  }
+
   // ---------------------- Get Product By ID ----------------------
   @Get(':id')
   @ApiOperation({ summary: 'Get a product by ID' })

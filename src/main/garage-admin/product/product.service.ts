@@ -845,4 +845,37 @@ export class ProductService {
       },
     };
   }
+
+  async getActiveSellers() {
+    const activeProducts = await this.prisma.product.findMany({
+      where: {
+        status: 'APPROVED',
+      },
+      select: {
+        createdBy: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+      },
+    });
+
+    const uniqueUsersMap = new Map<string, { id: string; fullName: string }>();
+    activeProducts.forEach((product) => {
+      if (product.createdBy) {
+        uniqueUsersMap.set(product.createdBy.id, {
+          id: product.createdBy.id,
+          fullName: product.createdBy.fullName || 'Unknown',
+        });
+      }
+    });
+
+    const sellers = Array.from(uniqueUsersMap.values());
+
+    return {
+      success: true,
+      data: sellers,
+    };
+  }
 }
