@@ -768,10 +768,13 @@ export class PaymentService {
     );
   }
 
-  // Create checkout session for monthly plan ($100)
+  // Create checkout session for monthly plan ($99 or dynamic)
   @HandleError('Failed to create monthly plan session')
   async createMonthlyPlanSession(userId: string): Promise<{ url: string }> {
     console.log('💰 Creating monthly plan session for user:', userId);
+
+    const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+    const garagePlanPrice = Number(paymentConfig?.monthlyGaragePrice || '99');
 
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
@@ -784,7 +787,7 @@ export class PaymentService {
               name: 'Monthly Subscription Plan',
               description: 'Unlimited product listings for 30 days',
             },
-            unit_amount: 10000,
+            unit_amount: garagePlanPrice * 100,
           },
           quantity: 1,
         },
@@ -795,7 +798,7 @@ export class PaymentService {
       metadata: {
         userId,
         type: 'monthly_subscription',
-        amount: '100',
+        amount: String(garagePlanPrice),
       },
     });
 
