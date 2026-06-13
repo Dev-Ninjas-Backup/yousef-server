@@ -113,6 +113,14 @@ export class ProductController {
     return this.productService.findMyProducts(userId);
   }
 
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Get product counts stats for categories and conditions',
+  })
+  async getProductStats(@Query('search') search?: string) {
+    return this.productService.getProductStats({ search });
+  }
+
   // ---------------------- Get Product By ID ----------------------
   @Get(':id')
   @ApiOperation({ summary: 'Get a product by ID' })

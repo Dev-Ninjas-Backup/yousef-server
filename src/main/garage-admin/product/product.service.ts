@@ -682,4 +682,148 @@ export class ProductService {
       productMonthlyEndsAt: user.productMonthlyEndDate,
     };
   }
+
+  async getProductStats(query?: { search?: string }) {
+    const where: any = {
+      status: 'APPROVED',
+    };
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const fortyFiveDaysAgo = new Date();
+    fortyFiveDaysAgo.setHours(0, 0, 0, 0);
+    fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
+
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setHours(0, 0, 0, 0);
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    const andConditions: any[] = [];
+
+    // Expiry / active listings filter (same logic as findAll)
+    andConditions.push({
+      OR: [
+        {
+          expiresAt: { gte: now },
+        },
+        {
+          expiresAt: null,
+          OR: [
+            {
+              listingPlan: 'PAY_PER',
+              createdAt: { gte: fortyFiveDaysAgo },
+            },
+            {
+              listingPlan: {
+                in: ['MONTHLY_BASIC', 'MONTHLY_PRO', 'MONTHLY_GARAGE'],
+              },
+              createdAt: { gte: sixtyDaysAgo },
+            },
+            {
+              listingPlan: {
+                notIn: [
+                  'PAY_PER',
+                  'MONTHLY_BASIC',
+                  'MONTHLY_PRO',
+                  'MONTHLY_GARAGE',
+                ],
+              },
+              createdAt: { gte: thirtyDaysAgo },
+            },
+            {
+              listingPlan: null,
+              createdAt: { gte: thirtyDaysAgo },
+            },
+          ],
+        },
+      ],
+    });
+
+    if (query?.search) {
+      andConditions.push({
+        OR: [
+          { partName: { contains: query.search, mode: 'insensitive' } },
+          { description: { contains: query.search, mode: 'insensitive' } },
+          { brand: { contains: query.search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    where.AND = andConditions;
+
+    // Get product counts grouped by category ID
+    const categoryStats = await this.prisma.product.groupBy({
+      by: ['categoryId'],
+      where,
+      _count: {
+        id: true,
+      },
+    });
+
+    // Get product counts grouped by condition
+    const conditionStats = await this.prisma.product.groupBy({
+      by: ['condition'],
+      where,
+      _count: {
+        id: true,
+      },
+    });
+
+    // Fetch categories to map ID to name
+    const categories = await this.prisma.partsCategory.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    const categoryMap = categories.reduce(
+      (acc, cat) => {
+        acc[cat.id] = cat.name;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    const categoryCounts: Record<string, number> = {};
+    categories.forEach((cat) => {
+      categoryCounts[cat.name] = 0;
+    });
+
+    categoryStats.forEach((stat) => {
+      const catName = categoryMap[stat.categoryId];
+      if (catName) {
+        categoryCounts[catName] = stat._count.id;
+      }
+    });
+
+    const conditionCounts: Record<string, number> = {
+      New: 0,
+      Used: 0,
+      Refurbished: 0,
+    };
+
+    conditionStats.forEach((stat) => {
+      const label = stat.condition;
+      if (label) {
+        const matchingKey = Object.keys(conditionCounts).find(
+          (k) => k.toLowerCase() === label.toLowerCase(),
+        );
+        if (matchingKey) {
+          conditionCounts[matchingKey] = stat._count.id;
+        }
+      }
+    });
+
+    return {
+      success: true,
+      data: {
+        categories: categoryCounts,
+        conditions: conditionCounts,
+      },
+    };
+  }
 }
