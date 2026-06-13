@@ -232,7 +232,9 @@ export class ProductService {
       },
       include: {
         seller: true,
-        createdBy: { select: { id: true, email: true, fullName: true } },
+        createdBy: {
+          select: { id: true, email: true, fullName: true, role: true },
+        },
         category: true,
       },
     });
@@ -291,6 +293,7 @@ export class ProductService {
     condition?: string;
     status?: string;
     sortBy?: string;
+    userId?: string;
   }) {
     const page = query?.page || 1;
     const limit = query?.limit || 20;
@@ -379,6 +382,10 @@ export class ProductService {
       where.status = query.status;
     }
 
+    if (query?.userId) {
+      where.createdById = query.userId;
+    }
+
     // Build orderBy based on sortBy
     let orderBy: any[];
     switch (query?.sortBy) {
@@ -400,7 +407,9 @@ export class ProductService {
         where,
         include: {
           seller: true,
-          createdBy: { select: { id: true, email: true, fullName: true } },
+          createdBy: {
+            select: { id: true, email: true, fullName: true, role: true },
+          },
           category: true,
         },
         skip,
@@ -444,7 +453,9 @@ export class ProductService {
       where: { id },
       include: {
         seller: true,
-        createdBy: { select: { id: true, email: true, fullName: true } },
+        createdBy: {
+          select: { id: true, email: true, fullName: true, role: true },
+        },
         category: true,
       },
     });
@@ -467,7 +478,9 @@ export class ProductService {
       where: { createdById: userId },
       include: {
         seller: true,
-        createdBy: { select: { id: true, email: true, fullName: true } },
+        createdBy: {
+          select: { id: true, email: true, fullName: true, role: true },
+        },
         category: true,
       },
     });
@@ -582,6 +595,7 @@ export class ProductService {
             id: true,
             email: true,
             fullName: true,
+            role: true,
           },
         },
         category: true,
@@ -610,6 +624,7 @@ export class ProductService {
             id: true,
             email: true,
             fullName: true,
+            role: true,
           },
         },
         category: true,
@@ -683,7 +698,7 @@ export class ProductService {
     };
   }
 
-  async getProductStats(query?: { search?: string }) {
+  async getProductStats(query?: { search?: string; userId?: string }) {
     const where: any = {
       status: 'APPROVED',
     };
@@ -750,6 +765,10 @@ export class ProductService {
           { brand: { contains: query.search, mode: 'insensitive' } },
         ],
       });
+    }
+
+    if (query?.userId) {
+      where.createdById = query.userId;
     }
 
     where.AND = andConditions;

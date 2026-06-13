@@ -85,4 +85,12 @@ export class ProductFilterDto {
   @IsOptional()
   @IsIn(['relevance', 'price_asc', 'price_desc', 'newest'])
   sortBy?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by user ID who created the product',
+    example: 'uuid-string',
+  })
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }
