@@ -754,17 +754,28 @@ export class PaymentService {
       select: {
         subscriptionEndsAt: true,
         isMembership: true,
+        isSubscribed: true,
+        subscriptionEndDate: true,
+        isSubscriptionTrialActive: true,
+        subscriptionTrialEndDate: true,
       },
     });
 
     if (!user) throw new NotFoundException('User not found');
 
-    // Check if user has membership and subscription hasn't expired
+    const now = new Date();
+
+    // Check if user has membership, active subscription, or active trial subscription and hasn't expired
     return (
-      Boolean(user.isMembership) &&
-      Boolean(user.subscriptionEndsAt) &&
-      user.subscriptionEndsAt !== null &&
-      new Date(user.subscriptionEndsAt) > new Date()
+      (Boolean(user.isMembership) &&
+        user.subscriptionEndsAt !== null &&
+        new Date(user.subscriptionEndsAt) > now) ||
+      (Boolean(user.isSubscribed) &&
+        user.subscriptionEndDate !== null &&
+        new Date(user.subscriptionEndDate) > now) ||
+      (Boolean(user.isSubscriptionTrialActive) &&
+        user.subscriptionTrialEndDate !== null &&
+        new Date(user.subscriptionTrialEndDate) > now)
     );
   }
 

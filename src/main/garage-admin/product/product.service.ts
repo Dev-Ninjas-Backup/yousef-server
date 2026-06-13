@@ -680,6 +680,10 @@ export class ProductService {
         freeProductsListing: true,
         subscriptionEndsAt: true,
         isMembership: true,
+        isSubscribed: true,
+        subscriptionEndDate: true,
+        isSubscriptionTrialActive: true,
+        subscriptionTrialEndDate: true,
         productMonthlyActive: true,
         productMonthlyEndDate: true,
         promotionCredits: true,
@@ -700,16 +704,24 @@ export class ProductService {
     const credits = user.freeProductsListing || 0;
     const promotionCredits = user.promotionCredits || 0;
 
+    const now = new Date();
+
     const hasGarageMonthly = Boolean(
-      user.isMembership &&
-      user.subscriptionEndsAt &&
-      new Date(user.subscriptionEndsAt) > new Date(),
+      (user.isMembership &&
+        user.subscriptionEndsAt &&
+        new Date(user.subscriptionEndsAt) > now) ||
+      (user.isSubscribed &&
+        user.subscriptionEndDate &&
+        new Date(user.subscriptionEndDate) > now) ||
+      (user.isSubscriptionTrialActive &&
+        user.subscriptionTrialEndDate &&
+        new Date(user.subscriptionTrialEndDate) > now),
     );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&
       user.productMonthlyEndDate &&
-      new Date(user.productMonthlyEndDate) > new Date(),
+      new Date(user.productMonthlyEndDate) > now,
     );
 
     return {
