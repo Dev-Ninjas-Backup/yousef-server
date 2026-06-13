@@ -233,7 +233,14 @@ export class ProductService {
       include: {
         seller: true,
         createdBy: {
-          select: { id: true, email: true, fullName: true, role: true },
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            profilePhoto: true,
+            garageLogo: true,
+          },
         },
         category: true,
       },
@@ -408,7 +415,14 @@ export class ProductService {
         include: {
           seller: true,
           createdBy: {
-            select: { id: true, email: true, fullName: true, role: true },
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+              role: true,
+              profilePhoto: true,
+              garageLogo: true,
+            },
           },
           category: true,
         },
@@ -454,7 +468,14 @@ export class ProductService {
       include: {
         seller: true,
         createdBy: {
-          select: { id: true, email: true, fullName: true, role: true },
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            profilePhoto: true,
+            garageLogo: true,
+          },
         },
         category: true,
       },
@@ -479,7 +500,14 @@ export class ProductService {
       include: {
         seller: true,
         createdBy: {
-          select: { id: true, email: true, fullName: true, role: true },
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            profilePhoto: true,
+            garageLogo: true,
+          },
         },
         category: true,
       },
