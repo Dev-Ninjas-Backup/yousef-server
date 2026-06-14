@@ -58,14 +58,14 @@ export class UserManagementService {
       this.prisma.user.count({
         where: {
           isDeleted: false,
-          role: 'GARAGE_OWNER',
+          role: { in: ['GARAGE_OWNER', 'CAR_OWNER'] },
           OR: [{ isSubscribed: true }, { productMonthlyActive: true }],
         },
       }),
       this.prisma.user.count({
         where: {
           isDeleted: false,
-          role: 'GARAGE_OWNER',
+          role: { in: ['GARAGE_OWNER', 'CAR_OWNER'] },
           OR: [{ isTrialActive: true }, { isSubscriptionTrialActive: true }],
         },
       }),
@@ -107,16 +107,21 @@ export class UserManagementService {
       },
     });
 
-    const noSubscription = garageOwners - (activePaid + activeTrial);
+    const noSubscription =
+      garageOwners + carOwners - (activePaid + activeTrial);
 
     // Optional: rename _count.garages to garageCount
     const formattedUsers = users.map((user) => {
       let subscriptionType = 'None';
-      if (user.role === 'GARAGE_OWNER') {
+      if (user.role === 'GARAGE_OWNER' || user.role === 'CAR_OWNER') {
         if (user.isSubscribed) {
           subscriptionType = 'Paid Monthly';
         } else if (user.productMonthlyActive) {
-          subscriptionType = `Monthly ${user.productMonthlyPlanType || 'Pro'}`;
+          const planName = user.productMonthlyPlanType
+            ? user.productMonthlyPlanType.charAt(0).toUpperCase() +
+              user.productMonthlyPlanType.slice(1).toLowerCase()
+            : 'Pro';
+          subscriptionType = `Monthly ${planName}`;
         } else if (user.isTrialActive || user.isSubscriptionTrialActive) {
           subscriptionType = 'Free Trial';
         } else {
