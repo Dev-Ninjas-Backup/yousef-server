@@ -93,4 +93,12 @@ export class ProductFilterDto {
   @IsOptional()
   @IsString()
   userId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by promoted products',
+    example: true,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  isPromoted?: boolean;
 }

@@ -301,6 +301,7 @@ export class ProductService {
     status?: string;
     sortBy?: string;
     userId?: string;
+    isPromoted?: boolean | string;
   }) {
     const page = query?.page || 1;
     const limit = query?.limit || 20;
@@ -391,6 +392,11 @@ export class ProductService {
 
     if (query?.userId) {
       where.createdById = query.userId;
+    }
+
+    if (query?.isPromoted !== undefined) {
+      where.isPromoted =
+        query.isPromoted === true || query.isPromoted === 'true';
     }
 
     // Build orderBy based on sortBy
@@ -877,11 +883,19 @@ export class ProductService {
       }
     });
 
+    const promotedCount = await this.prisma.product.count({
+      where: {
+        ...where,
+        isPromoted: true,
+      },
+    });
+
     return {
       success: true,
       data: {
         categories: categoryCounts,
         conditions: conditionCounts,
+        promoted: promotedCount,
       },
     };
   }
