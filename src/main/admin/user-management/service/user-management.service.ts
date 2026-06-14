@@ -36,7 +36,6 @@ export class UserManagementService {
       ];
     }
 
-    // Get total count for pagination and stats
     const [
       total,
       totalUsers,
@@ -44,6 +43,7 @@ export class UserManagementService {
       garageOwners,
       activePaid,
       activeTrial,
+      subscribedUsers,
     ] = await Promise.all([
       this.prisma.user.count({
         where: whereClause,
@@ -67,6 +67,18 @@ export class UserManagementService {
           isDeleted: false,
           role: { in: ['GARAGE_OWNER', 'CAR_OWNER'] },
           OR: [{ isTrialActive: true }, { isSubscriptionTrialActive: true }],
+        },
+      }),
+      this.prisma.user.count({
+        where: {
+          isDeleted: false,
+          role: { in: ['GARAGE_OWNER', 'CAR_OWNER'] },
+          OR: [
+            { isSubscribed: true },
+            { productMonthlyActive: true },
+            { isTrialActive: true },
+            { isSubscriptionTrialActive: true },
+          ],
         },
       }),
     ]);
@@ -151,6 +163,7 @@ export class UserManagementService {
           garageOwners,
           activePaid,
           activeTrial,
+          subscribedUsers,
           noSubscription: noSubscription > 0 ? noSubscription : 0,
         },
       },
