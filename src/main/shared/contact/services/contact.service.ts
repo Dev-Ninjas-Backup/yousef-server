@@ -37,6 +37,7 @@ export class ContactService {
           payload.subject === ContactSubject.OTHERS
             ? payload.othersubject
             : null,
+        garageOwnerId: payload.garageOwnerId || null,
       },
     });
 
