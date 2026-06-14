@@ -302,6 +302,7 @@ export class ProductService {
     sortBy?: string;
     userId?: string;
     isPromoted?: boolean | string;
+    sellerType?: string;
   }) {
     const page = query?.page || 1;
     const limit = query?.limit || 20;
@@ -372,6 +373,34 @@ export class ProductService {
           { brand: { contains: query.search, mode: 'insensitive' } },
         ],
       });
+    }
+
+    if (query?.sellerType) {
+      if (query.sellerType === 'GARAGE') {
+        andConditions.push({
+          createdBy: {
+            role: 'GARAGE_OWNER',
+          },
+        });
+      } else if (query.sellerType === 'SUPPLIER') {
+        andConditions.push({
+          createdBy: {
+            role: { not: 'GARAGE_OWNER' },
+          },
+          seller: {
+            sellerType: 'VERIFIED_SUPPLIER',
+          },
+        });
+      } else if (query.sellerType === 'INDIVIDUAL') {
+        andConditions.push({
+          createdBy: {
+            role: { not: 'GARAGE_OWNER' },
+          },
+          seller: {
+            sellerType: 'INDIVIDUAL',
+          },
+        });
+      }
     }
 
     where.AND = andConditions;

@@ -101,4 +101,14 @@ export class ProductFilterDto {
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   isPromoted?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Filter by seller type (GARAGE, SUPPLIER, INDIVIDUAL)',
+    example: 'GARAGE',
+    enum: ['GARAGE', 'SUPPLIER', 'INDIVIDUAL'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['GARAGE', 'SUPPLIER', 'INDIVIDUAL'])
+  sellerType?: string;
 }
