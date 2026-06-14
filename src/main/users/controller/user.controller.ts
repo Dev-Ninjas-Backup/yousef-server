@@ -40,6 +40,15 @@ export class UserController {
     return this.userService.getAllUsers();
   }
 
+  // ------------get admin info for live support chat (any logged-in user)------------
+  @ApiOperation({ summary: 'Get admin user info for Live Support chat' })
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Get('admin-info')
+  async getAdminInfo() {
+    return this.userService.getAdminInfo();
+  }
+
   // ----------------get profile--------------------
 
   @ApiOperation({ summary: 'Get user there owner  data  fetching now' })
