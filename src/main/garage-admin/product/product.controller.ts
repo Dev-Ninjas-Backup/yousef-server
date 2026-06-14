@@ -113,8 +113,8 @@ export class ProductController {
   @Get('my-products')
   @ApiOperation({ summary: 'Get my products' })
   @ApiResponse({ status: 200, description: 'List of my products.' })
-  async findMyProducts(@GetUser('userId') userId: string) {
-    return this.productService.findMyProducts(userId);
+  async findMyProducts(@GetUser('userId') userId: string, @Query() query: any) {
+    return this.productService.findMyProducts(userId, query);
   }
 
   @Get('stats')

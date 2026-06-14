@@ -500,8 +500,23 @@ export class ProductService {
   }
 
   // my products
-  async findMyProducts(userId: string) {
-    return this.prisma.product.findMany({
+  async findMyProducts(
+    userId: string,
+    query?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      categoryId?: string;
+      condition?: string;
+      status?: string;
+      stock?: string;
+      minPrice?: number | string;
+      maxPrice?: number | string;
+      sortBy?: string;
+    },
+  ) {
+    // 1. Fetch all products from DB for this user
+    const allProducts = await this.prisma.product.findMany({
       where: { createdById: userId },
       include: {
         seller: true,
@@ -518,6 +533,153 @@ export class ProductService {
         category: true,
       },
     });
+
+    // If page and limit are undefined, return the array directly for backward compatibility
+    if (query?.page === undefined && query?.limit === undefined) {
+      return allProducts;
+    }
+
+    const page = Number(query?.page) || 1;
+    const limit = Number(query?.limit) || 10;
+
+    // 2. Filter in-memory
+    const filtered = allProducts.filter((product) => {
+      const matchesSearch =
+        !query?.search ||
+        product.partName.toLowerCase().includes(query.search.toLowerCase()) ||
+        (product.brand?.toLowerCase() || '').includes(
+          query.search.toLowerCase(),
+        ) ||
+        (product.description?.toLowerCase() || '').includes(
+          query.search.toLowerCase(),
+        );
+
+      const matchesStatus =
+        !query?.status ||
+        query.status === 'all' ||
+        product.status.toLowerCase() === query.status.toLowerCase();
+
+      const matchesCondition =
+        !query?.condition ||
+        query.condition === 'all' ||
+        product.condition.toLowerCase() === query.condition.toLowerCase();
+
+      const matchesStock =
+        !query?.stock ||
+        query.stock === 'all' ||
+        (query.stock === 'instock' && product.quantity > 0) ||
+        (query.stock === 'outofstock' && product.quantity === 0);
+
+      const matchesCategory =
+        !query?.categoryId ||
+        query.categoryId === 'all' ||
+        product.categoryId === query.categoryId;
+
+      const priceNum = Number(product.price) || 0;
+      const matchesMinPrice =
+        !query?.minPrice || priceNum >= Number(query.minPrice);
+      const matchesMaxPrice =
+        !query?.maxPrice || priceNum <= Number(query.maxPrice);
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesCondition &&
+        matchesStock &&
+        matchesCategory &&
+        matchesMinPrice &&
+        matchesMaxPrice
+      );
+    });
+
+    // 3. Sort in-memory
+    filtered.sort((a, b) => {
+      if (query?.sortBy === 'newest') {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+      if (query?.sortBy === 'oldest') {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      }
+      if (query?.sortBy === 'price_asc') {
+        return (Number(a.price) || 0) - (Number(b.price) || 0);
+      }
+      if (query?.sortBy === 'price_desc') {
+        return (Number(b.price) || 0) - (Number(a.price) || 0);
+      }
+      if (query?.sortBy === 'most_viewed' || query?.sortBy === 'views_desc') {
+        return (b.views || 0) - (a.views || 0);
+      }
+      if (query?.sortBy === 'views_asc') {
+        return (a.views || 0) - (b.views || 0);
+      }
+      if (
+        query?.sortBy === 'most_inquiries' ||
+        query?.sortBy === 'inquiries_desc'
+      ) {
+        return (b.inquiries || 0) - (a.inquiries || 0);
+      }
+      if (query?.sortBy === 'inquiries_asc') {
+        return (a.inquiries || 0) - (b.inquiries || 0);
+      }
+      if (query?.sortBy === 'brand_asc') {
+        return (a.brand || '').localeCompare(b.brand || '');
+      }
+      if (query?.sortBy === 'brand_desc') {
+        return (b.brand || '').localeCompare(a.brand || '');
+      }
+      if (query?.sortBy === 'partName_asc') {
+        return a.partName.localeCompare(b.partName);
+      }
+      if (query?.sortBy === 'partName_desc') {
+        return b.partName.localeCompare(a.partName);
+      }
+      if (query?.sortBy === 'category_asc') {
+        return (a.category?.name || '').localeCompare(b.category?.name || '');
+      }
+      if (query?.sortBy === 'category_desc') {
+        return (b.category?.name || '').localeCompare(a.category?.name || '');
+      }
+      if (query?.sortBy === 'condition_asc') {
+        return a.condition.localeCompare(b.condition);
+      }
+      if (query?.sortBy === 'condition_desc') {
+        return b.condition.localeCompare(a.condition);
+      }
+      if (query?.sortBy === 'quantity_asc') {
+        return a.quantity - b.quantity;
+      }
+      if (query?.sortBy === 'quantity_desc') {
+        return b.quantity - a.quantity;
+      }
+      if (query?.sortBy === 'status_asc') {
+        return a.status.localeCompare(b.status);
+      }
+      if (query?.sortBy === 'status_desc') {
+        return b.status.localeCompare(a.status);
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    // 4. Paginate
+    const total = filtered.length;
+    const skip = (page - 1) * limit;
+    const paginatedProducts = filtered.slice(skip, skip + limit);
+
+    return {
+      success: true,
+      message: 'Products fetched successfully',
+      data: paginatedProducts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   // --------------update product by id----------------
