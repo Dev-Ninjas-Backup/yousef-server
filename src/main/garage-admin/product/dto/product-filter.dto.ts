@@ -85,4 +85,30 @@ export class ProductFilterDto {
   @IsOptional()
   @IsIn(['relevance', 'price_asc', 'price_desc', 'newest'])
   sortBy?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by user ID who created the product',
+    example: 'uuid-string',
+  })
+  @IsOptional()
+  @IsString()
+  userId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by promoted products',
+    example: true,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  isPromoted?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Filter by seller type (GARAGE, SUPPLIER, INDIVIDUAL)',
+    example: 'GARAGE',
+    enum: ['GARAGE', 'SUPPLIER', 'INDIVIDUAL'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['GARAGE', 'SUPPLIER', 'INDIVIDUAL'])
+  sellerType?: string;
 }

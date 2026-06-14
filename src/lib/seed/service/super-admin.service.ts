@@ -17,7 +17,7 @@ const DEFAULT_SERVICE_CATEGORIES = [
   'Diagnostics',
   'Towing',
   'Emergency Towing',
-  'Van Doorstep Repair',
+  'Mobile Van Repair Service',
   'Battery Replacement',
   'Transmission Service',
   'Suspension Repair',

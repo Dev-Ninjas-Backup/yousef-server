@@ -14,6 +14,7 @@ import {
   Query,
   UploadedFiles,
   UseInterceptors,
+  HttpException,
 } from '@nestjs/common';
 
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
@@ -78,13 +79,16 @@ export class ProductController {
         verificationImageFile,
       );
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException ||
-        error.message.includes('validation') ||
-        error.message.includes('Payment required') ||
-        error.message.includes('subscription required') ||
-        error.message.includes('User not found')
+        error.message?.includes('validation') ||
+        error.message?.includes('Payment required') ||
+        error.message?.includes('subscription required') ||
+        error.message?.includes('User not found')
       ) {
         throw new BadRequestException(error.message || error);
       }
@@ -109,8 +113,27 @@ export class ProductController {
   @Get('my-products')
   @ApiOperation({ summary: 'Get my products' })
   @ApiResponse({ status: 200, description: 'List of my products.' })
-  async findMyProducts(@GetUser('userId') userId: string) {
-    return this.productService.findMyProducts(userId);
+  async findMyProducts(@GetUser('userId') userId: string, @Query() query: any) {
+    return this.productService.findMyProducts(userId, query);
+  }
+
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Get product counts stats for categories and conditions',
+  })
+  async getProductStats(
+    @Query('search') search?: string,
+    @Query('userId') userId?: string,
+  ) {
+    return this.productService.getProductStats({ search, userId });
+  }
+
+  @Get('sellers')
+  @ApiOperation({
+    summary: 'Get list of unique users who have active listings',
+  })
+  async getActiveSellers() {
+    return this.productService.getActiveSellers();
   }
 
   // ---------------------- Get Product By ID ----------------------

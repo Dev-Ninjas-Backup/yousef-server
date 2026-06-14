@@ -39,4 +39,12 @@ export class CreateContactDto {
   @IsString()
   @IsOptional()
   othersubject?: string;
+
+  @ApiProperty({
+    example: 'garage-owner-uuid-here',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  garageOwnerId?: string;
 }

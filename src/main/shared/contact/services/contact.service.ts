@@ -37,6 +37,7 @@ export class ContactService {
           payload.subject === ContactSubject.OTHERS
             ? payload.othersubject
             : null,
+        garageOwnerId: payload.garageOwnerId || null,
       },
     });
 
@@ -62,5 +63,61 @@ export class ContactService {
     );
 
     return successResponse(contact, 'Contact message created successfully');
+  }
+
+  @HandleError('Failed to fetch support tickets', 'Contact')
+  async findByGarageOwner(garageOwnerId: string): Promise<TResponse<any>> {
+    const tickets = await this.prisma.contact.findMany({
+      where: { garageOwnerId },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return successResponse(tickets, 'Support tickets fetched successfully');
+  }
+
+  @HandleError('Failed to submit reply to support ticket', 'Contact')
+  async replyTicket(
+    contactId: string,
+    garageOwnerId: string,
+    content: string,
+  ): Promise<TResponse<any>> {
+    // 1. Verify ticket belongs to this garage owner
+    const contact = await this.prisma.contact.findFirst({
+      where: { id: contactId, garageOwnerId },
+    });
+
+    if (!contact) {
+      throw new AppError(404, 'Support ticket not found or access denied');
+    }
+
+    // 2. Create message
+    const message = await this.prisma.message.create({
+      data: {
+        contactId,
+        content,
+        isFromAdmin: false,
+        isForGrageAdmin: false,
+      },
+    });
+
+    // 3. Send notification email to admin
+    const adminEmail = this.configService.get<string>(ENVEnum.MAIL_USER);
+    if (adminEmail) {
+      await this.mailService.sendEmail(
+        adminEmail,
+        `New Reply on Support Ticket`,
+        `
+          <p><strong>${contact.FirstName} ${contact.LastName}</strong> has replied to support ticket:</p>
+          <blockquote>${content.replace(/\n/g, '<br>')}</blockquote>
+        `,
+      );
+    }
+
+    return successResponse(message, 'Reply submitted successfully');
   }
 }

@@ -1,4 +1,12 @@
-import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Query,
+  Body,
+  Patch,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   ValidateAuth,
@@ -58,5 +66,20 @@ export class UserManagementController {
   @Get('make-role-change/:id')
   UserRoleChange(@Param('id') id: string) {
     return this.userManagementService.UserRoleChange(id);
+  }
+
+  // --------update user promotion credits ------------
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @ValidateSuperAdmin()
+  @ApiOperation({
+    summary: 'Update promotion credits for a user (Super Admin only)',
+  })
+  @Patch('user/:id/promotion-credits')
+  updatePromotionCredits(
+    @Param('id') id: string,
+    @Body('credits') credits: number,
+  ) {
+    return this.userManagementService.updatePromotionCredits(id, credits);
   }
 }

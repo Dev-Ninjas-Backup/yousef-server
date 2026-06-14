@@ -41,9 +41,9 @@ export class OverviewService {
     ]);
 
     return {
-      totalListings,
-      totalActiveListings,
-      totalPendingListings,
+      totalProducts: totalListings,
+      activeListings: totalActiveListings,
+      pendingApproval: totalPendingListings,
       totalInquiries,
     };
   }

@@ -232,7 +232,16 @@ export class ProductService {
       },
       include: {
         seller: true,
-        createdBy: { select: { id: true, email: true, fullName: true } },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            profilePhoto: true,
+            garageLogo: true,
+          },
+        },
         category: true,
       },
     });
@@ -291,6 +300,9 @@ export class ProductService {
     condition?: string;
     status?: string;
     sortBy?: string;
+    userId?: string;
+    isPromoted?: boolean | string;
+    sellerType?: string;
   }) {
     const page = query?.page || 1;
     const limit = query?.limit || 20;
@@ -363,6 +375,34 @@ export class ProductService {
       });
     }
 
+    if (query?.sellerType) {
+      if (query.sellerType === 'GARAGE') {
+        andConditions.push({
+          createdBy: {
+            role: 'GARAGE_OWNER',
+          },
+        });
+      } else if (query.sellerType === 'SUPPLIER') {
+        andConditions.push({
+          createdBy: {
+            role: { not: 'GARAGE_OWNER' },
+          },
+          seller: {
+            sellerType: 'VERIFIED_SUPPLIER',
+          },
+        });
+      } else if (query.sellerType === 'INDIVIDUAL') {
+        andConditions.push({
+          createdBy: {
+            role: { not: 'GARAGE_OWNER' },
+          },
+          seller: {
+            sellerType: 'INDIVIDUAL',
+          },
+        });
+      }
+    }
+
     where.AND = andConditions;
 
     if (query?.category) {
@@ -377,6 +417,15 @@ export class ProductService {
 
     if (query?.status) {
       where.status = query.status;
+    }
+
+    if (query?.userId) {
+      where.createdById = query.userId;
+    }
+
+    if (query?.isPromoted !== undefined) {
+      where.isPromoted =
+        query.isPromoted === true || query.isPromoted === 'true';
     }
 
     // Build orderBy based on sortBy
@@ -400,7 +449,16 @@ export class ProductService {
         where,
         include: {
           seller: true,
-          createdBy: { select: { id: true, email: true, fullName: true } },
+          createdBy: {
+            select: {
+              id: true,
+              email: true,
+              fullName: true,
+              role: true,
+              profilePhoto: true,
+              garageLogo: true,
+            },
+          },
           category: true,
         },
         skip,
@@ -444,7 +502,16 @@ export class ProductService {
       where: { id },
       include: {
         seller: true,
-        createdBy: { select: { id: true, email: true, fullName: true } },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            profilePhoto: true,
+            garageLogo: true,
+          },
+        },
         category: true,
       },
     });
@@ -462,15 +529,186 @@ export class ProductService {
   }
 
   // my products
-  async findMyProducts(userId: string) {
-    return this.prisma.product.findMany({
+  async findMyProducts(
+    userId: string,
+    query?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      categoryId?: string;
+      condition?: string;
+      status?: string;
+      stock?: string;
+      minPrice?: number | string;
+      maxPrice?: number | string;
+      sortBy?: string;
+    },
+  ) {
+    // 1. Fetch all products from DB for this user
+    const allProducts = await this.prisma.product.findMany({
       where: { createdById: userId },
       include: {
         seller: true,
-        createdBy: { select: { id: true, email: true, fullName: true } },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            profilePhoto: true,
+            garageLogo: true,
+          },
+        },
         category: true,
       },
     });
+
+    // If page and limit are undefined, return the array directly for backward compatibility
+    if (query?.page === undefined && query?.limit === undefined) {
+      return allProducts;
+    }
+
+    const page = Number(query?.page) || 1;
+    const limit = Number(query?.limit) || 10;
+
+    // 2. Filter in-memory
+    const filtered = allProducts.filter((product) => {
+      const matchesSearch =
+        !query?.search ||
+        product.partName.toLowerCase().includes(query.search.toLowerCase()) ||
+        (product.brand?.toLowerCase() || '').includes(
+          query.search.toLowerCase(),
+        ) ||
+        (product.description?.toLowerCase() || '').includes(
+          query.search.toLowerCase(),
+        );
+
+      const matchesStatus =
+        !query?.status ||
+        query.status === 'all' ||
+        product.status.toLowerCase() === query.status.toLowerCase();
+
+      const matchesCondition =
+        !query?.condition ||
+        query.condition === 'all' ||
+        product.condition.toLowerCase() === query.condition.toLowerCase();
+
+      const matchesStock =
+        !query?.stock ||
+        query.stock === 'all' ||
+        (query.stock === 'instock' && product.quantity > 0) ||
+        (query.stock === 'outofstock' && product.quantity === 0);
+
+      const matchesCategory =
+        !query?.categoryId ||
+        query.categoryId === 'all' ||
+        product.categoryId === query.categoryId;
+
+      const priceNum = Number(product.price) || 0;
+      const matchesMinPrice =
+        !query?.minPrice || priceNum >= Number(query.minPrice);
+      const matchesMaxPrice =
+        !query?.maxPrice || priceNum <= Number(query.maxPrice);
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesCondition &&
+        matchesStock &&
+        matchesCategory &&
+        matchesMinPrice &&
+        matchesMaxPrice
+      );
+    });
+
+    // 3. Sort in-memory
+    filtered.sort((a, b) => {
+      if (query?.sortBy === 'newest') {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+      if (query?.sortBy === 'oldest') {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      }
+      if (query?.sortBy === 'price_asc') {
+        return (Number(a.price) || 0) - (Number(b.price) || 0);
+      }
+      if (query?.sortBy === 'price_desc') {
+        return (Number(b.price) || 0) - (Number(a.price) || 0);
+      }
+      if (query?.sortBy === 'most_viewed' || query?.sortBy === 'views_desc') {
+        return (b.views || 0) - (a.views || 0);
+      }
+      if (query?.sortBy === 'views_asc') {
+        return (a.views || 0) - (b.views || 0);
+      }
+      if (
+        query?.sortBy === 'most_inquiries' ||
+        query?.sortBy === 'inquiries_desc'
+      ) {
+        return (b.inquiries || 0) - (a.inquiries || 0);
+      }
+      if (query?.sortBy === 'inquiries_asc') {
+        return (a.inquiries || 0) - (b.inquiries || 0);
+      }
+      if (query?.sortBy === 'brand_asc') {
+        return (a.brand || '').localeCompare(b.brand || '');
+      }
+      if (query?.sortBy === 'brand_desc') {
+        return (b.brand || '').localeCompare(a.brand || '');
+      }
+      if (query?.sortBy === 'partName_asc') {
+        return a.partName.localeCompare(b.partName);
+      }
+      if (query?.sortBy === 'partName_desc') {
+        return b.partName.localeCompare(a.partName);
+      }
+      if (query?.sortBy === 'category_asc') {
+        return (a.category?.name || '').localeCompare(b.category?.name || '');
+      }
+      if (query?.sortBy === 'category_desc') {
+        return (b.category?.name || '').localeCompare(a.category?.name || '');
+      }
+      if (query?.sortBy === 'condition_asc') {
+        return a.condition.localeCompare(b.condition);
+      }
+      if (query?.sortBy === 'condition_desc') {
+        return b.condition.localeCompare(a.condition);
+      }
+      if (query?.sortBy === 'quantity_asc') {
+        return a.quantity - b.quantity;
+      }
+      if (query?.sortBy === 'quantity_desc') {
+        return b.quantity - a.quantity;
+      }
+      if (query?.sortBy === 'status_asc') {
+        return a.status.localeCompare(b.status);
+      }
+      if (query?.sortBy === 'status_desc') {
+        return b.status.localeCompare(a.status);
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    // 4. Paginate
+    const total = filtered.length;
+    const skip = (page - 1) * limit;
+    const paginatedProducts = filtered.slice(skip, skip + limit);
+
+    return {
+      success: true,
+      message: 'Products fetched successfully',
+      data: paginatedProducts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   // --------------update product by id----------------
@@ -582,6 +820,7 @@ export class ProductService {
             id: true,
             email: true,
             fullName: true,
+            role: true,
           },
         },
         category: true,
@@ -610,6 +849,7 @@ export class ProductService {
             id: true,
             email: true,
             fullName: true,
+            role: true,
           },
         },
         category: true,
@@ -637,6 +877,10 @@ export class ProductService {
         freeProductsListing: true,
         subscriptionEndsAt: true,
         isMembership: true,
+        isSubscribed: true,
+        subscriptionEndDate: true,
+        isSubscriptionTrialActive: true,
+        subscriptionTrialEndDate: true,
         productMonthlyActive: true,
         productMonthlyEndDate: true,
         promotionCredits: true,
@@ -657,16 +901,24 @@ export class ProductService {
     const credits = user.freeProductsListing || 0;
     const promotionCredits = user.promotionCredits || 0;
 
+    const now = new Date();
+
     const hasGarageMonthly = Boolean(
-      user.isMembership &&
-      user.subscriptionEndsAt &&
-      new Date(user.subscriptionEndsAt) > new Date(),
+      (user.isMembership &&
+        user.subscriptionEndsAt &&
+        new Date(user.subscriptionEndsAt) > now) ||
+      (user.isSubscribed &&
+        user.subscriptionEndDate &&
+        new Date(user.subscriptionEndDate) > now) ||
+      (user.isSubscriptionTrialActive &&
+        user.subscriptionTrialEndDate &&
+        new Date(user.subscriptionTrialEndDate) > now),
     );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&
       user.productMonthlyEndDate &&
-      new Date(user.productMonthlyEndDate) > new Date(),
+      new Date(user.productMonthlyEndDate) > now,
     );
 
     return {
@@ -680,6 +932,195 @@ export class ProductService {
       hasGarageMonthly,
       hasProductMonthly,
       productMonthlyEndsAt: user.productMonthlyEndDate,
+    };
+  }
+
+  async getProductStats(query?: { search?: string; userId?: string }) {
+    const where: any = {
+      status: 'APPROVED',
+    };
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const fortyFiveDaysAgo = new Date();
+    fortyFiveDaysAgo.setHours(0, 0, 0, 0);
+    fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
+
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setHours(0, 0, 0, 0);
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    const andConditions: any[] = [];
+
+    // Expiry / active listings filter (same logic as findAll)
+    andConditions.push({
+      OR: [
+        {
+          expiresAt: { gte: now },
+        },
+        {
+          expiresAt: null,
+          OR: [
+            {
+              listingPlan: 'PAY_PER',
+              createdAt: { gte: fortyFiveDaysAgo },
+            },
+            {
+              listingPlan: {
+                in: ['MONTHLY_BASIC', 'MONTHLY_PRO', 'MONTHLY_GARAGE'],
+              },
+              createdAt: { gte: sixtyDaysAgo },
+            },
+            {
+              listingPlan: {
+                notIn: [
+                  'PAY_PER',
+                  'MONTHLY_BASIC',
+                  'MONTHLY_PRO',
+                  'MONTHLY_GARAGE',
+                ],
+              },
+              createdAt: { gte: thirtyDaysAgo },
+            },
+            {
+              listingPlan: null,
+              createdAt: { gte: thirtyDaysAgo },
+            },
+          ],
+        },
+      ],
+    });
+
+    if (query?.search) {
+      andConditions.push({
+        OR: [
+          { partName: { contains: query.search, mode: 'insensitive' } },
+          { description: { contains: query.search, mode: 'insensitive' } },
+          { brand: { contains: query.search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (query?.userId) {
+      where.createdById = query.userId;
+    }
+
+    where.AND = andConditions;
+
+    // Get product counts grouped by category ID
+    const categoryStats = await this.prisma.product.groupBy({
+      by: ['categoryId'],
+      where,
+      _count: {
+        id: true,
+      },
+    });
+
+    // Get product counts grouped by condition
+    const conditionStats = await this.prisma.product.groupBy({
+      by: ['condition'],
+      where,
+      _count: {
+        id: true,
+      },
+    });
+
+    // Fetch categories to map ID to name
+    const categories = await this.prisma.partsCategory.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    const categoryMap = categories.reduce(
+      (acc, cat) => {
+        acc[cat.id] = cat.name;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    const categoryCounts: Record<string, number> = {};
+    categories.forEach((cat) => {
+      categoryCounts[cat.name] = 0;
+    });
+
+    categoryStats.forEach((stat) => {
+      const catName = categoryMap[stat.categoryId];
+      if (catName) {
+        categoryCounts[catName] = stat._count.id;
+      }
+    });
+
+    const conditionCounts: Record<string, number> = {
+      New: 0,
+      Used: 0,
+      Refurbished: 0,
+    };
+
+    conditionStats.forEach((stat) => {
+      const label = stat.condition;
+      if (label) {
+        const matchingKey = Object.keys(conditionCounts).find(
+          (k) => k.toLowerCase() === label.toLowerCase(),
+        );
+        if (matchingKey) {
+          conditionCounts[matchingKey] = stat._count.id;
+        }
+      }
+    });
+
+    const promotedCount = await this.prisma.product.count({
+      where: {
+        ...where,
+        isPromoted: true,
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        categories: categoryCounts,
+        conditions: conditionCounts,
+        promoted: promotedCount,
+      },
+    };
+  }
+
+  async getActiveSellers() {
+    const activeProducts = await this.prisma.product.findMany({
+      where: {
+        status: 'APPROVED',
+      },
+      select: {
+        createdBy: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+      },
+    });
+
+    const uniqueUsersMap = new Map<string, { id: string; fullName: string }>();
+    activeProducts.forEach((product) => {
+      if (product.createdBy) {
+        uniqueUsersMap.set(product.createdBy.id, {
+          id: product.createdBy.id,
+          fullName: product.createdBy.fullName || 'Unknown',
+        });
+      }
+    });
+
+    const sellers = Array.from(uniqueUsersMap.values());
+
+    return {
+      success: true,
+      data: sellers,
     };
   }
 }

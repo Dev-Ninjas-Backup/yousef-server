@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -9,7 +9,6 @@ import { ValidateAuth, ValidateSuperAdmin } from 'src/common/jwt/jwt.decorator';
 import {
   AdminDashboardOverviewService,
   DashboardOverview,
-  RecentActivityItem,
 } from '../service/admin-dashboard-overview.service';
 
 @ApiTags('Admin-dashboard overview monitor performace')
@@ -28,13 +27,22 @@ export class AdminDashboardOverviewController {
     return this.adminDashboardOverviewService.getDashboardOverview();
   }
 
-  // ----------recent activity-----------------
   @ValidateAuth()
   @ValidateSuperAdmin()
   @ApiBearerAuth()
   @Get('recent-activity')
-  getRecentActivity(): Promise<RecentActivityItem[]> {
-    return this.adminDashboardOverviewService.getRecentActivity();
+  getRecentActivity(
+    @Query('userPage') userPage?: number,
+    @Query('userLimit') userLimit?: number,
+    @Query('garagePage') garagePage?: number,
+    @Query('garageLimit') garageLimit?: number,
+  ) {
+    return this.adminDashboardOverviewService.getRecentActivity({
+      userPage,
+      userLimit,
+      garagePage,
+      garageLimit,
+    });
   }
 
   // ---------------partsCategory show parts category name & percentage ---

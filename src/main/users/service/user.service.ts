@@ -39,6 +39,24 @@ export class UserService {
     return successResponse(users, 'All users retrieved successfully');
   }
 
+  // ------------------------- Get Admin Info (for Live Support) -----------------
+  @HandleError('Failed to get admin info', 'User')
+  async getAdminInfo() {
+    const admin = await this.prisma.user.findFirst({
+      where: { role: 'SUPER_ADMIN' },
+      select: {
+        id: true,
+        fullName: true,
+        profilePhoto: true,
+        email: true,
+      },
+    });
+
+    if (!admin) throw new AppError(404, 'Admin not found');
+
+    return successResponse(admin, 'Admin info retrieved successfully');
+  }
+
   // ------------------------- Get Profile -----------------
   @HandleError('Failed to get profile', 'Profile')
   async getProfile(userId: string) {
