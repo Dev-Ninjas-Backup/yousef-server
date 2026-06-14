@@ -64,4 +64,19 @@ export class ContactService {
 
     return successResponse(contact, 'Contact message created successfully');
   }
+
+  @HandleError('Failed to fetch support tickets', 'Contact')
+  async findByGarageOwner(garageOwnerId: string): Promise<TResponse<any>> {
+    const tickets = await this.prisma.contact.findMany({
+      where: { garageOwnerId },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return successResponse(tickets, 'Support tickets fetched successfully');
+  }
 }
