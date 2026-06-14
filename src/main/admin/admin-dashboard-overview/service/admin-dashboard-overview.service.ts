@@ -82,10 +82,64 @@ export class AdminDashboardOverviewService {
   // ------------------ Recent Activity Method ------------------
 
   @HandleError('Failed to fetch recent activity')
-  async getRecentActivity(): Promise<RecentActivityItem[]> {
-    const limit = 10;
-    const [recentProducts, recentUsers, recentGarages] = await Promise.all([
-      // ----------- Fetch recent product submissions (those currently pending approval)------------------
+  async getRecentActivity(query?: {
+    userPage?: number;
+    userLimit?: number;
+    garagePage?: number;
+    garageLimit?: number;
+  }): Promise<any> {
+    const userPage = Number(query?.userPage) || 1;
+    const userLimit = Number(query?.userLimit) || 10;
+    const userSkip = (userPage - 1) * userLimit;
+
+    const garagePage = Number(query?.garagePage) || 1;
+    const garageLimit = Number(query?.garageLimit) || 10;
+    const garageSkip = (garagePage - 1) * garageLimit;
+
+    // Fetch total counts for metadata
+    const [totalUsers, totalGarages, totalProductsPending] = await Promise.all([
+      this.prisma.user.count({
+        where: { role: UserRole.CAR_OWNER },
+      }),
+      this.prisma.garage.count(),
+      this.prisma.product.count({
+        where: { status: 'PENDING' },
+      }),
+    ]);
+
+    const totalGarageActivities = totalGarages + totalProductsPending;
+
+    // Fetch users (User Activity)
+    const recentUsers = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        fullName: true,
+        createdAt: true,
+      },
+      where: {
+        role: UserRole.CAR_OWNER,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: userSkip,
+      take: userLimit,
+    });
+
+    // Fetch garage activities (Garages + Product submissions)
+    // To properly paginate the merged garage activities, we will query a larger slice or compute it.
+    const [recentGarages, recentProducts] = await Promise.all([
+      this.prisma.garage.findMany({
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: garageSkip + garageLimit,
+      }),
       this.prisma.product.findMany({
         select: {
           id: true,
@@ -104,46 +158,12 @@ export class AdminDashboardOverviewService {
         orderBy: {
           createdAt: 'desc',
         },
-        take: limit,
-      }),
-      // ---------- Fetch recent new user registrations (Car Owners)------------
-      this.prisma.user.findMany({
-        select: {
-          id: true,
-          fullName: true,
-          createdAt: true,
-        },
-        where: {
-          role: UserRole.CAR_OWNER,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-      }),
-      // ------------ Fetch recent new garage registrations (Garage Owners)------------------
-      this.prisma.garage.findMany({
-        select: {
-          id: true,
-          name: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
+        take: garageSkip + garageLimit,
       }),
     ]);
 
-    //---------------- Combine and standardize the activities------------------
-    const combinedActivity: RecentActivityItem[] = [
-      ...recentProducts.map((p) => ({
-        id: p.id,
-        type: 'PRODUCT_SUBMISSION' as const,
-        message: `New part submitted for approval by ${p.seller.name || 'Unknown Seller'}: ${p.partName || 'Unnamed Product'}`, // Enhanced message
-        timestamp: p.createdAt,
-        timeAgo: dayjs(p.createdAt).fromNow(),
-      })),
+    // Format & combine garage activities
+    const combinedGarageActivities = [
       ...recentGarages.map((g) => ({
         id: g.id,
         type: 'NEW_GARAGE' as const,
@@ -151,19 +171,45 @@ export class AdminDashboardOverviewService {
         timestamp: g.createdAt,
         timeAgo: dayjs(g.createdAt).fromNow(),
       })),
-      ...recentUsers.map((u) => ({
-        id: u.id,
-        type: 'NEW_USER' as const,
-        message: `New user registration: ${u.fullName || 'Unnamed User'}`,
-        timestamp: u.createdAt,
-        timeAgo: dayjs(u.createdAt).fromNow(),
+      ...recentProducts.map((p) => ({
+        id: p.id,
+        type: 'PRODUCT_SUBMISSION' as const,
+        message: `New part submitted for approval by ${p.seller.name || 'Unknown Seller'}: ${p.partName || 'Unnamed Product'}`,
+        timestamp: p.createdAt,
+        timeAgo: dayjs(p.createdAt).fromNow(),
       })),
-    ];
-
-    // Sort all activities by timestamp (most recent first) and return top 'limit'
-    return combinedActivity
+    ]
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
+      .slice(garageSkip, garageSkip + garageLimit);
+
+    // Format user activities
+    const userActivities = recentUsers.map((u) => ({
+      id: u.id,
+      type: 'NEW_USER' as const,
+      message: `New user registration: ${u.fullName || 'Unnamed User'}`,
+      timestamp: u.createdAt,
+      timeAgo: dayjs(u.createdAt).fromNow(),
+    }));
+
+    return {
+      success: true,
+      data: {
+        users: userActivities,
+        garages: combinedGarageActivities,
+        userMetadata: {
+          page: userPage,
+          limit: userLimit,
+          total: totalUsers,
+          totalPage: Math.ceil(totalUsers / userLimit),
+        },
+        garageMetadata: {
+          page: garagePage,
+          limit: garageLimit,
+          total: totalGarageActivities,
+          totalPage: Math.ceil(totalGarageActivities / garageLimit),
+        },
+      },
+    };
   }
 
   // ------------------ Dashboard Overview Method ------------------
