@@ -91,7 +91,14 @@ export class AdminMessageService {
 
   @HandleError('Failed to fetch contact', 'Contact')
   async findOne(id: string): Promise<TResponse<any>> {
-    const contact = await this.prisma.contact.findUnique({ where: { id } });
+    const contact = await this.prisma.contact.findUnique({
+      where: { id },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
 
     if (!contact) {
       throw new AppError(404, `No contact found with ID: ${id}`);

@@ -27,4 +27,17 @@ export class ContactController {
   getMyTickets(@GetUser('userId') userId: string) {
     return this.contactService.findByGarageOwner(userId);
   }
+
+  @ApiBearerAuth()
+  @ValidateGarageOwner()
+  @ApiOperation({
+    summary: 'Reply to an existing support ticket',
+  })
+  @Post('reply')
+  replyTicket(
+    @Body() dto: { contactId: string; content: string },
+    @GetUser('userId') userId: string,
+  ) {
+    return this.contactService.replyTicket(dto.contactId, userId, dto.content);
+  }
 }
