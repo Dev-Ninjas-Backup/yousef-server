@@ -271,4 +271,34 @@ export class SparepartsFinancialsService {
       status: payment.status,
     }));
   }
+
+  // Export all spare parts data
+  @HandleError('Failed to export all spare parts data')
+  async exportAllParts() {
+    const products = await this.prisma.product.findMany({
+      include: {
+        seller: {
+          select: {
+            name: true,
+            email: true,
+            phoneNumber: true,
+          },
+        },
+        category: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Products exported successfully',
+      data: products,
+    };
+  }
 }

@@ -63,6 +63,15 @@ export class SparepartsFinancialsController {
     return this.sparepartsFinancialsService.RecentTransactions();
   }
 
+  // -----------Export all spare parts data-----------
+  @ApiBearerAuth()
+  @ValidateAdmin()
+  @ApiOperation({ summary: 'Export all spare parts data' })
+  @Get('parts/export')
+  async exportAllParts() {
+    return this.sparepartsFinancialsService.exportAllParts();
+  }
+
   // -----------Last 30 all data export-----------
   @ApiTags('Admin-Financials')
   @ApiBearerAuth()
