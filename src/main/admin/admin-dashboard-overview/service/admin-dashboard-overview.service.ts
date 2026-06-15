@@ -58,6 +58,63 @@ export class AdminDashboardOverviewService {
   // ------------------ Helper Methods ------------------
 
   /**
+   * Helper to build active listing filters
+   */
+  private getActiveFilter() {
+    const now = new Date();
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const fortyFiveDaysAgo = new Date();
+    fortyFiveDaysAgo.setHours(0, 0, 0, 0);
+    fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
+
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setHours(0, 0, 0, 0);
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    return {
+      OR: [
+        {
+          expiresAt: { gte: now },
+        },
+        {
+          expiresAt: null,
+          OR: [
+            {
+              listingPlan: 'PAY_PER',
+              createdAt: { gte: fortyFiveDaysAgo },
+            },
+            {
+              listingPlan: {
+                in: ['MONTHLY_BASIC', 'MONTHLY_PRO', 'MONTHLY_GARAGE'],
+              },
+              createdAt: { gte: sixtyDaysAgo },
+            },
+            {
+              listingPlan: {
+                notIn: [
+                  'PAY_PER',
+                  'MONTHLY_BASIC',
+                  'MONTHLY_PRO',
+                  'MONTHLY_GARAGE',
+                ],
+              },
+              createdAt: { gte: thirtyDaysAgo },
+            },
+            {
+              listingPlan: null,
+              createdAt: { gte: thirtyDaysAgo },
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  /**
    * Calculates percentage change between current and prior periods
    */
   private calculatePercentageChange(current: number, prior: number): number {
@@ -225,6 +282,8 @@ export class AdminDashboardOverviewService {
     const LastMonth = new Date(today);
     LastMonth.setDate(today.getDate() - 60);
 
+    const activeFilter = this.getActiveFilter();
+
     // Execute all database queries in parallel for optimal performance
     const [
       currentRevenueAggregate,
@@ -249,8 +308,10 @@ export class AdminDashboardOverviewService {
         _sum: { amount: true },
         where: { createdAt: { gte: LastMonth, lt: last30DaysStart } },
       }),
-      // Products - Total
-      this.prisma.product.count(),
+      // Products - Total (Active only)
+      this.prisma.product.count({
+        where: activeFilter,
+      }),
       // Products - Current Period
       this.prisma.product.count({
         where: { createdAt: { gte: last30DaysStart } },
@@ -261,7 +322,7 @@ export class AdminDashboardOverviewService {
       }),
 
       this.prisma.product.count({
-        where: { status: 'APPROVED' },
+        where: { status: 'PENDING' },
       }),
 
       this.prisma.user.count(),
@@ -324,14 +385,6 @@ export class AdminDashboardOverviewService {
       totalGaragesOwners - lastMonthGaragesOwnersCount,
     );
 
-    //-----------product pending status count--------------
-    await this.prisma.product.count({
-      where: { status: 'PENDING' },
-    });
-    // -------------grage pending status count-------------
-    await this.prisma.user.count({
-      where: { garageStatus: 'PENDING' },
-    });
     // --- Final Simplified Return for Frontend Cards ---
     return {
       userStats: {
@@ -368,57 +421,7 @@ export class AdminDashboardOverviewService {
   // ------------------------ Parts Category Statistics ------------------------
   @HandleError('Failed to fetch parts category statistics', 'Parts Category')
   async getStatistics(): Promise<TResponse<any>> {
-    const now = new Date();
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setHours(0, 0, 0, 0);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const fortyFiveDaysAgo = new Date();
-    fortyFiveDaysAgo.setHours(0, 0, 0, 0);
-    fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
-
-    const sixtyDaysAgo = new Date();
-    sixtyDaysAgo.setHours(0, 0, 0, 0);
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-    const activeFilter = {
-      OR: [
-        {
-          expiresAt: { gte: now },
-        },
-        {
-          expiresAt: null,
-          OR: [
-            {
-              listingPlan: 'PAY_PER',
-              createdAt: { gte: fortyFiveDaysAgo },
-            },
-            {
-              listingPlan: {
-                in: ['MONTHLY_BASIC', 'MONTHLY_PRO', 'MONTHLY_GARAGE'],
-              },
-              createdAt: { gte: sixtyDaysAgo },
-            },
-            {
-              listingPlan: {
-                notIn: [
-                  'PAY_PER',
-                  'MONTHLY_BASIC',
-                  'MONTHLY_PRO',
-                  'MONTHLY_GARAGE',
-                ],
-              },
-              createdAt: { gte: thirtyDaysAgo },
-            },
-            {
-              listingPlan: null,
-              createdAt: { gte: thirtyDaysAgo },
-            },
-          ],
-        },
-      ],
-    };
+    const activeFilter = this.getActiveFilter();
 
     // Get total product count
     const totalProducts = await this.prisma.product.count({
