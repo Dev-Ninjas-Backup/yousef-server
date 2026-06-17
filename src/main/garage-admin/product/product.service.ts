@@ -884,6 +884,7 @@ export class ProductService {
         productMonthlyActive: true,
         productMonthlyEndDate: true,
         promotionCredits: true,
+        productMonthlyPlanType: true,
       },
     });
 
@@ -894,6 +895,7 @@ export class ProductService {
         productCredits: 0,
         hasGarageMonthly: false,
         hasProductMonthly: false,
+        productMonthlyPlanType: null,
       };
     }
 
@@ -932,6 +934,7 @@ export class ProductService {
       hasGarageMonthly,
       hasProductMonthly,
       productMonthlyEndsAt: user.productMonthlyEndDate,
+      productMonthlyPlanType: user.productMonthlyPlanType,
     };
   }
 
