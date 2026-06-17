@@ -1,13 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { successResponse } from 'src/common/utilsResponse/response.util';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
 import { SendPrivateMessageDto } from '../dto/privateChatGateway.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PrivateChatService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PrivateChatService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   /**
    * Send a private message and update lastMessage in conversation
@@ -34,6 +40,7 @@ export class PrivateChatService {
             id: true,
             profilePhoto: true,
             fullName: true,
+            role: true,
           },
         },
       },
@@ -77,6 +84,39 @@ export class PrivateChatService {
       senderId === conversation.user1Id
         ? conversation.user2Id
         : conversation.user1Id;
+
+    // Emit event for real-time notification
+    try {
+      const recipientUser = await this.prisma.user.findUnique({
+        where: { id: recipientId },
+        select: { email: true },
+      });
+      if (recipientUser) {
+        const messageEvent = {
+          action: 'CREATE',
+          meta: {
+            userId: senderId,
+            message: message.content || 'Shared a file',
+            sentAt: message.createdAt,
+          },
+          info: {
+            messageId: message.id,
+            fromUserId: senderId,
+            toUserId: recipientId,
+            recipients: [
+              {
+                id: recipientId,
+                email: recipientUser.email,
+              },
+            ],
+          },
+        };
+        this.eventEmitter.emit('new-message.create', messageEvent);
+      }
+    } catch (err) {
+      this.logger.error(`Failed to emit new message event: ${err.message}`);
+    }
+
     return {
       ...message,
       recipientId,
@@ -101,6 +141,7 @@ export class PrivateChatService {
                 id: true,
                 profilePhoto: true,
                 fullName: true,
+                role: true,
               },
             },
           },
@@ -110,6 +151,7 @@ export class PrivateChatService {
             id: true,
             profilePhoto: true,
             fullName: true,
+            role: true,
           },
         },
         user2: {
@@ -117,6 +159,7 @@ export class PrivateChatService {
             id: true,
             profilePhoto: true,
             fullName: true,
+            role: true,
           },
         },
       },
@@ -232,6 +275,7 @@ export class PrivateChatService {
                 id: true,
                 profilePhoto: true,
                 fullName: true,
+                role: true,
               },
             },
             // file: true,
@@ -242,6 +286,7 @@ export class PrivateChatService {
             id: true,
             profilePhoto: true,
             fullName: true,
+            role: true,
           },
         },
         user2: {
@@ -249,6 +294,7 @@ export class PrivateChatService {
             id: true,
             profilePhoto: true,
             fullName: true,
+            role: true,
           },
         },
       },
@@ -330,6 +376,7 @@ export class PrivateChatService {
             id: true,
             profilePhoto: true,
             fullName: true,
+            role: true,
           },
         },
         user2: {
@@ -337,6 +384,7 @@ export class PrivateChatService {
             id: true,
             profilePhoto: true,
             fullName: true,
+            role: true,
           },
         },
         messages: {
@@ -347,6 +395,7 @@ export class PrivateChatService {
                 id: true,
                 profilePhoto: true,
                 fullName: true,
+                role: true,
               },
             },
             // file: true,
