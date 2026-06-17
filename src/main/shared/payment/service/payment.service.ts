@@ -452,6 +452,7 @@ export class PaymentService {
           paymentMethod: 'card',
           paymentType: 'MONTHLY_PEY_PRODUCT',
           userId,
+          planType: planNameParam,
         },
       });
 

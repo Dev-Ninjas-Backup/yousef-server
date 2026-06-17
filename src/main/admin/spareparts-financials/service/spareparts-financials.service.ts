@@ -214,6 +214,7 @@ export class SparepartsFinancialsService {
     return payments.map((payment) => ({
       id: payment.id,
       Type: payment.paymentType,
+      planType: payment.planType,
       amount: payment.amount,
       status: payment.status,
       source: payment.garageSubscriptionId,
@@ -244,6 +245,7 @@ export class SparepartsFinancialsService {
         id: true,
         amount: true,
         paymentType: true,
+        planType: true,
         paymentMethod: true,
         status: true,
         createdAt: true,
@@ -267,6 +269,7 @@ export class SparepartsFinancialsService {
       customerEmail: payment.user?.email || 'N/A',
       amount: payment.amount,
       type: payment.paymentType,
+      planType: payment.planType,
       method: payment.paymentMethod,
       status: payment.status,
     }));
