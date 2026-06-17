@@ -435,13 +435,25 @@ export class ProductService {
       case 'price_desc':
         // Price is stored as string, so we can't sort directly in DB
         // We'll fetch all and sort in memory
-        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
+        orderBy = [
+          { isPromoted: 'desc' },
+          { createdBy: { productMonthlyActive: 'desc' } },
+          { createdAt: 'desc' },
+        ];
         break;
       case 'newest':
-        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
+        orderBy = [
+          { isPromoted: 'desc' },
+          { createdBy: { productMonthlyActive: 'desc' } },
+          { createdAt: 'desc' },
+        ];
         break;
-      default: // relevance — promoted first, then newest
-        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
+      default: // relevance — promoted first, then monthly active, then newest
+        orderBy = [
+          { isPromoted: 'desc' },
+          { createdBy: { productMonthlyActive: 'desc' } },
+          { createdAt: 'desc' },
+        ];
     }
 
     const [products, total] = await Promise.all([
@@ -457,6 +469,8 @@ export class ProductService {
               role: true,
               profilePhoto: true,
               garageLogo: true,
+              productMonthlyActive: true,
+              productMonthlyPlanType: true,
             },
           },
           category: true,
@@ -510,6 +524,8 @@ export class ProductService {
             role: true,
             profilePhoto: true,
             garageLogo: true,
+            productMonthlyActive: true,
+            productMonthlyPlanType: true,
           },
         },
         category: true,
@@ -557,6 +573,8 @@ export class ProductService {
             role: true,
             profilePhoto: true,
             garageLogo: true,
+            productMonthlyActive: true,
+            productMonthlyPlanType: true,
           },
         },
         category: true,
