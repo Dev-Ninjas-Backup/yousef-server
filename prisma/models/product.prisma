@@ -80,5 +80,8 @@ model Product {
   promotions Promotion[]
   payments   Payment[]
 
+  garageId String?
+  garage   Garage? @relation(fields: [garageId], references: [id], onDelete: SetNull)
+
   @@map("products")
 }

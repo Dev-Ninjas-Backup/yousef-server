@@ -31,6 +31,7 @@ model Garage {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   services String[]
   reviews  Review[]
+  products Product[]
 
   requestedBrandExpertise String[] @default([])
 

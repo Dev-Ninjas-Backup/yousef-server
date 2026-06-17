@@ -115,6 +115,13 @@ export class UserService {
         createdAt: true,
         updatedAt: true,
         serviceCategories: true,
+        productMonthlyActive: true,
+        productMonthlyPlanType: true,
+        productMonthlyStartDate: true,
+        productMonthlyEndDate: true,
+        isMembership: true,
+        subscriptionStartDate: true,
+        subscriptionEndsAt: true,
       },
     });
 

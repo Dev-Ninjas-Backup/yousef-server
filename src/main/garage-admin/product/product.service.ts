@@ -46,6 +46,13 @@ export class ProductService {
       categoryId,
       ...productData
     } = dto;
+    if (
+      productData.garageId === 'null' ||
+      productData.garageId === 'none' ||
+      productData.garageId === ''
+    ) {
+      productData.garageId = null;
+    }
     console.log('create', createProductDto);
 
     // Validate seller email
@@ -435,13 +442,25 @@ export class ProductService {
       case 'price_desc':
         // Price is stored as string, so we can't sort directly in DB
         // We'll fetch all and sort in memory
-        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
+        orderBy = [
+          { isPromoted: 'desc' },
+          { createdBy: { productMonthlyActive: 'desc' } },
+          { createdAt: 'desc' },
+        ];
         break;
       case 'newest':
-        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
+        orderBy = [
+          { isPromoted: 'desc' },
+          { createdBy: { productMonthlyActive: 'desc' } },
+          { createdAt: 'desc' },
+        ];
         break;
-      default: // relevance — promoted first, then newest
-        orderBy = [{ isPromoted: 'desc' }, { createdAt: 'desc' }];
+      default: // relevance — promoted first, then monthly active, then newest
+        orderBy = [
+          { isPromoted: 'desc' },
+          { createdBy: { productMonthlyActive: 'desc' } },
+          { createdAt: 'desc' },
+        ];
     }
 
     const [products, total] = await Promise.all([
@@ -457,6 +476,8 @@ export class ProductService {
               role: true,
               profilePhoto: true,
               garageLogo: true,
+              productMonthlyActive: true,
+              productMonthlyPlanType: true,
             },
           },
           category: true,
@@ -510,6 +531,8 @@ export class ProductService {
             role: true,
             profilePhoto: true,
             garageLogo: true,
+            productMonthlyActive: true,
+            productMonthlyPlanType: true,
           },
         },
         category: true,
@@ -557,6 +580,8 @@ export class ProductService {
             role: true,
             profilePhoto: true,
             garageLogo: true,
+            productMonthlyActive: true,
+            productMonthlyPlanType: true,
           },
         },
         category: true,
@@ -584,9 +609,9 @@ export class ProductService {
         );
 
       const matchesStatus =
-        !query?.status ||
-        query.status === 'all' ||
-        product.status.toLowerCase() === query.status.toLowerCase();
+        !query?.status || query.status === 'all'
+          ? product.status !== 'DRAFT'
+          : product.status.toLowerCase() === query.status.toLowerCase();
 
       const matchesCondition =
         !query?.condition ||
@@ -740,6 +765,13 @@ export class ProductService {
       sellerType,
       ...productData
     } = dto;
+    if (
+      productData.garageId === 'null' ||
+      productData.garageId === 'none' ||
+      productData.garageId === ''
+    ) {
+      productData.garageId = null;
+    }
 
     // ----------- Validate verificationImage for VERIFIED_SUPPLIER ---------------
     if (
@@ -840,6 +872,50 @@ export class ProductService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
+    const draftProduct = await this.prisma.product.update({
+      where: { id },
+      data: { status: 'DRAFT' },
+      include: {
+        seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+          },
+        },
+        category: true,
+      },
+    });
+
+    return {
+      message: 'Product moved to drafts successfully',
+      product: draftProduct,
+    };
+  }
+
+  @HandleError('Failed to permanently delete product')
+  async removePermanently(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    // Delete photos from S3
+    if (product.photos && product.photos.length > 0) {
+      await Promise.all(
+        product.photos.map((photoUrl) =>
+          (this.s3FileService as any).deleteFile(photoUrl),
+        ),
+      ).catch((e) =>
+        console.error('S3 Deletion during permanent DELETE Failed:', e),
+      );
+    }
+
     const deletedProduct = await this.prisma.product.delete({
       where: { id },
       include: {
@@ -857,7 +933,7 @@ export class ProductService {
     });
 
     return {
-      message: 'Product deleted successfully',
+      message: 'Product deleted permanently successfully',
       product: deletedProduct,
     };
   }
@@ -884,6 +960,7 @@ export class ProductService {
         productMonthlyActive: true,
         productMonthlyEndDate: true,
         promotionCredits: true,
+        productMonthlyPlanType: true,
       },
     });
 
@@ -894,6 +971,7 @@ export class ProductService {
         productCredits: 0,
         hasGarageMonthly: false,
         hasProductMonthly: false,
+        productMonthlyPlanType: null,
       };
     }
 
@@ -932,6 +1010,7 @@ export class ProductService {
       hasGarageMonthly,
       hasProductMonthly,
       productMonthlyEndsAt: user.productMonthlyEndDate,
+      productMonthlyPlanType: user.productMonthlyPlanType,
     };
   }
 

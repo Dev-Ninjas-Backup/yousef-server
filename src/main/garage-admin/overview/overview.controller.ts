@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetUser, ValidateGarageOwner } from 'src/common/jwt/jwt.decorator';
 import { OverviewService } from './overview.service';
@@ -12,32 +12,44 @@ export class OverviewController {
   @ValidateGarageOwner()
   @ApiOperation({ summary: 'Get user overview statistics' })
   @Get('stats')
-  async getUserOverview(@GetUser('userId') userId: string) {
-    return this.overviewService.getUserOverview(userId);
+  async getUserOverview(
+    @GetUser('userId') userId: string,
+    @Query('garageId') garageId?: string,
+  ) {
+    return this.overviewService.getUserOverview(userId, garageId);
   }
 
   @ApiBearerAuth()
   @ValidateGarageOwner()
   @ApiOperation({ summary: 'Get performance summary' })
   @Get('performance-summary')
-  async getPerformanceSummary(@GetUser('userId') userId: string) {
-    return this.overviewService.getPerformanceSummary(userId);
+  async getPerformanceSummary(
+    @GetUser('userId') userId: string,
+    @Query('garageId') garageId?: string,
+  ) {
+    return this.overviewService.getPerformanceSummary(userId, garageId);
   }
 
   @ApiBearerAuth()
   @ValidateGarageOwner()
   @ApiOperation({ summary: 'Get recent Acitivity' })
   @Get('recent-activity')
-  async getRecentActivity(@GetUser('userId') userId: string) {
-    return this.overviewService.getRecentActivity(userId);
+  async getRecentActivity(
+    @GetUser('userId') userId: string,
+    @Query('garageId') garageId?: string,
+  ) {
+    return this.overviewService.getRecentActivity(userId, garageId);
   }
 
   @ApiBearerAuth()
   @ValidateGarageOwner()
   @ApiOperation({ summary: 'Get recent listing' })
   @Get('recent-listings')
-  async getRecentListings(@GetUser('userId') userId: string) {
-    return this.overviewService.getRecentListings(userId);
+  async getRecentListings(
+    @GetUser('userId') userId: string,
+    @Query('garageId') garageId?: string,
+  ) {
+    return this.overviewService.getRecentListings(userId, garageId);
   }
 
   @ApiBearerAuth()

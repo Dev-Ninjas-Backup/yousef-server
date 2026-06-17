@@ -6,7 +6,12 @@ import { PrismaService } from 'src/lib/prisma/prisma.service';
 export class OverviewService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserOverview(userId: string) {
+  async getUserOverview(userId: string, garageId?: string) {
+    const productWhere: any = { createdById: userId };
+    if (garageId) {
+      productWhere.garageId = garageId;
+    }
+
     const [
       totalListings,
       totalActiveListings,
@@ -15,17 +20,17 @@ export class OverviewService {
     ] = await Promise.all([
       // Total listing
       this.prisma.product.count({
-        where: { createdById: userId },
+        where: productWhere,
       }),
 
       // Active Listing
       this.prisma.product.count({
-        where: { createdById: userId, status: 'APPROVED' },
+        where: { ...productWhere, status: 'APPROVED' },
       }),
 
       // Pending Listing
       this.prisma.product.count({
-        where: { createdById: userId, status: 'PENDING' },
+        where: { ...productWhere, status: 'PENDING' },
       }),
 
       // Inquiries
@@ -49,12 +54,17 @@ export class OverviewService {
   }
 
   // Performance summary
-  async getPerformanceSummary(userId: string) {
+  async getPerformanceSummary(userId: string, garageId?: string) {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const productWhere: any = { createdById: userId };
+    if (garageId) {
+      productWhere.garageId = garageId;
+    }
 
     const [totalViewsResult, totalReceived, totalRead] = await Promise.all([
       this.prisma.product.aggregate({
-        where: { createdById: userId },
+        where: productWhere,
         _sum: { views: true },
       }),
 
@@ -86,13 +96,18 @@ export class OverviewService {
     };
   }
 
-  async getRecentActivity(userId: string) {
+  async getRecentActivity(userId: string, garageId?: string) {
+    const where: any = {
+      createdById: userId,
+      isPromoted: true,
+      status: { in: ['PENDING', 'APPROVED'] },
+    };
+    if (garageId) {
+      where.garageId = garageId;
+    }
+
     const activities = await this.prisma.product.findMany({
-      where: {
-        createdById: userId,
-        isPromoted: true,
-        status: { in: ['PENDING', 'APPROVED'] },
-      },
+      where,
       select: {
         id: true,
         partName: true,
@@ -106,9 +121,14 @@ export class OverviewService {
   }
 
   // Recent listings
-  async getRecentListings(userId: string) {
+  async getRecentListings(userId: string, garageId?: string) {
+    const where: any = { createdById: userId };
+    if (garageId) {
+      where.garageId = garageId;
+    }
+
     const recentListings = await this.prisma.product.findMany({
-      where: { createdById: userId },
+      where,
       select: {
         id: true,
         partName: true,
