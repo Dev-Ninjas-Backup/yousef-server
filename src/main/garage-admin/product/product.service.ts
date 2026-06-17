@@ -602,9 +602,9 @@ export class ProductService {
         );
 
       const matchesStatus =
-        !query?.status ||
-        query.status === 'all' ||
-        product.status.toLowerCase() === query.status.toLowerCase();
+        !query?.status || query.status === 'all'
+          ? product.status !== 'DRAFT'
+          : product.status.toLowerCase() === query.status.toLowerCase();
 
       const matchesCondition =
         !query?.condition ||
@@ -858,6 +858,50 @@ export class ProductService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
+    const draftProduct = await this.prisma.product.update({
+      where: { id },
+      data: { status: 'DRAFT' },
+      include: {
+        seller: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+          },
+        },
+        category: true,
+      },
+    });
+
+    return {
+      message: 'Product moved to drafts successfully',
+      product: draftProduct,
+    };
+  }
+
+  @HandleError('Failed to permanently delete product')
+  async removePermanently(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    // Delete photos from S3
+    if (product.photos && product.photos.length > 0) {
+      await Promise.all(
+        product.photos.map((photoUrl) =>
+          (this.s3FileService as any).deleteFile(photoUrl),
+        ),
+      ).catch((e) =>
+        console.error('S3 Deletion during permanent DELETE Failed:', e),
+      );
+    }
+
     const deletedProduct = await this.prisma.product.delete({
       where: { id },
       include: {
@@ -875,7 +919,7 @@ export class ProductService {
     });
 
     return {
-      message: 'Product deleted successfully',
+      message: 'Product deleted permanently successfully',
       product: deletedProduct,
     };
   }

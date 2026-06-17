@@ -195,8 +195,11 @@ export class ProductController {
   @ValidateAuth()
   @ApiBearerAuth()
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a product by ID' })
-  @ApiResponse({ status: 200, description: 'Product deleted successfully.' })
+  @ApiOperation({ summary: 'Delete a product by ID (moves to drafts)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product deleted successfully (moved to drafts).',
+  })
   @ApiResponse({ status: 404, description: 'Product not found.' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
@@ -210,6 +213,32 @@ export class ProductController {
         throw new NotFoundException(error.message);
       }
       throw new InternalServerErrorException('Failed to delete product');
+    }
+  }
+
+  @ValidateAuth()
+  @ApiBearerAuth()
+  @Delete(':id/permanent')
+  @ApiOperation({ summary: 'Permanently delete a product by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Product permanently deleted successfully.',
+  })
+  @ApiResponse({ status: 404, description: 'Product not found.' })
+  @HttpCode(HttpStatus.OK)
+  async removePermanently(@Param('id') id: string) {
+    try {
+      return await this.productService.removePermanently(id);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error.message.includes('not found')
+      ) {
+        throw new NotFoundException(error.message);
+      }
+      throw new InternalServerErrorException(
+        'Failed to permanently delete product',
+      );
     }
   }
 

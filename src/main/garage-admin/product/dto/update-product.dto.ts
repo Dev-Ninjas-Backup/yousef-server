@@ -19,6 +19,14 @@ enum SellerType {
 
 export class UpdateProductDto {
   @ApiPropertyOptional({
+    description: 'Product status',
+    example: 'PENDING',
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({
     description: 'Name of the product (Part Name)',
     example: 'Brake Pads Front Set',
   })
