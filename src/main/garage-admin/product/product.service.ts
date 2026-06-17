@@ -46,6 +46,13 @@ export class ProductService {
       categoryId,
       ...productData
     } = dto;
+    if (
+      productData.garageId === 'null' ||
+      productData.garageId === 'none' ||
+      productData.garageId === ''
+    ) {
+      productData.garageId = null;
+    }
     console.log('create', createProductDto);
 
     // Validate seller email
@@ -758,6 +765,13 @@ export class ProductService {
       sellerType,
       ...productData
     } = dto;
+    if (
+      productData.garageId === 'null' ||
+      productData.garageId === 'none' ||
+      productData.garageId === ''
+    ) {
+      productData.garageId = null;
+    }
 
     // ----------- Validate verificationImage for VERIFIED_SUPPLIER ---------------
     if (
