@@ -231,6 +231,7 @@ export class SparepartsFinancialsService {
       productPhoto: payment.product?.photos?.[0] || null,
       productDescription: payment.product?.description || 'N/A',
       userInformation: payment.user?.id || 'N/A',
+      customerId: payment.userId,
 
       updatedAt: payment.updatedAt.toISOString().split('T')[0],
     }));
@@ -249,6 +250,7 @@ export class SparepartsFinancialsService {
         paymentMethod: true,
         status: true,
         createdAt: true,
+        userId: true,
         user: {
           select: {
             fullName: true,
@@ -272,6 +274,7 @@ export class SparepartsFinancialsService {
       planType: payment.planType,
       method: payment.paymentMethod,
       status: payment.status,
+      customerId: payment.userId,
     }));
   }
 
