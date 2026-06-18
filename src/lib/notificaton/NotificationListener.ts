@@ -32,6 +32,7 @@ export class NotificationListener {
       message: payload.meta.message,
       createdAt: new Date(),
       meta: {
+        inquiryId: payload.info.Id,
         senderEmail: payload.meta.senderEmail,
         subject: payload.info.subject,
         date: payload.info.date,
