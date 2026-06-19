@@ -17,6 +17,7 @@ export class OverviewService {
       totalActiveListings,
       totalPendingListings,
       totalInquiries,
+      totalDrafts,
     ] = await Promise.all([
       // Total listing
       this.prisma.product.count({
@@ -43,6 +44,11 @@ export class OverviewService {
           },
         },
       }),
+
+      // Drafts
+      this.prisma.product.count({
+        where: { ...productWhere, status: 'DRAFT' },
+      }),
     ]);
 
     return {
@@ -50,6 +56,7 @@ export class OverviewService {
       activeListings: totalActiveListings,
       pendingApproval: totalPendingListings,
       totalInquiries,
+      totalDrafts,
     };
   }
 
