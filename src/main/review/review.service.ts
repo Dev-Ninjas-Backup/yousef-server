@@ -31,6 +31,10 @@ export class ReviewService {
       throw new NotFoundException('Garage not found');
     }
 
+    if (garage.userId === userId) {
+      throw new ForbiddenException('You cannot review your own garage');
+    }
+
     const existingReview = await this.prisma.review.findFirst({
       where: { userId, garageId },
     });
