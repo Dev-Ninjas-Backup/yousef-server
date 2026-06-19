@@ -110,18 +110,24 @@ export class LocationGarageService {
       throw new Error('Latitude and longitude are required');
     }
 
-    const bbox = this.calculateBoundingBox(lat, lng, radius + 5);
+    const isFullRadius = radius >= 100000;
+
+    const whereClause: any = {
+      user: {
+        isActive: true,
+        isDeleted: false,
+        garageStatus: 'APPROVE',
+      },
+    };
+
+    if (!isFullRadius) {
+      const bbox = this.calculateBoundingBox(lat, lng, radius + 5);
+      whereClause.garageLat = { gte: bbox.minLat, lte: bbox.maxLat };
+      whereClause.garageLng = { gte: bbox.minLng, lte: bbox.maxLng };
+    }
 
     const garages = await this.prisma.garage.findMany({
-      where: {
-        garageLat: { gte: bbox.minLat, lte: bbox.maxLat },
-        garageLng: { gte: bbox.minLng, lte: bbox.maxLng },
-        user: {
-          isActive: true,
-          isDeleted: false,
-          garageStatus: 'APPROVE',
-        },
-      },
+      where: whereClause,
       include: {
         user: {
           select: {
@@ -137,18 +143,22 @@ export class LocationGarageService {
           },
         },
       },
-      take: 100,
+      take: isFullRadius ? undefined : 100,
     });
 
     const result = garages
       .map((garage) => {
+        if (garage.garageLat == null || garage.garageLng == null) {
+          return null;
+        }
+
         const distance = this.calculateDistance(
           lat,
           lng,
-          garage.garageLat!,
-          garage.garageLng!,
+          garage.garageLat,
+          garage.garageLng,
         );
-        if (distance > radius) return null;
+        if (!isFullRadius && distance > radius) return null;
 
         const totalRating = (garage as any).reviews.reduce(
           (sum: number, r: any) => sum + r.overallExperience,
@@ -161,8 +171,8 @@ export class LocationGarageService {
         return {
           id: garage.id,
           name: garage.name,
-          garageLat: garage.garageLat!,
-          garageLng: garage.garageLng!,
+          garageLat: garage.garageLat,
+          garageLng: garage.garageLng,
           description: garage.description,
           certifications: garage.certifications,
           weekdaysHours: garage.weekdaysHours,
@@ -185,7 +195,7 @@ export class LocationGarageService {
       })
       .filter(Boolean)
       .sort((a, b) => a!.distance - b!.distance)
-      .slice(0, 50) as GarageWithDistance[];
+      .slice(0, isFullRadius ? 500 : 50) as GarageWithDistance[];
 
     return {
       success: true,
