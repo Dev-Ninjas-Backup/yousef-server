@@ -577,18 +577,22 @@ export class PaymentService {
         },
       });
 
-      // Give user 1 promotion credit
+      // Give user purchased credits (amountToPay)
+      const creditsToBuy = session.metadata?.creditsToBuy
+        ? parseInt(session.metadata.creditsToBuy)
+        : 1;
+
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: {
           hasPaid: true,
           promotionCredits: {
-            increment: 1,
+            increment: creditsToBuy,
           },
         },
       });
       console.log(
-        '✅ User updated with promotion credit:',
+        '✅ User updated with promotion credits:',
         updatedUser.promotionCredits,
       );
 
@@ -1007,6 +1011,24 @@ export class PaymentService {
       price = Number(paymentConfig.promotionalAdPrice7Days || 99);
     }
 
+    // Get user's available promotion credits (1 credit = 1 AED)
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { promotionCredits: true },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const userCredits = user.promotionCredits || 0;
+    const deduction = Math.min(price, userCredits);
+    const amountToPay = price - deduction;
+
+    if (amountToPay <= 0) {
+      throw new BadRequestException(
+        'Credits cover the entire price. No payment required.',
+      );
+    }
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -1016,9 +1038,9 @@ export class PaymentService {
             currency: 'aed',
             product_data: {
               name: `Product Promotion - ${duration} Days`,
-              description: description,
+              description: `${description} (${price} AED total. Deducted ${deduction} credits. Paying remaining ${amountToPay} AED)`,
             },
-            unit_amount: price * 100,
+            unit_amount: amountToPay * 100,
           },
           quantity: 1,
         },
@@ -1029,7 +1051,8 @@ export class PaymentService {
         userId,
         type: 'product_promotion_credit',
         duration,
-        amount: `${price}`,
+        amount: `${amountToPay}`,
+        creditsToBuy: `${amountToPay}`,
       },
     });
 

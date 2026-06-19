@@ -32,6 +32,7 @@ export class ProductService {
     files: Express.Multer.File[] = [],
     verificationImageFile?: Express.Multer.File,
   ) {
+    const promotedDuration = createProductDto.promotedDuration || '30';
     const dto = createProductDto as any;
     delete dto.promotedDuration;
     delete dto.photos;
@@ -79,15 +80,10 @@ export class ProductService {
       );
     }
 
-    const promotionalAdPrice = Number(paymentConfig?.promotionalAdPrice || 0);
     const perPerListingPrice = Number(paymentConfig?.perListingPrice || 0);
     const sparePartsMonthlySubscription = Number(
       paymentConfig?.sparePartsMonthly || 0,
     );
-    // const freePromotionalListings = Number(
-    //   paymentConfig?.freePromotionalListings || 0,
-    // );
-    // console.log(promotionalAdPrice, perListingPrice, freePromotionalListings, sparePartsMonthlySubscription);
 
     if (!categoryExists) {
       throw new BadRequestException(
@@ -95,14 +91,29 @@ export class ProductService {
       );
     }
 
+    const isPromoted =
+      productData.isPromoted === true || productData.isPromoted === 'true';
+
+    // Calculate required promotion price
+    let promoPrice = 99;
+    if (promotedDuration === '7') {
+      promoPrice = Number(paymentConfig?.promotionalAdPrice3Days || 49);
+    } else {
+      promoPrice = Number(paymentConfig?.promotionalAdPrice7Days || 99);
+    }
+
     // Check promotion credit availability (but don't consume yet)
-    if (productData.isPromoted) {
-      const hasCredit = await this.paymentService.hasPromotionCredits(userId);
-      if (!hasCredit) {
+    if (isPromoted) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { promotionCredits: true },
+      });
+      const userCredits = user?.promotionCredits || 0;
+      if (userCredits < promoPrice) {
         throw new BadRequestException({
-          message: `${promotionalAdPrice}$ Payment required for product promotion`,
+          message: `${promoPrice} AED payment or credits required for product promotion. Current credits: ${userCredits}`,
           code: 'PROMOTION_PAYMENT_REQUIRED',
-          amount: promotionalAdPrice,
+          amount: promoPrice - userCredits,
         });
       }
     }
@@ -232,7 +243,7 @@ export class ProductService {
         status: 'PENDING',
         photos: photoUrls,
         views: 0,
-        promoCost: productData.isPromoted ? promotionalAdPrice : null,
+        promoCost: isPromoted ? String(promoPrice) : null,
         categoryId,
         expiresAt,
         ...productData,
@@ -254,8 +265,15 @@ export class ProductService {
     });
 
     // Only consume promotion credit AFTER successful product creation
-    if (productData.isPromoted) {
-      await this.paymentService.usePromotionCredit(userId);
+    if (isPromoted) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          promotionCredits: {
+            decrement: promoPrice,
+          },
+        },
+      });
     }
 
     const user = await this.prisma.user.findUnique({
