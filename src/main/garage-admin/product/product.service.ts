@@ -569,6 +569,38 @@ export class ProductService {
     return { ...product, views: product.views + 1 };
   }
 
+  private isProductExpired(product: any, now: Date): boolean {
+    if (product.expiresAt) {
+      return new Date(product.expiresAt) < now;
+    }
+
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const fortyFiveDaysAgo = new Date(now);
+    fortyFiveDaysAgo.setHours(0, 0, 0, 0);
+    fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
+
+    const sixtyDaysAgo = new Date(now);
+    sixtyDaysAgo.setHours(0, 0, 0, 0);
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    const createdAt = new Date(product.createdAt);
+
+    if (product.listingPlan === 'PAY_PER') {
+      return createdAt < fortyFiveDaysAgo;
+    } else if (
+      product.listingPlan === 'MONTHLY_BASIC' ||
+      product.listingPlan === 'MONTHLY_PRO' ||
+      product.listingPlan === 'MONTHLY_GARAGE'
+    ) {
+      return createdAt < sixtyDaysAgo;
+    } else {
+      return createdAt < thirtyDaysAgo;
+    }
+  }
+
   // my products
   async findMyProducts(
     userId: string,
@@ -626,10 +658,21 @@ export class ProductService {
           query.search.toLowerCase(),
         );
 
-      const matchesStatus =
-        !query?.status || query.status === 'all'
-          ? product.status !== 'DRAFT'
-          : product.status.toLowerCase() === query.status.toLowerCase();
+      const now = new Date();
+      const expired = this.isProductExpired(product, now);
+
+      let matchesStatus = false;
+      const qStatus = query?.status?.toLowerCase();
+
+      if (!qStatus || qStatus === 'all') {
+        matchesStatus = product.status !== 'DRAFT' && !expired;
+      } else if (qStatus === 'expired') {
+        matchesStatus = product.status === 'APPROVED' && expired;
+      } else if (qStatus === 'approved') {
+        matchesStatus = product.status === 'APPROVED' && !expired;
+      } else {
+        matchesStatus = product.status.toLowerCase() === qStatus;
+      }
 
       const matchesCondition =
         !query?.condition ||
@@ -858,6 +901,23 @@ export class ProductService {
     };
     if (photoUrls.length > 0) {
       updateData.photos = photoUrls;
+    }
+
+    if (updateData.status === 'PENDING') {
+      const expiresAt = new Date();
+      const plan = updateData.listingPlan || product.listingPlan;
+      if (plan === 'PAY_PER') {
+        expiresAt.setDate(expiresAt.getDate() + 45);
+      } else if (
+        plan === 'MONTHLY_BASIC' ||
+        plan === 'MONTHLY_PRO' ||
+        plan === 'MONTHLY_GARAGE'
+      ) {
+        expiresAt.setDate(expiresAt.getDate() + 60);
+      } else {
+        expiresAt.setDate(expiresAt.getDate() + 30);
+      }
+      updateData.expiresAt = expiresAt;
     }
 
     return this.prisma.product.update({
