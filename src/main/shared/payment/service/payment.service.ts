@@ -978,11 +978,11 @@ export class PaymentService {
     });
   }
 
-  // Create checkout session for product promotion (3 days or 7 days)
+  // Create checkout session for product promotion (7 days or 30 days)
   @HandleError('Failed to create promotion session')
   async createPromotionPaymentSession(
     userId: string,
-    duration: string = '7',
+    duration: string = '30',
   ): Promise<{ url: string }> {
     console.log(
       `🎯 Creating promotion session (${duration} days) for user:`,
@@ -998,11 +998,11 @@ export class PaymentService {
     }
 
     let price = 99;
-    let description = 'Promote your product listing for 7 days';
+    let description = 'Promote your product listing for 30 days';
 
-    if (duration === '3') {
+    if (duration === '7') {
       price = Number(paymentConfig.promotionalAdPrice3Days || 49);
-      description = 'Promote your product listing for 3 days';
+      description = 'Promote your product listing for 7 days';
     } else {
       price = Number(paymentConfig.promotionalAdPrice7Days || 99);
     }
