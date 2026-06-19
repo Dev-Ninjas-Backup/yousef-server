@@ -30,5 +30,6 @@ model Message {
 enum ContactSubject {
   CAR_PARTS
   CAR_SERVICE
+  LIMITED_TIME_OFFER
   OTHERS
 }
