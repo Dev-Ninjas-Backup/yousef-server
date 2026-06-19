@@ -105,22 +105,24 @@ export class LocationGarageService {
     count: number;
   }> {
     const { lat, lng, radius = 10 } = query;
+    const isFullRadius = radius >= 100000;
 
-    if (!lat || !lng) {
+    if (!isFullRadius && (!lat || !lng)) {
       throw new Error('Latitude and longitude are required');
     }
 
-    const isFullRadius = radius >= 100000;
-
     const whereClause: any = {
+      status: 'APPROVED',
       user: {
         isActive: true,
         isDeleted: false,
-        garageStatus: 'APPROVE',
+        garageStatus: {
+          in: ['APPROVE', 'GARAGE_PAID_OWNER', 'GARAGE_TRAIL_OWNER'],
+        },
       },
     };
 
-    if (!isFullRadius) {
+    if (!isFullRadius && lat && lng) {
       const bbox = this.calculateBoundingBox(lat, lng, radius + 5);
       whereClause.garageLat = { gte: bbox.minLat, lte: bbox.maxLat };
       whereClause.garageLng = { gte: bbox.minLng, lte: bbox.maxLng };
@@ -152,12 +154,15 @@ export class LocationGarageService {
           return null;
         }
 
-        const distance = this.calculateDistance(
-          lat,
-          lng,
-          garage.garageLat,
-          garage.garageLng,
-        );
+        const distance =
+          lat && lng
+            ? this.calculateDistance(
+                lat,
+                lng,
+                garage.garageLat,
+                garage.garageLng,
+              )
+            : 0;
         if (!isFullRadius && distance > radius) return null;
 
         const totalRating = (garage as any).reviews.reduce(
