@@ -75,9 +75,32 @@ export class LocationGarageService {
 
     const now = new Date();
     const day = now.getDay();
-    const isWeekend = day === 0 || day === 6;
-    const hoursStr = isWeekend ? weekendsHours : weekdaysHours;
-    if (!hoursStr) return false;
+    const daysOfWeek = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
+    const currentDayName = daysOfWeek[day];
+
+    let hoursStr = '';
+
+    if (weekdaysHours && weekdaysHours.startsWith('{')) {
+      try {
+        const schedule = JSON.parse(weekdaysHours);
+        hoursStr = schedule[currentDayName] || '';
+      } catch (e) {
+        console.error('Failed to parse JSON working hours in isGarageOpen', e);
+      }
+    } else {
+      const isWeekend = day === 0 || day === 6;
+      hoursStr = (isWeekend ? weekendsHours : weekdaysHours) || '';
+    }
+
+    if (!hoursStr || hoursStr.toLowerCase() === 'closed') return false;
 
     const match = hoursStr.match(
       /(\d{1,2}):?(\d{0,2})\s*(am|pm)?\s*-\s*(\d{1,2}):?(\d{0,2})\s*(am|pm)?/i,
