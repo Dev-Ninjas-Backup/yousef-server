@@ -63,7 +63,16 @@ export class UserService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
-        garages: true,
+        garages: {
+          include: {
+            reviews: {
+              where: { isVisible: true },
+              select: {
+                overallExperience: true,
+              },
+            },
+          },
+        },
       },
     });
 
