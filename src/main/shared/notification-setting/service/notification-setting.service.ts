@@ -105,6 +105,7 @@ export class NotificationSettingService {
       createdAt: un.notification.createdAt,
       updatedAt: un.notification.updatedAt,
       meta: un.notification.meta || {},
+      read: un.read,
     }));
 
     return successResponse(
@@ -112,6 +113,43 @@ export class NotificationSettingService {
       'User notifications retrieved successfully',
     );
   }
+
+  @HandleError('Failed to mark notification as read')
+  async markAsRead(
+    userId: string,
+    notificationId: string,
+  ): Promise<TResponse<any>> {
+    const result = await this.prisma.userNotification.update({
+      where: {
+        userId_notificationId: {
+          userId,
+          notificationId,
+        },
+      },
+      data: {
+        read: true,
+      },
+    });
+    return successResponse(result, 'Notification marked as read successfully');
+  }
+
+  @HandleError('Failed to mark all notifications as read')
+  async markAllAsRead(userId: string): Promise<TResponse<any>> {
+    const result = await this.prisma.userNotification.updateMany({
+      where: {
+        userId,
+        read: false,
+      },
+      data: {
+        read: true,
+      },
+    });
+    return successResponse(
+      result,
+      'All notifications marked as read successfully',
+    );
+  }
+
   @HandleError('Failed to delete all notifications')
   async deleteAllNotifications(userId: string): Promise<TResponse<any>> {
     const result = await this.prisma.userNotification.deleteMany({
