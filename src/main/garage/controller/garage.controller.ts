@@ -49,11 +49,14 @@ export class GarageController {
       [
         { name: 'coverPhoto', maxCount: 1 },
         { name: 'profileImage', maxCount: 1 },
+        { name: 'certificationFile', maxCount: 1 },
       ],
       new MulterService().createMulterOptions(
         './Uploads',
-
+        'garage',
         FileType.IMAGE,
+        100 * 1024 * 1024,
+        ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
       ),
     ),
   )
@@ -70,6 +73,7 @@ export class GarageController {
     files: {
       coverPhoto?: Express.Multer.File[];
       profileImage?: Express.Multer.File[];
+      certificationFile?: Express.Multer.File[];
     } = {},
   ) {
     // console.log('POST /garages hit', { createGarageDto, files });
@@ -77,6 +81,7 @@ export class GarageController {
     return this.garageService.create(userId, createGarageDto, {
       coverPhoto: files.coverPhoto?.[0],
       profileImage: files.profileImage?.[0],
+      certificationFile: files.certificationFile?.[0],
     });
   }
 
@@ -144,11 +149,14 @@ export class GarageController {
       [
         { name: 'coverPhoto', maxCount: 1 },
         { name: 'profileImage', maxCount: 1 },
+        { name: 'certificationFile', maxCount: 1 },
       ],
       new MulterService().createMulterOptions(
         './Uploads',
-
+        'garage',
         FileType.IMAGE,
+        100 * 1024 * 1024,
+        ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
       ),
     ),
   )
@@ -167,12 +175,14 @@ export class GarageController {
     files: {
       coverPhoto?: Express.Multer.File[];
       profileImage?: Express.Multer.File[];
+      certificationFile?: Express.Multer.File[];
     } = {},
   ) {
     console.log('userId', userId);
     return this.garageService.update(userId, id, updateGarageDto, {
       coverPhoto: files.coverPhoto?.[0],
       profileImage: files.profileImage?.[0],
+      certificationFile: files.certificationFile?.[0],
     });
   }
 

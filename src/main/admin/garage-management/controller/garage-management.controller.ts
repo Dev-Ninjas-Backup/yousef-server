@@ -119,6 +119,7 @@ export class GarageManagementController {
     return this.garageManagementService.rejectBrandExpertise(
       garageId,
       dto.brands,
+      dto.reason,
     );
   }
 

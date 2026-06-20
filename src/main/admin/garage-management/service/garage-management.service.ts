@@ -575,9 +575,11 @@ export class GarageManagementService {
   async rejectBrandExpertise(
     garageId: string,
     brands: string[],
+    reason?: string,
   ): Promise<TResponse<any>> {
     const garage = await this.prisma.garage.findUnique({
       where: { id: garageId },
+      include: { user: true },
     });
 
     if (!garage) throw new NotFoundException('Garage not found');
@@ -592,6 +594,32 @@ export class GarageManagementService {
         requestedBrandExpertise: updatedRequested,
       },
     });
+
+    if (garage.user?.email) {
+      const brandListHtml = brands
+        .map((b) => `<li><strong>${b}</strong></li>`)
+        .join('');
+      const emailContent = `
+        <h3>Brand Expertise Request Update</h3>
+        <p>Dear ${garage.user.fullName || 'Garage Owner'},</p>
+        <p>Your request for the following brand expertise has been declined by the administrator:</p>
+        <ul>
+          ${brandListHtml}
+        </ul>
+        ${reason ? `<p style="color: #b30000; font-size: 14px; margin-top: 15px; padding: 10px; border-left: 4px solid #b30000; background-color: #fcf3f3;"><strong>Reason of Rejection:</strong> ${reason}</p>` : ''}
+        <p style="margin-top: 20px;">If you have any questions, please contact our support team.</p>
+        <p>Best regards,<br/><strong>SAYARA HUB Team</strong></p>
+      `;
+      try {
+        await this.mail.sendEmail(
+          garage.user.email,
+          'Brand Expertise Request Rejected',
+          emailContent,
+        );
+      } catch (err) {
+        console.error('Failed to send brand expertise rejection email', err);
+      }
+    }
 
     return successResponse(updated, 'Brand expertise rejected successfully');
   }

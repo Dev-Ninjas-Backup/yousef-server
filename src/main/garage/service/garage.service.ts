@@ -27,10 +27,12 @@ export class GarageService {
     files: {
       coverPhoto?: Express.Multer.File;
       profileImage?: Express.Multer.File;
+      certificationFile?: Express.Multer.File;
     } = {},
   ): Promise<TResponse<any>> {
     let coverPhotoUrl: string | undefined;
     let profileImageUrl: string | undefined;
+    let certificationFileUrl: string | undefined;
 
     // Process coverPhoto
     if (files.coverPhoto) {
@@ -58,6 +60,20 @@ export class GarageService {
       }
     }
 
+    // Process certificationFile
+    if (files.certificationFile) {
+      try {
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.certificationFile,
+        );
+        certificationFileUrl = url;
+      } catch (error) {
+        throw new Error(
+          `Failed to upload certificationFile to S3: ${error.message}`,
+        );
+      }
+    }
+
     const brandArray = createGarageDto.brandExpertise
       ? createGarageDto.brandExpertise.split(',').map((b) => b.trim())
       : [];
@@ -72,6 +88,7 @@ export class GarageService {
       name: createGarageDto.name.trim(),
       coverPhoto: coverPhotoUrl,
       profileImage: profileImageUrl,
+      certificationFile: certificationFileUrl,
       garagePhone: createGarageDto.phone,
       email: createGarageDto.email,
       street: createGarageDto.street,
@@ -327,6 +344,7 @@ export class GarageService {
     files: {
       coverPhoto?: Express.Multer.File;
       profileImage?: Express.Multer.File;
+      certificationFile?: Express.Multer.File;
     } = {},
   ): Promise<TResponse<any>> {
     const garage = await this.prisma.garage.findUnique({ where: { id } });
@@ -357,6 +375,7 @@ export class GarageService {
 
     let coverPhotoUrl: string | undefined;
     let profileImageUrl: string | undefined;
+    let certificationFileUrl: string | undefined;
 
     // Process coverPhoto
     if (files.coverPhoto) {
@@ -384,6 +403,20 @@ export class GarageService {
       }
     }
 
+    // Process certificationFile
+    if (files.certificationFile) {
+      try {
+        const { url } = await this.s3FileService.processUploadedFile(
+          files.certificationFile,
+        );
+        certificationFileUrl = url;
+      } catch (error) {
+        throw new Error(
+          `Failed to upload certificationFile to S3: ${error.message}`,
+        );
+      }
+    }
+
     const brandArray = updateGarageDto.brandExpertise
       ? updateGarageDto.brandExpertise.split(',').map((b) => b.trim())
       : undefined;
@@ -399,6 +432,8 @@ export class GarageService {
     if (updateGarageDto.name) updateData.name = updateGarageDto.name.trim();
     if (coverPhotoUrl) updateData.coverPhoto = coverPhotoUrl;
     if (profileImageUrl) updateData.profileImage = profileImageUrl;
+    if (certificationFileUrl)
+      updateData.certificationFile = certificationFileUrl;
     if (updateGarageDto.phone) updateData.garagePhone = updateGarageDto.phone;
     if (updateGarageDto.email) updateData.email = updateGarageDto.email;
     if (updateGarageDto.street) updateData.street = updateGarageDto.street;

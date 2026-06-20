@@ -21,6 +21,7 @@ model Garage {
 
   description    String?
   certifications String[]
+  certificationFile String?
   weekdaysHours  String?
   weekendsHours  String?
   brandExpertise String[]

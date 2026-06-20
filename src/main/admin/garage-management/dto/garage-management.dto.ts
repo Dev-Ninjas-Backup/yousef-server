@@ -52,4 +52,12 @@ export class ReviewBrandExpertiseDto {
   @IsArray()
   @IsString({ each: true })
   brands: string[];
+
+  @ApiPropertyOptional({
+    description: 'Reason of rejection/decline',
+    example: 'Invalid certification uploaded',
+  })
+  @IsOptional()
+  @IsString()
+  reason?: string;
 }
