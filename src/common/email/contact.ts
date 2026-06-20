@@ -1,3 +1,17 @@
+const formatSubject = (
+  subject: string,
+  othersubject?: string | null,
+): string => {
+  if (subject === 'OTHERS' && othersubject) {
+    return othersubject;
+  }
+  if (!subject) return '';
+  return subject
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 export const ContactEmailTemplate = {
   contactAdmin: (payload: any) => `
   <div style="font-family: Arial, sans-serif; padding: 20px; background: #f6f9fc;">
@@ -18,7 +32,7 @@ export const ContactEmailTemplate = {
         </tr>
         <tr>
           <td style="font-weight: bold;">Subject:</td>
-          <td>${payload.subject}</td>
+          <td>${formatSubject(payload.subject, payload.othersubject)}</td>
         </tr>
       </table>
 
@@ -57,7 +71,7 @@ export const ContactEmailTemplate = {
         </tr>
         <tr>
           <td style="font-weight: bold;">Subject:</td>
-          <td>${payload.subject}</td>
+          <td>${formatSubject(payload.subject, payload.othersubject)}</td>
         </tr>
       </table>
 

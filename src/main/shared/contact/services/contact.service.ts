@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AppError } from 'src/common/error/handle-error.app';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import {
@@ -13,6 +14,8 @@ import { ContactSubject } from '@prisma/client';
 import { ContactEmailTemplate } from 'src/common/email/contact';
 import { ENVEnum } from 'src/common/enum/env.enum';
 import { CreateContactDto } from '../dto/create-subscribe.dto';
+import { EVENT_TYPES } from 'src/common/interface/events.name';
+import { CustomerInquiryAlertEvent } from 'src/common/interface/events-payload';
 
 @Injectable()
 export class ContactService {
@@ -22,8 +25,8 @@ export class ContactService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
-
   @HandleError('Failed to create contact message', 'Contact')
   async create(payload: CreateContactDto): Promise<TResponse<any>> {
     const contact = await this.prisma.contact.create({
@@ -62,9 +65,88 @@ export class ContactService {
       ContactEmailTemplate.contactUser(payload),
     );
 
+    try {
+      // -----------------------------------------
+      // Get recipients (admins or garage owners)
+      // -----------------------------------------
+      const recipients: { id: string; email: string }[] = [];
+
+      if (payload.garageOwnerId) {
+        const garageOwner = await this.prisma.user.findUnique({
+          where: { id: payload.garageOwnerId },
+          select: { id: true, email: true },
+        });
+        if (garageOwner) {
+          recipients.push({ id: garageOwner.id, email: garageOwner.email });
+        }
+      } else {
+        const admins = await this.prisma.user.findMany({
+          where: { role: 'SUPER_ADMIN', isDeleted: false },
+          select: { id: true, email: true },
+        });
+        recipients.push(...admins.map((a) => ({ id: a.id, email: a.email })));
+      }
+
+      if (recipients.length > 0) {
+        // Create Notification entry
+        const notification = await this.prisma.notification.create({
+          data: {
+            title: `New Inquiry: ${payload.FirstName} ${payload.LastName}`,
+            message: `${payload.email} sent an inquiry: ${payload.message.substring(0, 50)}...`,
+            type: 'CustomerInquiryAlert',
+            createdAt: new Date(),
+            meta: {
+              inquiryId: contact.id,
+              subject: payload.subject,
+              message: payload.message,
+              senderEmail: payload.email,
+              senderName: `${payload.FirstName} ${payload.LastName}`,
+              date: new Date().toISOString(),
+            },
+          },
+        });
+
+        // Create UserNotification records
+        await this.prisma.userNotification.createMany({
+          data: recipients.map((r) => ({
+            userId: r.id,
+            notificationId: notification.id,
+          })),
+          skipDuplicates: true,
+        });
+
+        // Emit Event for Real-time Notification
+        const eventPayload: CustomerInquiryAlertEvent = {
+          action: 'CREATE',
+          meta: {
+            title: payload.subject,
+            message: payload.message || '',
+            senderEmail: payload.email,
+            date: new Date().toISOString(),
+          },
+          info: {
+            Id: contact.id,
+            subject: payload.subject || '',
+            message: payload.message || '',
+            date: new Date().toISOString(),
+            recipients: recipients,
+          },
+        };
+
+        this.eventEmitter.emit(
+          EVENT_TYPES.CustomerInquiryAlert_CREATE,
+          eventPayload,
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        'Failed to create and emit notification for contact submission:',
+        err,
+      );
+    }
+
     return successResponse(contact, 'Contact message created successfully');
   }
-
   @HandleError('Failed to fetch support tickets', 'Contact')
   async findByGarageOwner(garageOwnerId: string): Promise<TResponse<any>> {
     const tickets = await this.prisma.contact.findMany({
@@ -185,6 +267,86 @@ export class ContactService {
           <p><strong>${contact.FirstName} ${contact.LastName}</strong> has replied to support ticket via email:</p>
           <blockquote>${content.replace(/\n/g, '<br>')}</blockquote>
         `,
+      );
+    }
+
+    try {
+      // -----------------------------------------
+      // Get recipients (admins or garage owners)
+      // -----------------------------------------
+      const recipients: { id: string; email: string }[] = [];
+
+      if (contact.garageOwnerId) {
+        const garageOwner = await this.prisma.user.findUnique({
+          where: { id: contact.garageOwnerId },
+          select: { id: true, email: true },
+        });
+        if (garageOwner) {
+          recipients.push({ id: garageOwner.id, email: garageOwner.email });
+        }
+      } else {
+        const admins = await this.prisma.user.findMany({
+          where: { role: 'SUPER_ADMIN', isDeleted: false },
+          select: { id: true, email: true },
+        });
+        recipients.push(...admins.map((a) => ({ id: a.id, email: a.email })));
+      }
+
+      if (recipients.length > 0) {
+        // Create Notification entry
+        const notification = await this.prisma.notification.create({
+          data: {
+            title: `Reply: ${contact.FirstName} ${contact.LastName}`,
+            message: `${contact.email} replied: ${content.substring(0, 50)}...`,
+            type: 'CustomerInquiryAlert',
+            createdAt: new Date(),
+            meta: {
+              inquiryId: contact.id,
+              subject: contact.subject,
+              message: content,
+              senderEmail: contact.email,
+              senderName: `${contact.FirstName} ${contact.LastName}`,
+              date: new Date().toISOString(),
+            },
+          },
+        });
+
+        // Create UserNotification records
+        await this.prisma.userNotification.createMany({
+          data: recipients.map((r) => ({
+            userId: r.id,
+            notificationId: notification.id,
+          })),
+          skipDuplicates: true,
+        });
+
+        // Emit Event for Real-time Notification
+        const eventPayload: CustomerInquiryAlertEvent = {
+          action: 'CREATE',
+          meta: {
+            title: `Reply on Inquiry`,
+            message: content,
+            senderEmail: contact.email,
+            date: new Date().toISOString(),
+          },
+          info: {
+            Id: contact.id,
+            subject: `Reply on Inquiry`,
+            message: content,
+            date: new Date().toISOString(),
+            recipients: recipients,
+          },
+        };
+
+        this.eventEmitter.emit(
+          EVENT_TYPES.CustomerInquiryAlert_CREATE,
+          eventPayload,
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        'Failed to create and emit notification for inbound email reply:',
+        err,
       );
     }
 
