@@ -120,4 +120,94 @@ export class ContactService {
 
     return successResponse(message, 'Reply submitted successfully');
   }
+
+  @HandleError('Failed to handle inbound email reply', 'Contact')
+  async handleInboundEmail(dto: {
+    from: string;
+    subject: string;
+    text?: string;
+    html?: string;
+    body?: string;
+  }): Promise<TResponse<any>> {
+    const subject = dto.subject || '';
+    const match = subject.match(/\[Ticket ID:\s*([0-9a-fA-F-]+)\]/i);
+    if (!match) {
+      throw new AppError(400, 'Ticket ID not found in subject line');
+    }
+    const ticketId = match[1];
+
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: ticketId },
+    });
+    if (!contact) {
+      throw new AppError(404, 'Ticket not found');
+    }
+
+    const fromRaw = dto.from || '';
+    const emailMatch = fromRaw.match(/<([^>]+)>/);
+    const senderEmail = emailMatch ? emailMatch[1].trim() : fromRaw.trim();
+
+    if (senderEmail.toLowerCase() !== contact.email.toLowerCase()) {
+      throw new AppError(403, 'Sender email does not match the ticket email');
+    }
+
+    let rawBody = dto.text || dto.body || '';
+    if (!rawBody && dto.html) {
+      rawBody = dto.html.replace(/<[^>]*>/g, ' ');
+    }
+    if (!rawBody.trim()) {
+      throw new AppError(400, 'Message content is empty');
+    }
+
+    const cleanedBody = this.cleanEmailBody(rawBody);
+    const content = cleanedBody.trim() || rawBody.trim();
+
+    const message = await this.prisma.message.create({
+      data: {
+        contactId: contact.id,
+        content,
+        isFromAdmin: false,
+        isForGrageAdmin: false,
+      },
+    });
+
+    await this.prisma.contact.update({
+      where: { id: contact.id },
+      data: { updatedAt: new Date() },
+    });
+
+    const adminEmail = this.configService.get<string>(ENVEnum.MAIL_USER);
+    if (adminEmail) {
+      await this.mailService.sendEmail(
+        adminEmail,
+        `New Reply on Support Ticket [Ticket ID: ${contact.id}]`,
+        `
+          <p><strong>${contact.FirstName} ${contact.LastName}</strong> has replied to support ticket via email:</p>
+          <blockquote>${content.replace(/\n/g, '<br>')}</blockquote>
+        `,
+      );
+    }
+
+    return successResponse(message, 'Inbound reply processed successfully');
+  }
+
+  private cleanEmailBody(text: string): string {
+    if (!text) return '';
+    const splitters = [
+      /\r?\nOn\s.*\swrote:/i,
+      /\r?\nOn\s.*,\s*at\s.*\swrote:/i,
+      /\r?\nOn\s.*,\s*.*,\s*wrote:/i,
+      /\r?\n-----Original Message-----/i,
+      /\r?\nFrom:/i,
+      /\r?\n__+/,
+    ];
+    let cleaned = text;
+    for (const splitter of splitters) {
+      const index = cleaned.search(splitter);
+      if (index !== -1) {
+        cleaned = cleaned.substring(0, index);
+      }
+    }
+    return cleaned.trim();
+  }
 }

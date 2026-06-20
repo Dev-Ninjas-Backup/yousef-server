@@ -77,12 +77,7 @@ export class UserManagementService {
         where: {
           isDeleted: false,
           role: { in: ['GARAGE_OWNER', 'CAR_OWNER'] },
-          OR: [
-            { isSubscribed: true },
-            { productMonthlyActive: true },
-            { isTrialActive: true },
-            { isSubscriptionTrialActive: true },
-          ],
+          OR: [{ isSubscribed: true }, { productMonthlyActive: true }],
         },
       }),
       // Subscribed garage owners
@@ -90,12 +85,7 @@ export class UserManagementService {
         where: {
           isDeleted: false,
           role: 'GARAGE_OWNER',
-          OR: [
-            { isSubscribed: true },
-            { productMonthlyActive: true },
-            { isTrialActive: true },
-            { isSubscriptionTrialActive: true },
-          ],
+          OR: [{ isSubscribed: true }, { productMonthlyActive: true }],
         },
       }),
       // Subscribed car owners
@@ -103,12 +93,7 @@ export class UserManagementService {
         where: {
           isDeleted: false,
           role: 'CAR_OWNER',
-          OR: [
-            { isSubscribed: true },
-            { productMonthlyActive: true },
-            { isTrialActive: true },
-            { isSubscriptionTrialActive: true },
-          ],
+          OR: [{ isSubscribed: true }, { productMonthlyActive: true }],
         },
       }),
     ]);

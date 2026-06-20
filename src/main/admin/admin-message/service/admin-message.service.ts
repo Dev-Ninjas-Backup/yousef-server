@@ -54,7 +54,7 @@ export class AdminMessageService {
     // 3. Send email to user
     await this.mailService.sendEmail(
       contact.email,
-      'Support Team Reply',
+      `Support Team Reply [Ticket ID: ${contact.id}]`,
       ContactEmailTemplate.adminReply({
         firstName: contact.FirstName,
         lastName: contact.LastName,

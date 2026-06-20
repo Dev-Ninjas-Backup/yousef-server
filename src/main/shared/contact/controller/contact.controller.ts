@@ -40,4 +40,21 @@ export class ContactController {
   ) {
     return this.contactService.replyTicket(dto.contactId, userId, dto.content);
   }
+
+  @ApiOperation({
+    summary: 'Webhook for inbound email replies from users/guests',
+  })
+  @Post('inbound-reply')
+  handleInboundReply(
+    @Body()
+    dto: {
+      from: string;
+      subject: string;
+      text?: string;
+      html?: string;
+      body?: string;
+    },
+  ) {
+    return this.contactService.handleInboundEmail(dto);
+  }
 }

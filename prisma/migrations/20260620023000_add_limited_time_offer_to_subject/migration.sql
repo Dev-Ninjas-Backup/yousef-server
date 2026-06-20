@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "ContactSubject" ADD VALUE 'LIMITED_TIME_OFFER';
