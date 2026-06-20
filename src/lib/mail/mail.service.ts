@@ -22,7 +22,7 @@ export class MailService {
   private getEmailTemplate(content: string): string {
     const logoUrl =
       this.configService.get<string>(ENVEnum.MAIL_LOGO_URL) ||
-      'https://your-default-logo-url.com/logo.png';
+      'https://yousef-frontend-teal.vercel.app/logo.png';
 
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
