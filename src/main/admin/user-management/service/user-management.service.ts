@@ -44,11 +44,15 @@ export class UserManagementService {
       activePaid,
       activeTrial,
       subscribedUsers,
+      subscribedGarages,
+      subscribedCarOwners,
     ] = await Promise.all([
       this.prisma.user.count({
         where: whereClause,
       }),
-      this.prisma.user.count({ where: { isDeleted: false } }),
+      this.prisma.user.count({
+        where: { isDeleted: false, role: { notIn: ['SUPER_ADMIN'] } },
+      }),
       this.prisma.user.count({
         where: { isDeleted: false, role: 'CAR_OWNER' },
       }),
@@ -73,6 +77,32 @@ export class UserManagementService {
         where: {
           isDeleted: false,
           role: { in: ['GARAGE_OWNER', 'CAR_OWNER'] },
+          OR: [
+            { isSubscribed: true },
+            { productMonthlyActive: true },
+            { isTrialActive: true },
+            { isSubscriptionTrialActive: true },
+          ],
+        },
+      }),
+      // Subscribed garage owners
+      this.prisma.user.count({
+        where: {
+          isDeleted: false,
+          role: 'GARAGE_OWNER',
+          OR: [
+            { isSubscribed: true },
+            { productMonthlyActive: true },
+            { isTrialActive: true },
+            { isSubscriptionTrialActive: true },
+          ],
+        },
+      }),
+      // Subscribed car owners
+      this.prisma.user.count({
+        where: {
+          isDeleted: false,
+          role: 'CAR_OWNER',
           OR: [
             { isSubscribed: true },
             { productMonthlyActive: true },
@@ -122,6 +152,9 @@ export class UserManagementService {
     const noSubscription =
       garageOwners + carOwners - (activePaid + activeTrial);
 
+    const nonSubscribedGarages = garageOwners - subscribedGarages;
+    const nonSubscribedCarOwners = carOwners - subscribedCarOwners;
+
     // Optional: rename _count.garages to garageCount
     const formattedUsers = users.map((user) => {
       let subscriptionType = 'None';
@@ -165,6 +198,12 @@ export class UserManagementService {
           activeTrial,
           subscribedUsers,
           noSubscription: noSubscription > 0 ? noSubscription : 0,
+          subscribedGarages,
+          nonSubscribedGarages:
+            nonSubscribedGarages > 0 ? nonSubscribedGarages : 0,
+          subscribedCarOwners,
+          nonSubscribedCarOwners:
+            nonSubscribedCarOwners > 0 ? nonSubscribedCarOwners : 0,
         },
       },
       'All users retrieved successfully',
