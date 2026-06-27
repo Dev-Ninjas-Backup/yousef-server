@@ -656,12 +656,19 @@ export class PaymentService {
         },
       });
 
+      const duration = session.metadata?.duration || '15';
+      const promotedUntil = new Date();
+      promotedUntil.setDate(
+        promotedUntil.getDate() + (duration === '7' ? 7 : 15),
+      );
+
       // Update product status to APPROVED and set promoted
       const product = await this.prisma.product.update({
         where: { id: productId },
         data: {
           status: 'APPROVED',
           isPromoted: true,
+          promotedUntil,
         },
       });
 
@@ -985,11 +992,11 @@ export class PaymentService {
     });
   }
 
-  // Create checkout session for product promotion (7 days or 30 days)
+  // Create checkout session for product promotion (7 days or 15 days)
   @HandleError('Failed to create promotion session')
   async createPromotionPaymentSession(
     userId: string,
-    duration: string = '30',
+    duration: string = '15',
   ): Promise<{ url: string }> {
     console.log(
       `🎯 Creating promotion session (${duration} days) for user:`,
@@ -1005,13 +1012,14 @@ export class PaymentService {
     }
 
     let price = 99;
-    let description = 'Promote your product listing for 30 days';
+    let description = 'Promote your product listing for 15 days';
 
     if (duration === '7') {
       price = Number(paymentConfig.promotionalAdPrice3Days || 49);
       description = 'Promote your product listing for 7 days';
     } else {
       price = Number(paymentConfig.promotionalAdPrice7Days || 99);
+      description = 'Promote your product listing for 15 days';
     }
 
     // Get user's available promotion credits (1 credit = 1 AED)

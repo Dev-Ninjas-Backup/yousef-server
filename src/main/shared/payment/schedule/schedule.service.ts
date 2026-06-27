@@ -102,6 +102,27 @@ export class ScheduleService {
       );
     }
 
+    // 4. Find all products whose promotion has expired
+    const expiredPromotions = await this.prisma.product.findMany({
+      where: {
+        isPromoted: true,
+        promotedUntil: { lte: now },
+      },
+    });
+
+    for (const product of expiredPromotions) {
+      await this.prisma.product.update({
+        where: { id: product.id },
+        data: {
+          isPromoted: false,
+          promotedUntil: null,
+        },
+      });
+      this.logger.log(
+        `Product promotion expired for product ${product.partName || product.id}`,
+      );
+    }
+
     this.logger.log(`Processed subscriptions check.`);
   }
 }

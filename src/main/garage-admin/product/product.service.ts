@@ -32,7 +32,7 @@ export class ProductService {
     files: Express.Multer.File[] = [],
     verificationImageFile?: Express.Multer.File,
   ) {
-    const promotedDuration = createProductDto.promotedDuration || '30';
+    const promotedDuration = createProductDto.promotedDuration || '15';
     const dto = createProductDto as any;
     delete dto.promotedDuration;
     delete dto.photos;
@@ -100,6 +100,14 @@ export class ProductService {
       promoPrice = Number(paymentConfig?.promotionalAdPrice3Days || 49);
     } else {
       promoPrice = Number(paymentConfig?.promotionalAdPrice7Days || 99);
+    }
+
+    let promotedUntil: Date | null = null;
+    if (isPromoted) {
+      promotedUntil = new Date();
+      promotedUntil.setDate(
+        promotedUntil.getDate() + (promotedDuration === '7' ? 7 : 15),
+      );
     }
 
     // Check promotion credit availability (but don't consume yet)
@@ -293,6 +301,7 @@ export class ProductService {
         photos: photoUrls,
         views: 0,
         promoCost: isPromoted ? String(promoPrice) : null,
+        promotedUntil,
         categoryId,
         expiresAt,
         ...productData,
@@ -529,6 +538,18 @@ export class ProductService {
           { createdAt: 'desc' },
         ];
     }
+
+    // Clean up expired promotions on the fly
+    await this.prisma.product.updateMany({
+      where: {
+        isPromoted: true,
+        promotedUntil: { lte: now },
+      },
+      data: {
+        isPromoted: false,
+        promotedUntil: null,
+      },
+    });
 
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
