@@ -50,6 +50,7 @@ export class InquiriesService {
             content: true,
             isFromAdmin: true,
             createdAt: true,
+            attachment: true,
           },
         },
       },
@@ -287,6 +288,7 @@ export class InquiriesService {
         contactId: dto.contactId,
         isForGrageAdmin: true,
         content: dto.content,
+        attachment: dto.attachment,
       },
     });
 

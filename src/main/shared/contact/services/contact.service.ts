@@ -82,7 +82,10 @@ export class ContactService {
         ContactEmailTemplate.contactUser(payload),
       );
     } catch (mailErr) {
-      this.logger.error('Failed to send contact form notification/confirmation emails:', mailErr);
+      this.logger.error(
+        'Failed to send contact form notification/confirmation emails:',
+        mailErr,
+      );
     }
 
     try {
@@ -222,7 +225,10 @@ export class ContactService {
           `,
         );
       } catch (mailErr) {
-        this.logger.error('Failed to send admin notification email for ticket reply:', mailErr);
+        this.logger.error(
+          'Failed to send admin notification email for ticket reply:',
+          mailErr,
+        );
       }
     }
 
