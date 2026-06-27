@@ -128,19 +128,62 @@ export class ProductService {
     const hasGarageMonthlyPlan =
       await this.paymentService.hasActiveMonthlySubscription(userId);
 
+    const limitUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        productMonthlyPlanType: true,
+        productMonthlyStartDate: true,
+      },
+    });
+
+    let isBasicLimitExceeded = false;
+    if (
+      hasProductMonthlyPlan &&
+      limitUser?.productMonthlyPlanType === 'BASIC'
+    ) {
+      const activeProductsCount = await this.prisma.product.count({
+        where: {
+          createdById: userId,
+          createdAt: {
+            gte: limitUser.productMonthlyStartDate ?? new Date(0),
+          },
+        },
+      });
+      if (activeProductsCount >= 10) {
+        isBasicLimitExceeded = true;
+      }
+    }
+
     const canCreateWithoutPayment =
       canUseFreeSlot ||
       hasPayPerCredit ||
-      hasProductMonthlyPlan ||
+      (hasProductMonthlyPlan && !isBasicLimitExceeded) ||
       hasGarageMonthlyPlan;
 
     // Validate plan selection against user's subscription status
-    if ((hasProductMonthlyPlan || hasGarageMonthlyPlan) && plan === 'PAY_PER') {
+    if (
+      ((hasProductMonthlyPlan && !isBasicLimitExceeded) ||
+        hasGarageMonthlyPlan) &&
+      plan === 'PAY_PER'
+    ) {
       throw new BadRequestException({
         message:
           'You have an active Monthly subscription. Cannot use PAY_PER plan.',
         code: 'INVALID_PLAN_SELECTION',
       });
+    }
+
+    // If Monthly plan limit is exceeded and they tried to use MONTHLY
+    if (isBasicLimitExceeded && plan === 'MONTHLY') {
+      if (!hasPayPerCredit) {
+        throw new BadRequestException({
+          message:
+            'You have reached the limit of 10 listings for your Basic Plan. You must pay 9 AED to add more listings.',
+          code: 'BASIC_PLAN_LIMIT_EXCEEDED',
+          amount: 9,
+          plan: 'PAY_PER',
+        });
+      }
     }
 
     // If no free slot, no credit, no active Product Monthly → force payment
@@ -174,7 +217,11 @@ export class ProductService {
     }
 
     // Consume pay-per-product credit if used
-    if (hasPayPerCredit && !canUseFreeSlot && !hasProductMonthlyPlan) {
+    if (
+      hasPayPerCredit &&
+      !canUseFreeSlot &&
+      (!hasProductMonthlyPlan || isBasicLimitExceeded)
+    ) {
       await this.paymentService.useProductCreationCredit(userId);
     }
 
@@ -224,15 +271,17 @@ export class ProductService {
 
     const expiresAt = new Date();
     if (productData.listingPlan === 'PAY_PER') {
-      expiresAt.setDate(expiresAt.getDate() + 45);
+      expiresAt.setDate(expiresAt.getDate() + 15);
+    } else if (productData.listingPlan === 'MONTHLY_BASIC') {
+      expiresAt.setDate(expiresAt.getDate() + 15);
     } else if (
-      productData.listingPlan === 'MONTHLY_BASIC' ||
       productData.listingPlan === 'MONTHLY_PRO' ||
       productData.listingPlan === 'MONTHLY_GARAGE'
     ) {
-      expiresAt.setDate(expiresAt.getDate() + 60);
-    } else {
       expiresAt.setDate(expiresAt.getDate() + 30);
+    } else {
+      // Free plan
+      expiresAt.setDate(expiresAt.getDate() + 15);
     }
 
     // Create product
@@ -907,15 +956,14 @@ export class ProductService {
       const expiresAt = new Date();
       const plan = updateData.listingPlan || product.listingPlan;
       if (plan === 'PAY_PER') {
-        expiresAt.setDate(expiresAt.getDate() + 45);
-      } else if (
-        plan === 'MONTHLY_BASIC' ||
-        plan === 'MONTHLY_PRO' ||
-        plan === 'MONTHLY_GARAGE'
-      ) {
-        expiresAt.setDate(expiresAt.getDate() + 60);
-      } else {
+        expiresAt.setDate(expiresAt.getDate() + 15);
+      } else if (plan === 'MONTHLY_BASIC') {
+        expiresAt.setDate(expiresAt.getDate() + 15);
+      } else if (plan === 'MONTHLY_PRO' || plan === 'MONTHLY_GARAGE') {
         expiresAt.setDate(expiresAt.getDate() + 30);
+      } else {
+        // Free plan
+        expiresAt.setDate(expiresAt.getDate() + 15);
       }
       updateData.expiresAt = expiresAt;
     }
@@ -1037,6 +1085,7 @@ export class ProductService {
         subscriptionTrialEndDate: true,
         productMonthlyActive: true,
         productMonthlyEndDate: true,
+        productMonthlyStartDate: true,
         promotionCredits: true,
         productMonthlyPlanType: true,
         productMonthlyPendingPlanType: true,
@@ -1054,6 +1103,8 @@ export class ProductService {
         productMonthlyPlanType: null,
         productMonthlyPendingPlanType: null,
         productMonthlyCancelAtPeriodEnd: false,
+        basicListingsUsed: 0,
+        basicListingsLimit: 10,
       };
     }
 
@@ -1099,6 +1150,18 @@ export class ProductService {
       new Date(user.productMonthlyEndDate) > now,
     );
 
+    let basicListingsUsed = 0;
+    if (hasProductMonthly && user.productMonthlyPlanType === 'BASIC') {
+      basicListingsUsed = await this.prisma.product.count({
+        where: {
+          createdById: userId,
+          createdAt: {
+            gte: user.productMonthlyStartDate ?? new Date(0),
+          },
+        },
+      });
+    }
+
     return {
       userId,
       userEmail: user.email,
@@ -1113,6 +1176,8 @@ export class ProductService {
       productMonthlyPlanType: user.productMonthlyPlanType,
       productMonthlyPendingPlanType: user.productMonthlyPendingPlanType,
       productMonthlyCancelAtPeriodEnd: user.productMonthlyCancelAtPeriodEnd,
+      basicListingsUsed,
+      basicListingsLimit: 10,
     };
   }
 
