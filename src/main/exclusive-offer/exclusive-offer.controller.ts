@@ -13,7 +13,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ValidateAdmin } from 'src/common/jwt/jwt.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
-import { FileService } from 'src/lib/file/file.service';
+import { S3FileService } from 'src/lib/s3file/s3file.service';
 import { ExclusiveOfferService } from './exclusive-offer.service';
 import { CreateExclusiveOfferDto } from './dto/create-exclusive-offer.dto';
 import { UpdateExclusiveOfferDto } from './dto/update-exclusive-offer.dto';
@@ -24,7 +24,7 @@ import { AppError } from 'src/common/error/handle-error.app';
 export class ExclusiveOfferController {
   constructor(
     private readonly exclusiveOfferService: ExclusiveOfferService,
-    private readonly fileService: FileService,
+    private readonly s3FileService: S3FileService,
   ) {}
 
   @ApiBearerAuth()
@@ -51,7 +51,7 @@ export class ExclusiveOfferController {
     if (!file) {
       throw new AppError(400, 'Banner image file is required');
     }
-    const processedFile = await this.fileService.processUploadedFile(file);
+    const processedFile = await this.s3FileService.processUploadedFile(file);
     return this.exclusiveOfferService.create(dto, processedFile.url);
   }
 
@@ -89,7 +89,7 @@ export class ExclusiveOfferController {
   ) {
     let bannerImageUrl: string | undefined = undefined;
     if (file) {
-      const processedFile = await this.fileService.processUploadedFile(file);
+      const processedFile = await this.s3FileService.processUploadedFile(file);
       bannerImageUrl = processedFile.url;
     }
     return this.exclusiveOfferService.update(id, dto, bannerImageUrl);

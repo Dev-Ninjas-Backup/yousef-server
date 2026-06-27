@@ -58,9 +58,10 @@ RUN pnpm prisma generate
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
-# Create non-root user
+# Create non-root user and directories
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs && \
+    mkdir -p /app/uploads /app/Uploads && \
     chown -R nestjs:nodejs /app
 
 # Switch to non-root user

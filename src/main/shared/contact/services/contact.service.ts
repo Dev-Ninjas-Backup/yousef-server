@@ -16,7 +16,7 @@ import { ENVEnum } from 'src/common/enum/env.enum';
 import { CreateContactDto } from '../dto/create-subscribe.dto';
 import { EVENT_TYPES } from 'src/common/interface/events.name';
 import { CustomerInquiryAlertEvent } from 'src/common/interface/events-payload';
-import { FileService } from 'src/lib/file/file.service';
+import { S3FileService } from 'src/lib/s3file/s3file.service';
 
 @Injectable()
 export class ContactService {
@@ -27,7 +27,7 @@ export class ContactService {
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
-    private readonly fileService: FileService,
+    private readonly s3FileService: S3FileService,
   ) {}
   @HandleError('Failed to create contact message', 'Contact')
   async create(
@@ -36,7 +36,7 @@ export class ContactService {
   ): Promise<TResponse<any>> {
     let attachmentUrl: string | null = null;
     if (file) {
-      const processedFile = await this.fileService.processUploadedFile(file);
+      const processedFile = await this.s3FileService.processUploadedFile(file);
       attachmentUrl = processedFile.url;
     }
 
