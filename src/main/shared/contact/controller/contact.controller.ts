@@ -58,10 +58,15 @@ export class ContactController {
   })
   @Post('reply')
   replyTicket(
-    @Body() dto: { contactId: string; content: string },
+    @Body() dto: { contactId: string; content: string; attachment?: string },
     @GetUser('userId') userId: string,
   ) {
-    return this.contactService.replyTicket(dto.contactId, userId, dto.content);
+    return this.contactService.replyTicket(
+      dto.contactId,
+      userId,
+      dto.content,
+      dto.attachment,
+    );
   }
 
   @ApiOperation({

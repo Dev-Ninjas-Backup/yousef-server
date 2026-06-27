@@ -48,6 +48,7 @@ export class AdminMessageService {
         contactId: dto.contactId,
         isFromAdmin: true,
         content: dto.content,
+        attachment: dto.attachment,
       },
     });
 

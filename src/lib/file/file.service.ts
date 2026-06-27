@@ -94,7 +94,7 @@ export class FileService {
 
     const filePath = path.join(uploadDir, filename);
 
-    const fileUrl = `${this.configService.getOrThrow<string>('+')}/files/${filename}`;
+    const fileUrl = `${this.configService.getOrThrow<string>('BASE_URL')}/files/${filename}`;
     // const fileUrl = `/files/${filename}`;
 
     if (file.path) {

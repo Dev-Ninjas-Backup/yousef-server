@@ -182,6 +182,7 @@ export class ContactService {
     contactId: string,
     garageOwnerId: string,
     content: string,
+    attachment?: string,
   ): Promise<TResponse<any>> {
     // 1. Verify ticket belongs to this garage owner
     const contact = await this.prisma.contact.findFirst({
@@ -199,6 +200,7 @@ export class ContactService {
         content,
         isFromAdmin: false,
         isForGrageAdmin: false,
+        attachment,
       },
     });
 

@@ -28,6 +28,7 @@ model Message {
   isForGrageAdmin Boolean @default(false)
 
   content   String
+  attachment String?
   createdAt DateTime @default(now())
 }
 
@@ -35,5 +36,6 @@ enum ContactSubject {
   CAR_PARTS
   CAR_SERVICE
   LIMITED_TIME_OFFER
+  EXCLUSIVE_OFFER
   OTHERS
 }
