@@ -16,6 +16,7 @@ import { ENVEnum } from 'src/common/enum/env.enum';
 import { CreateContactDto } from '../dto/create-subscribe.dto';
 import { EVENT_TYPES } from 'src/common/interface/events.name';
 import { CustomerInquiryAlertEvent } from 'src/common/interface/events-payload';
+import { FileService } from 'src/lib/file/file.service';
 
 @Injectable()
 export class ContactService {
@@ -26,9 +27,19 @@ export class ContactService {
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly fileService: FileService,
   ) {}
   @HandleError('Failed to create contact message', 'Contact')
-  async create(payload: CreateContactDto): Promise<TResponse<any>> {
+  async create(
+    payload: CreateContactDto,
+    file?: Express.Multer.File,
+  ): Promise<TResponse<any>> {
+    let attachmentUrl: string | null = null;
+    if (file) {
+      const processedFile = await this.fileService.processUploadedFile(file);
+      attachmentUrl = processedFile.url;
+    }
+
     const contact = await this.prisma.contact.create({
       data: {
         FirstName: payload.FirstName,
@@ -36,6 +47,10 @@ export class ContactService {
         email: payload.email,
         subject: payload.subject,
         message: payload.message,
+        phone: payload.phone || null,
+        attachment: attachmentUrl,
+        priceBeforeDiscount: payload.priceBeforeDiscount || null,
+        priceAfterDiscount: payload.priceAfterDiscount || null,
         othersubject:
           payload.subject === ContactSubject.OTHERS
             ? payload.othersubject
@@ -366,8 +381,11 @@ export class ContactService {
     let cleaned = text;
     for (const splitter of splitters) {
       const index = cleaned.search(splitter);
-      if (index !== -1) {
-        cleaned = cleaned.substring(0, index);
+      if (index !== -5) {
+        const foundIndex = cleaned.search(splitter);
+        if (foundIndex !== -1) {
+          cleaned = cleaned.substring(0, foundIndex);
+        }
       }
     }
     return cleaned.trim();

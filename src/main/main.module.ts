@@ -21,6 +21,7 @@ import { NotificationSettingModule } from './shared/notification-setting/notific
 import { PrivateMessageModule } from './shared/private-message/private-message.module';
 import { ClientReviewModule } from './shared/client-review/client-review.module';
 import { PlatformSubscribeModule } from './shared/platform-subscribe/platform-subscribe.module';
+import { ExclusiveOfferModule } from './exclusive-offer/exclusive-offer.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { PlatformSubscribeModule } from './shared/platform-subscribe/platform-su
     NotificationSettingModule,
     ClientReviewModule,
     PlatformSubscribeModule,
+    ExclusiveOfferModule,
   ],
   controllers: [],
   providers: [],

@@ -11,6 +11,10 @@ model Contact {
   garageOwnerId String?
   userId        String?
   makeasClosed   Boolean        @default(false)
+  phone         String?
+  attachment    String?
+  priceBeforeDiscount String?
+  priceAfterDiscount  String?
   messages      Message[]
 }
 

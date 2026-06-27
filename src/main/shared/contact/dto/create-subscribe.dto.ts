@@ -47,4 +47,28 @@ export class CreateContactDto {
   @IsString()
   @IsOptional()
   garageOwnerId?: string;
+
+  @ApiProperty({
+    example: '+971 6 543 5678',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @ApiProperty({
+    example: '150',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  priceBeforeDiscount?: string;
+
+  @ApiProperty({
+    example: '100',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  priceAfterDiscount?: string;
 }
