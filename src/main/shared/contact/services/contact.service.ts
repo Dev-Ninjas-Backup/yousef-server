@@ -66,19 +66,24 @@ export class ContactService {
       throw new AppError(400, 'Admin email not configured');
     }
 
-    // ----- Admin Notification Email -----
-    await this.mailService.sendEmail(
-      adminEmail,
-      'New Contact Form Submission',
-      ContactEmailTemplate.contactAdmin(payload),
-    );
+    // ----- Send Emails (Non-blocking) -----
+    try {
+      // ----- Admin Notification Email -----
+      await this.mailService.sendEmail(
+        adminEmail,
+        'New Contact Form Submission',
+        ContactEmailTemplate.contactAdmin(payload),
+      );
 
-    // ----- User Confirmation Email -----
-    await this.mailService.sendEmail(
-      payload.email,
-      'We Received Your Message',
-      ContactEmailTemplate.contactUser(payload),
-    );
+      // ----- User Confirmation Email -----
+      await this.mailService.sendEmail(
+        payload.email,
+        'We Received Your Message',
+        ContactEmailTemplate.contactUser(payload),
+      );
+    } catch (mailErr) {
+      this.logger.error('Failed to send contact form notification/confirmation emails:', mailErr);
+    }
 
     try {
       // -----------------------------------------
@@ -204,17 +209,21 @@ export class ContactService {
       },
     });
 
-    // 3. Send notification email to admin
+    // 3. Send notification email to admin (Non-blocking)
     const adminEmail = this.configService.get<string>(ENVEnum.MAIL_USER);
     if (adminEmail) {
-      await this.mailService.sendEmail(
-        adminEmail,
-        `New Reply on Support Ticket`,
-        `
-          <p><strong>${contact.FirstName} ${contact.LastName}</strong> has replied to support ticket:</p>
-          <blockquote>${content.replace(/\n/g, '<br>')}</blockquote>
-        `,
-      );
+      try {
+        await this.mailService.sendEmail(
+          adminEmail,
+          `New Reply on Support Ticket`,
+          `
+            <p><strong>${contact.FirstName} ${contact.LastName}</strong> has replied to support ticket:</p>
+            <blockquote>${content.replace(/\n/g, '<br>')}</blockquote>
+          `,
+        );
+      } catch (mailErr) {
+        this.logger.error('Failed to send admin notification email for ticket reply:', mailErr);
+      }
     }
 
     return successResponse(message, 'Reply submitted successfully');
