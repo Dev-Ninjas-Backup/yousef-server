@@ -91,6 +91,7 @@ export const ContactEmailTemplate = {
     firstName: string;
     lastName: string;
     content: string;
+    attachment?: string;
   }) => `
   <div style="font-family: Arial, sans-serif; padding: 20px; background: #f8fafc;">
     <div style="max-width: 600px; margin: auto; background: white; border-radius: 8px; padding: 25px; 
@@ -105,6 +106,17 @@ export const ContactEmailTemplate = {
         border-radius: 4px; font-size: 15px;">
         <p style="margin: 0; color: #1e293b;">${payload.content.replace(/\n/g, '<br>')}</p>
       </div>
+
+      ${
+        payload.attachment
+          ? `
+      <div style="margin: 20px 0; text-align: center;">
+        <p style="color: #475569; font-size: 14px; margin-bottom: 10px;">Attachment:</p>
+        <img src="${payload.attachment}" alt="Attachment" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;" />
+      </div>
+      `
+          : ''
+      }
 
       <p style="color: #64748b; font-size: 14px;">
         You can view the full conversation anytime by clicking the link in your confirmation email.

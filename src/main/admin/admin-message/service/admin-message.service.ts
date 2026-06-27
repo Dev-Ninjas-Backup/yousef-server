@@ -60,6 +60,7 @@ export class AdminMessageService {
         firstName: contact.FirstName,
         lastName: contact.LastName,
         content: dto.content,
+        attachment: dto.attachment,
       }),
     );
 

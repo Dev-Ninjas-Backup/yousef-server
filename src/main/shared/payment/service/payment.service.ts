@@ -565,6 +565,7 @@ export class PaymentService {
       }
     } else if (type === 'product_promotion_credit') {
       console.log('🎯 Processing promotion credit for user:', userId);
+      const duration = session.metadata?.duration || '15';
       // Create payment record for promotion credit
       await this.prisma.payment.create({
         data: {
@@ -576,6 +577,7 @@ export class PaymentService {
           paymentMethod: 'card',
           paymentType: 'PRODUCT_PROMOTION_CREDIT',
           userId,
+          planType: duration,
           // planId: null for custom payments
         },
       });
@@ -640,6 +642,7 @@ export class PaymentService {
         console.error('Failed to send email:', emailError);
       }
     } else if (type === 'product_promotion' && productId) {
+      const duration = session.metadata?.duration || '15';
       // Create payment record
       await this.prisma.payment.create({
         data: {
@@ -652,11 +655,11 @@ export class PaymentService {
           paymentType: 'PRODUCT_PROMOTION',
           userId,
           productId,
+          planType: duration,
           // planId: null for custom payments
         },
       });
 
-      const duration = session.metadata?.duration || '15';
       const promotedUntil = new Date();
       promotedUntil.setDate(
         promotedUntil.getDate() + (duration === '7' ? 7 : 15),
