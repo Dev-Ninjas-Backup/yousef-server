@@ -15,6 +15,7 @@ export interface GarageWithDistance {
   distance: number;
   address: string;
   profileImage: string | null;
+  userId: string;
   user: {
     fullName: string | null;
     phone: string | null;
@@ -209,6 +210,7 @@ export class LocationGarageService {
           distance: Number(distance.toFixed(2)),
           address: garage.address,
           profileImage: garage.profileImage,
+          userId: garage.userId,
           user: garage.user,
           reviews: (garage as any).reviews,
           averageRating: Number(averageRating.toFixed(1)),
