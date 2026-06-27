@@ -885,6 +885,129 @@ export class ProductService {
     }
 
     const dto = updateProductDto as any;
+
+    const wasDraft = product.status === 'DRAFT';
+    const isPublishing = wasDraft && dto.status === 'PENDING';
+
+    if (isPublishing) {
+      const paymentConfig = await this.prisma.paymentConfigure.findFirst();
+      if (!paymentConfig) {
+        throw new InternalServerErrorException(
+          'Platform payment configuration missing!',
+        );
+      }
+      const perPerListingPrice = Number(paymentConfig?.perListingPrice || 0);
+      const sparePartsMonthlySubscription = Number(
+        paymentConfig?.sparePartsMonthly || 0,
+      );
+
+      const plan = dto.plan || product.listingPlan || 'PAY_PER';
+      const userId = product.createdById;
+
+      const canUseFreeSlot =
+        await this.paymentService.canCreateFreeProduct(userId);
+      const hasPayPerCredit =
+        await this.paymentService.hasProductCreationCredits(userId);
+      const hasProductMonthlyPlan =
+        await this.paymentService.hasActiveProductMonthly(userId);
+      const hasGarageMonthlyPlan =
+        await this.paymentService.hasActiveMonthlySubscription(userId);
+
+      const limitUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          productMonthlyPlanType: true,
+          productMonthlyStartDate: true,
+        },
+      });
+
+      let isBasicLimitExceeded = false;
+      if (
+        hasProductMonthlyPlan &&
+        limitUser?.productMonthlyPlanType === 'BASIC'
+      ) {
+        const activeProductsCount = await this.prisma.product.count({
+          where: {
+            createdById: userId,
+            createdAt: {
+              gte: limitUser.productMonthlyStartDate ?? new Date(0),
+            },
+          },
+        });
+        if (activeProductsCount >= 10) {
+          isBasicLimitExceeded = true;
+        }
+      }
+
+      const canCreateWithoutPayment =
+        canUseFreeSlot ||
+        hasPayPerCredit ||
+        (hasProductMonthlyPlan && !isBasicLimitExceeded) ||
+        hasGarageMonthlyPlan;
+
+      if (
+        ((hasProductMonthlyPlan && !isBasicLimitExceeded) ||
+          hasGarageMonthlyPlan) &&
+        plan === 'PAY_PER'
+      ) {
+        throw new BadRequestException({
+          message:
+            'You have an active Monthly subscription. Cannot use PAY_PER plan.',
+          code: 'INVALID_PLAN_SELECTION',
+        });
+      }
+
+      if (isBasicLimitExceeded && plan === 'MONTHLY') {
+        if (!hasPayPerCredit) {
+          throw new BadRequestException({
+            message:
+              'You have reached the limit of 10 listings for your Basic Plan. You must pay 9 AED to add more listings.',
+            code: 'BASIC_PLAN_LIMIT_EXCEEDED',
+            amount: 9,
+            plan: 'PAY_PER',
+          });
+        }
+      }
+
+      if (!canCreateWithoutPayment) {
+        if (plan === 'PAY_PER') {
+          throw new BadRequestException({
+            message: `${perPerListingPrice}$ Pay-Per payment required to publish this product`,
+            code: 'PAY_PER_PAYMENT_REQUIRED',
+            amount: perPerListingPrice,
+            plan: 'PAY_PER',
+          });
+        }
+
+        if (plan === 'MONTHLY') {
+          throw new BadRequestException({
+            message: `${sparePartsMonthlySubscription}$ Product Monthly subscription required for unlimited listings`,
+            code: 'PRODUCT_MONTHLY_SUBSCRIPTION_REQUIRED',
+            amount: sparePartsMonthlySubscription,
+            plan: 'MONTHLY',
+          });
+        }
+
+        throw new BadRequestException(
+          'Free limit exceeded. Payment or subscription required to publish draft.',
+        );
+      }
+
+      // Consume free slot if used
+      if (canUseFreeSlot) {
+        await this.paymentService.incrementFreeProductCount(userId);
+      }
+
+      // Consume pay-per-product credit if used
+      if (
+        hasPayPerCredit &&
+        !canUseFreeSlot &&
+        (!hasProductMonthlyPlan || isBasicLimitExceeded)
+      ) {
+        await this.paymentService.useProductCreationCredit(userId);
+      }
+    }
+
     delete dto.promotedDuration;
     delete dto.photos;
     delete dto.verificationImage;
