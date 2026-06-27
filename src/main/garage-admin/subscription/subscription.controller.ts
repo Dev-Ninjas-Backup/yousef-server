@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   GetUser,
@@ -48,5 +48,26 @@ export class SubscriptionController {
   @ValidateGarageOwner()
   async cancelSubscription(@GetUser('userId') userId: string) {
     return this.subscriptionService.cancelSubscription(userId);
+  }
+
+  @Patch('downgrade-product-plan')
+  @ApiOperation({
+    summary: 'Downgrade active product monthly subscription on next renewal',
+  })
+  @ValidateAuth()
+  async downgradeProductPlan(
+    @GetUser('userId') userId: string,
+    @Body('planType') planType: string,
+  ) {
+    return this.subscriptionService.downgradeProductPlan(userId, planType);
+  }
+
+  @Patch('cancel-product-plan')
+  @ApiOperation({
+    summary: 'Cancel active product monthly subscription at period end',
+  })
+  @ValidateAuth()
+  async cancelProductMonthly(@GetUser('userId') userId: string) {
+    return this.subscriptionService.cancelProductMonthly(userId);
   }
 }

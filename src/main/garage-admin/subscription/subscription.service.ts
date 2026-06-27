@@ -22,6 +22,9 @@ export class SubscriptionService {
         subscriptionStartDate: true,
         subscriptionEndDate: true,
         nextSubscriptionBillingDate: true,
+        subscriptionCancelAtPeriodEnd: true,
+        productMonthlyPendingPlanType: true,
+        productMonthlyCancelAtPeriodEnd: true,
       },
     });
 
@@ -54,6 +57,9 @@ export class SubscriptionService {
         endDate: user.subscriptionTrialEndDate,
         daysRemaining,
         message: 'Free trial is currently active',
+        subscriptionCancelAtPeriodEnd: user.subscriptionCancelAtPeriodEnd,
+        productMonthlyPendingPlanType: user.productMonthlyPendingPlanType,
+        productMonthlyCancelAtPeriodEnd: user.productMonthlyCancelAtPeriodEnd,
       };
     }
 
@@ -81,6 +87,9 @@ export class SubscriptionService {
         nextBillingDate: user.nextSubscriptionBillingDate,
         daysRemaining,
         message: 'Paid subscription is active',
+        subscriptionCancelAtPeriodEnd: user.subscriptionCancelAtPeriodEnd,
+        productMonthlyPendingPlanType: user.productMonthlyPendingPlanType,
+        productMonthlyCancelAtPeriodEnd: user.productMonthlyCancelAtPeriodEnd,
       };
     }
 
@@ -91,6 +100,12 @@ export class SubscriptionService {
       planType: 'NONE',
       status: 'expired',
       message: 'No active plan. Subscription required.',
+      subscriptionCancelAtPeriodEnd:
+        user?.subscriptionCancelAtPeriodEnd ?? false,
+      productMonthlyPendingPlanType:
+        user?.productMonthlyPendingPlanType ?? null,
+      productMonthlyCancelAtPeriodEnd:
+        user?.productMonthlyCancelAtPeriodEnd ?? false,
     };
   }
 
@@ -192,13 +207,68 @@ export class SubscriptionService {
     await this.prisma.user.update({
       where: { id: userId },
       data: {
-        isSubscribed: false,
-        isSubscriptionTrialActive: false,
+        subscriptionCancelAtPeriodEnd: true,
       },
     });
 
     return {
-      message: 'Subscription cancelled successfully',
+      message: 'Subscription will be cancelled at the end of current period',
+      data: null,
+    };
+  }
+
+  async downgradeProductPlan(userId: string, planType: string): Promise<any> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    if (!user.productMonthlyActive) {
+      throw new AppError(
+        400,
+        'No active product monthly plan found to downgrade',
+      );
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        productMonthlyPendingPlanType: planType,
+      },
+    });
+
+    return {
+      message: `Plan will be downgraded to ${planType} on renewal`,
+      data: null,
+    };
+  }
+
+  async cancelProductMonthly(userId: string): Promise<any> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    if (!user.productMonthlyActive) {
+      throw new AppError(400, 'No active product monthly plan found');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        productMonthlyCancelAtPeriodEnd: true,
+      },
+    });
+
+    return {
+      message:
+        'Product monthly subscription will be cancelled at the end of period',
       data: null,
     };
   }

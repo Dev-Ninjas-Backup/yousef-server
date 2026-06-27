@@ -247,6 +247,7 @@ export class PaymentService {
           nextSubscriptionBillingDate: subscriptionEndDate,
           garageStatus: 'GARAGE_PAID_OWNER',
           isSubscriptionTrialActive: false, // End trial if active
+          subscriptionCancelAtPeriodEnd: false, // Reset cancellation flag
         },
       });
       console.log(
@@ -435,11 +436,11 @@ export class PaymentService {
       console.log('Processing PRODUCT MONTHLY subscription for user:', userId);
 
       const planNameParam = session.metadata?.planType || 'PRO';
-      const daysToAdd = planNameParam.toUpperCase() === 'BASIC' ? 60 : 30;
+      const daysToAdd = 30; // Strictly 30 days subscription
 
       const now = new Date();
       const endDate = new Date(now);
-      endDate.setDate(endDate.getDate() + daysToAdd); // Dynamically set 30 or 60 days subscription
+      endDate.setDate(endDate.getDate() + daysToAdd);
 
       // Payment record
       await this.prisma.payment.create({
@@ -465,6 +466,8 @@ export class PaymentService {
           productMonthlyStartDate: now,
           productMonthlyEndDate: endDate,
           productMonthlyPlanType: planNameParam,
+          productMonthlyPendingPlanType: null, // Clear pending downgrade plan type
+          productMonthlyCancelAtPeriodEnd: false, // Reset cancellation flag
         },
       });
 

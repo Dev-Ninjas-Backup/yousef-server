@@ -1039,6 +1039,8 @@ export class ProductService {
         productMonthlyEndDate: true,
         promotionCredits: true,
         productMonthlyPlanType: true,
+        productMonthlyPendingPlanType: true,
+        productMonthlyCancelAtPeriodEnd: true,
       },
     });
 
@@ -1050,6 +1052,8 @@ export class ProductService {
         hasGarageMonthly: false,
         hasProductMonthly: false,
         productMonthlyPlanType: null,
+        productMonthlyPendingPlanType: null,
+        productMonthlyCancelAtPeriodEnd: false,
       };
     }
 
@@ -1089,6 +1093,8 @@ export class ProductService {
       hasProductMonthly,
       productMonthlyEndsAt: user.productMonthlyEndDate,
       productMonthlyPlanType: user.productMonthlyPlanType,
+      productMonthlyPendingPlanType: user.productMonthlyPendingPlanType,
+      productMonthlyCancelAtPeriodEnd: user.productMonthlyCancelAtPeriodEnd,
     };
   }
 
