@@ -1075,10 +1075,26 @@ export class PaymentService {
 
     if (!user) return false;
 
-    return (
+    const isActive =
       user.productMonthlyActive === true &&
       user.productMonthlyEndDate !== null &&
-      new Date(user.productMonthlyEndDate) > new Date()
-    );
+      new Date(user.productMonthlyEndDate) > new Date();
+
+    if (
+      user.productMonthlyActive &&
+      user.productMonthlyEndDate &&
+      new Date(user.productMonthlyEndDate) <= new Date()
+    ) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          productMonthlyActive: false,
+          productMonthlyPendingPlanType: null,
+          productMonthlyCancelAtPeriodEnd: false,
+        },
+      });
+    }
+
+    return isActive;
   }
 }

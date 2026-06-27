@@ -14,11 +14,11 @@ export class ScheduleService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleExpiration() {
-    this.logger.log('Checking for expired MEMBER users...');
+    this.logger.log('Checking for expired subscription cycles...');
 
     const now = new Date();
 
-    // Find all MEMBERS whose subscription has ended
+    // 1. Find all MEMBERS whose subscription has ended
     const expiredMembers = await this.prisma.user.findMany({
       where: {
         role: 'MEMBER',
@@ -58,8 +58,50 @@ export class ScheduleService {
       }
     }
 
-    this.logger.log(
-      `Processed ${expiredMembers.length} expired premium members.`,
-    );
+    // 2. Find all users whose product monthly plan has ended
+    const expiredProductMonthly = await this.prisma.user.findMany({
+      where: {
+        productMonthlyActive: true,
+        productMonthlyEndDate: { lte: now },
+      },
+    });
+
+    for (const user of expiredProductMonthly) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          productMonthlyActive: false,
+          productMonthlyPendingPlanType: null,
+          productMonthlyCancelAtPeriodEnd: false,
+        },
+      });
+      this.logger.log(
+        `Product monthly plan expired for user ${user.email || user.id}`,
+      );
+    }
+
+    // 3. Find all users whose garage subscription has ended
+    const expiredGarageSubscriptions = await this.prisma.user.findMany({
+      where: {
+        isSubscribed: true,
+        subscriptionEndDate: { lte: now },
+      },
+    });
+
+    for (const user of expiredGarageSubscriptions) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isSubscribed: false,
+          subscriptionCancelAtPeriodEnd: false,
+          garageStatus: 'APPROVE',
+        },
+      });
+      this.logger.log(
+        `Garage subscription expired for user ${user.email || user.id}`,
+      );
+    }
+
+    this.logger.log(`Processed subscriptions check.`);
   }
 }

@@ -1063,6 +1063,24 @@ export class ProductService {
 
     const now = new Date();
 
+    if (
+      user.productMonthlyActive &&
+      user.productMonthlyEndDate &&
+      new Date(user.productMonthlyEndDate) <= now
+    ) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          productMonthlyActive: false,
+          productMonthlyPendingPlanType: null,
+          productMonthlyCancelAtPeriodEnd: false,
+        },
+      });
+      user.productMonthlyActive = false;
+      user.productMonthlyPendingPlanType = null;
+      user.productMonthlyCancelAtPeriodEnd = false;
+    }
+
     const hasGarageMonthly = Boolean(
       (user.isMembership &&
         user.subscriptionEndsAt &&
