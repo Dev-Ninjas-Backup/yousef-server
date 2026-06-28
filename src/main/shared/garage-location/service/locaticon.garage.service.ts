@@ -27,7 +27,7 @@ export interface GarageWithDistance {
   }[];
   averageRating: number;
   totalReviews: number;
-  services: { id: string; name: string; icon: string }[];
+  services: string[];
   isOpenNow: boolean;
 }
 
@@ -215,8 +215,7 @@ export class LocationGarageService {
           reviews: (garage as any).reviews,
           averageRating: Number(averageRating.toFixed(1)),
           totalReviews: (garage as any).reviews.length,
-          services:
-            (garage as any).services?.map((gs: any) => gs.service) || [],
+          services: garage.services || [],
           isOpenNow: this.isGarageOpen(
             garage.weekdaysHours,
             garage.weekendsHours,
@@ -295,7 +294,7 @@ export class LocationGarageService {
         profileImage: garage.profileImage,
         averageRating: Number(avg.toFixed(1)),
         totalReviews: (garage as any).reviews.length,
-        services: (garage as any).services.map((gs: any) => gs.service),
+        services: garage.services || [],
         isOpenNow: this.isGarageOpen(
           garage.weekdaysHours,
           garage.weekendsHours,
