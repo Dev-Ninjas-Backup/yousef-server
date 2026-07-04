@@ -15,6 +15,7 @@ model Contact {
   attachment    String?
   priceBeforeDiscount String?
   priceAfterDiscount  String?
+  offerDuration       String?
   messages      Message[]
 }
 

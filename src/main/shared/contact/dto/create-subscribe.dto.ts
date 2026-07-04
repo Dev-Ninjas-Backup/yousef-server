@@ -71,4 +71,12 @@ export class CreateContactDto {
   @IsString()
   @IsOptional()
   priceAfterDiscount?: string;
+
+  @ApiProperty({
+    example: '3 days',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  offerDuration?: string;
 }
