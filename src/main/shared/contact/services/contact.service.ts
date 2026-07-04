@@ -51,6 +51,7 @@ export class ContactService {
         attachment: attachmentUrl,
         priceBeforeDiscount: payload.priceBeforeDiscount || null,
         priceAfterDiscount: payload.priceAfterDiscount || null,
+        offerDuration: payload.offerDuration || null,
         othersubject:
           payload.subject === ContactSubject.OTHERS
             ? payload.othersubject
