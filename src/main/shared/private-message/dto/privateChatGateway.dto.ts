@@ -3,7 +3,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   IsArray,
-  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
@@ -22,8 +21,8 @@ export class SendPrivateMessageDto {
     example: 'Hey! How are you?',
   })
   @IsString()
-  @IsNotEmpty({ message: 'Content cannot be empty' })
-  content: string;
+  @IsOptional()
+  content?: string;
 
   @ApiPropertyOptional({
     description: 'Array of uploaded file URLs (max 10)',

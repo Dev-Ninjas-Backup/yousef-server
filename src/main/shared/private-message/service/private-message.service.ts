@@ -26,7 +26,7 @@ export class PrivateChatService {
   ) {
     const message = await this.prisma.privateMessage.create({
       data: {
-        content: dto.content,
+        content: dto.content || '',
         conversationId,
         senderId,
         ...(dto.files &&

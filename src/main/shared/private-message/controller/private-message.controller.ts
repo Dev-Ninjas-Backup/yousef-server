@@ -8,6 +8,7 @@ import {
   OnModuleInit,
   Param,
   Post,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -20,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { GetUser, ValidateAuth } from 'src/common/jwt/jwt.decorator';
 import { FileType, MulterService } from 'src/lib/multer/multer.service';
+import { S3FileService } from 'src/lib/s3file/s3file.service';
 import { SendPrivateMessageDto } from '../dto/privateChatGateway.dto';
 import { sendPrivateMessageSwaggerSchema } from '../dto/sendPrivateMessageSwaggerSchema';
 import { PrivateChatGateway } from '../privateChatGateway/privateChatGateway';
@@ -36,6 +38,7 @@ export class PrivateChatController implements OnModuleInit {
     private readonly privateService: PrivateChatService,
     @Inject(forwardRef(() => PrivateChatGateway))
     private readonly injectedGateway: PrivateChatGateway,
+    private readonly s3FileService: S3FileService,
   ) {}
 
   onModuleInit() {
@@ -87,10 +90,21 @@ export class PrivateChatController implements OnModuleInit {
     @Param('recipientId') recipientId: string,
     @Body() dto: SendPrivateMessageDto,
     @GetUser('userId') senderId: string,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
     if (recipientId === senderId) {
       throw new Error('Cannot send message to yourself');
     }
+
+    let fileUrls: string[] = [];
+    if (files && files.length > 0) {
+      const uploadPromises = files.map((file) =>
+        this.s3FileService.processUploadedFile(file),
+      );
+      const uploadResults = await Promise.all(uploadPromises);
+      fileUrls = uploadResults.map((r) => r.url);
+    }
+    dto.files = fileUrls;
 
     const conversation = await this.privateService.findOrCreateConversation(
       senderId,
