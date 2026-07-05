@@ -104,7 +104,9 @@ export class PrivateChatController implements OnModuleInit {
       const uploadResults = await Promise.all(uploadPromises);
       fileUrls = uploadResults.map((r) => r.url);
     }
-    dto.files = fileUrls;
+    if (fileUrls.length > 0) {
+      dto.files = fileUrls;
+    }
 
     const conversation = await this.privateService.findOrCreateConversation(
       senderId,
