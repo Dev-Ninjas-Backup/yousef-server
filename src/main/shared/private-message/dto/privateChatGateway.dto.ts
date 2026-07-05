@@ -1,5 +1,6 @@
 // src/private-chat/dto/send-private-message.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -33,6 +34,13 @@ export class SendPrivateMessageDto {
     ],
   })
   @IsOptional()
+  @Transform(({ obj }) => {
+    const rawFiles = obj['files[]'] || obj['files'];
+    if (rawFiles) {
+      return Array.isArray(rawFiles) ? rawFiles : [rawFiles];
+    }
+    return undefined;
+  })
   @IsArray()
   @ArrayMaxSize(10, { message: 'Maximum 10 files allowed' })
   @IsString({ each: true })
