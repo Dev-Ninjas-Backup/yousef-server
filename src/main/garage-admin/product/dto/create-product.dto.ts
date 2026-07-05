@@ -157,6 +157,14 @@ export class CreateProductDto {
   verificationImage?: any;
 
   @ApiPropertyOptional({
+    description: 'Status of the product (PENDING or DRAFT)',
+    example: 'PENDING',
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({
     description: 'ID of the garage this product belongs to',
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
