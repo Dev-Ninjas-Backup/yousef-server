@@ -1000,10 +1000,12 @@ export class PaymentService {
   async createPromotionPaymentSession(
     userId: string,
     duration: string = '15',
+    useCredits: boolean = true,
   ): Promise<{ url: string }> {
     console.log(
       `🎯 Creating promotion session (${duration} days) for user:`,
       userId,
+      `using credits: ${useCredits}`,
     );
 
     const paymentConfig = await this.prisma.paymentConfigure.findFirst();
@@ -1033,7 +1035,7 @@ export class PaymentService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    const userCredits = user.promotionCredits || 0;
+    const userCredits = useCredits ? user.promotionCredits || 0 : 0;
     const deduction = Math.min(price, userCredits);
     const amountToPay = price - deduction;
 
