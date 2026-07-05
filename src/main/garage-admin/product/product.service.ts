@@ -110,8 +110,10 @@ export class ProductService {
       );
     }
 
+    const isDraft = createProductDto.status === 'DRAFT';
+
     // Check promotion credit availability (but don't consume yet)
-    if (isPromoted) {
+    if (isPromoted && !isDraft) {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         select: { promotionCredits: true },
@@ -126,111 +128,119 @@ export class ProductService {
       }
     }
 
-    // Check if user can create product without new payment
-    const canUseFreeSlot =
-      await this.paymentService.canCreateFreeProduct(userId);
-    const hasPayPerCredit =
-      await this.paymentService.hasProductCreationCredits(userId);
-    const hasProductMonthlyPlan =
-      await this.paymentService.hasActiveProductMonthly(userId);
-    const hasGarageMonthlyPlan =
-      await this.paymentService.hasActiveMonthlySubscription(userId);
-
-    const limitUser = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        productMonthlyPlanType: true,
-        productMonthlyStartDate: true,
-      },
-    });
-
+    let canUseFreeSlot = false;
+    let hasPayPerCredit = false;
+    let hasProductMonthlyPlan = false;
+    let hasGarageMonthlyPlan = false;
     let isBasicLimitExceeded = false;
-    if (
-      hasProductMonthlyPlan &&
-      limitUser?.productMonthlyPlanType === 'BASIC'
-    ) {
-      const activeProductsCount = await this.prisma.product.count({
-        where: {
-          createdById: userId,
-          createdAt: {
-            gte: limitUser.productMonthlyStartDate ?? new Date(0),
-          },
+
+    if (!isDraft) {
+      // Check if user can create product without new payment
+      canUseFreeSlot = await this.paymentService.canCreateFreeProduct(userId);
+      hasPayPerCredit =
+        await this.paymentService.hasProductCreationCredits(userId);
+      hasProductMonthlyPlan =
+        await this.paymentService.hasActiveProductMonthly(userId);
+      hasGarageMonthlyPlan =
+        await this.paymentService.hasActiveMonthlySubscription(userId);
+
+      const limitUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          productMonthlyPlanType: true,
+          productMonthlyStartDate: true,
         },
       });
-      if (activeProductsCount >= 10) {
-        isBasicLimitExceeded = true;
+
+      if (
+        hasProductMonthlyPlan &&
+        limitUser?.productMonthlyPlanType === 'BASIC'
+      ) {
+        const activeProductsCount = await this.prisma.product.count({
+          where: {
+            createdById: userId,
+            createdAt: {
+              gte: limitUser.productMonthlyStartDate ?? new Date(0),
+            },
+          },
+        });
+        if (activeProductsCount >= 10) {
+          isBasicLimitExceeded = true;
+        }
       }
-    }
 
-    const canCreateWithoutPayment =
-      canUseFreeSlot ||
-      hasPayPerCredit ||
-      (hasProductMonthlyPlan && !isBasicLimitExceeded) ||
-      hasGarageMonthlyPlan;
+      const canCreateWithoutPayment =
+        canUseFreeSlot ||
+        hasPayPerCredit ||
+        (hasProductMonthlyPlan && !isBasicLimitExceeded) ||
+        hasGarageMonthlyPlan;
 
-    // Validate plan selection against user's subscription status
-    if (
-      ((hasProductMonthlyPlan && !isBasicLimitExceeded) ||
-        hasGarageMonthlyPlan) &&
-      plan === 'PAY_PER'
-    ) {
-      throw new BadRequestException({
-        message:
-          'You have an active Monthly subscription. Cannot use PAY_PER plan.',
-        code: 'INVALID_PLAN_SELECTION',
-      });
-    }
-
-    // If Monthly plan limit is exceeded and they tried to use MONTHLY
-    if (isBasicLimitExceeded && plan === 'MONTHLY') {
-      if (!hasPayPerCredit) {
+      // Validate plan selection against user's subscription status
+      if (
+        ((hasProductMonthlyPlan && !isBasicLimitExceeded) ||
+          hasGarageMonthlyPlan) &&
+        plan === 'PAY_PER'
+      ) {
         throw new BadRequestException({
           message:
-            'You have reached the limit of 10 listings for your Basic Plan. You must pay 9 AED to add more listings.',
-          code: 'BASIC_PLAN_LIMIT_EXCEEDED',
-          amount: 9,
-          plan: 'PAY_PER',
-        });
-      }
-    }
-
-    // If no free slot, no credit, no active Product Monthly → force payment
-    if (!canCreateWithoutPayment) {
-      if (plan === 'PAY_PER') {
-        throw new BadRequestException({
-          message: `${perPerListingPrice}$ Pay-Per payment required to create this product`,
-          code: 'PAY_PER_PAYMENT_REQUIRED',
-          amount: perPerListingPrice,
-          plan: 'PAY_PER',
+            'You have an active Monthly subscription. Cannot use PAY_PER plan.',
+          code: 'INVALID_PLAN_SELECTION',
         });
       }
 
-      if (plan === 'MONTHLY') {
-        throw new BadRequestException({
-          message: `${sparePartsMonthlySubscription}$ Product Monthly subscription required for unlimited listings`,
-          code: 'PRODUCT_MONTHLY_SUBSCRIPTION_REQUIRED',
-          amount: sparePartsMonthlySubscription,
-          plan: 'MONTHLY',
-        });
+      // If Monthly plan limit is exceeded and they tried to use MONTHLY
+      if (isBasicLimitExceeded && plan === 'MONTHLY') {
+        if (!hasPayPerCredit) {
+          throw new BadRequestException({
+            message:
+              'You have reached the limit of 10 listings for your Basic Plan. You must pay 9 AED to add more listings.',
+            code: 'BASIC_PLAN_LIMIT_EXCEEDED',
+            amount: 9,
+            plan: 'PAY_PER',
+          });
+        }
       }
 
-      throw new BadRequestException(
-        'Free limit exceeded. Payment or subscription required.',
-      );
+      // If no free slot, no credit, no active Product Monthly → force payment
+      if (!canCreateWithoutPayment) {
+        if (plan === 'PAY_PER') {
+          throw new BadRequestException({
+            message: `${perPerListingPrice}$ Pay-Per payment required to create this product`,
+            code: 'PAY_PER_PAYMENT_REQUIRED',
+            amount: perPerListingPrice,
+            plan: 'PAY_PER',
+          });
+        }
+
+        if (plan === 'MONTHLY') {
+          throw new BadRequestException({
+            message: `${sparePartsMonthlySubscription}$ Product Monthly subscription required for unlimited listings`,
+            code: 'PRODUCT_MONTHLY_SUBSCRIPTION_REQUIRED',
+            amount: sparePartsMonthlySubscription,
+            plan: 'MONTHLY',
+          });
+        }
+
+        throw new BadRequestException(
+          'Free limit exceeded. Payment or subscription required.',
+        );
+      }
     }
 
-    // Consume free slot if used
-    if (canUseFreeSlot) {
-      await this.paymentService.incrementFreeProductCount(userId);
-    }
+    if (!isDraft) {
+      // Consume free slot if used
+      if (canUseFreeSlot) {
+        await this.paymentService.incrementFreeProductCount(userId);
+      }
 
-    // Consume pay-per-product credit if used
-    if (
-      hasPayPerCredit &&
-      !canUseFreeSlot &&
-      (!hasProductMonthlyPlan || isBasicLimitExceeded)
-    ) {
-      await this.paymentService.useProductCreationCredit(userId);
+      // Consume pay-per-product credit if used
+      if (
+        hasPayPerCredit &&
+        !canUseFreeSlot &&
+        (!hasProductMonthlyPlan || isBasicLimitExceeded)
+      ) {
+        await this.paymentService.useProductCreationCredit(userId);
+      }
     }
 
     // Find or create seller
@@ -297,13 +307,13 @@ export class ProductService {
       data: {
         sellerId: seller.id,
         createdById: userId,
-        status: 'PENDING',
+        status: isDraft ? 'DRAFT' : 'PENDING',
         photos: photoUrls,
         views: 0,
-        promoCost: isPromoted ? String(promoPrice) : null,
-        promotedUntil,
+        promoCost: isPromoted && !isDraft ? String(promoPrice) : null,
+        promotedUntil: isDraft ? null : promotedUntil,
         categoryId,
-        expiresAt,
+        expiresAt: isDraft ? null : expiresAt,
         ...productData,
       },
       include: {
@@ -323,7 +333,7 @@ export class ProductService {
     });
 
     // Only consume promotion credit AFTER successful product creation
-    if (isPromoted) {
+    if (isPromoted && !isDraft) {
       await this.prisma.user.update({
         where: { id: userId },
         data: {
