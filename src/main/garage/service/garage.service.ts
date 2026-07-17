@@ -114,6 +114,41 @@ export class GarageService {
       data: garageData,
     });
 
+    // Notify Super Admins
+    try {
+      const admins = await this.prisma.user.findMany({
+        where: { role: 'SUPER_ADMIN', isDeleted: false },
+        select: { id: true, email: true },
+      });
+
+      if (admins.length > 0) {
+        const notification = await this.prisma.notification.create({
+          data: {
+            title: `New Garage Pending Approval`,
+            message: `A new garage "${garage.name}" has been created and is pending approval.`,
+            type: 'CustomerInquiryAlert',
+            createdAt: new Date(),
+            meta: {
+              isGarageApproval: true,
+              garageId: garage.id,
+              userId: userId,
+              date: new Date().toISOString(),
+            },
+          },
+        });
+
+        await this.prisma.userNotification.createMany({
+          data: admins.map((r) => ({
+            userId: r.id,
+            notificationId: notification.id,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to create admin notification for new garage:', err);
+    }
+
     //----------- Validate business rules ---------------------------
     if (garage.garageLat === null || garage.garageLng === null) {
       throw new ValidationException('Latitude and longitude are required', {

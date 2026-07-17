@@ -113,7 +113,7 @@ export class AuthService {
         if (!isNaN(parsedLng)) lng = parsedLng;
       }
 
-      await this.prisma.garage.create({
+      const garage = await this.prisma.garage.create({
         data: {
           name: garageName || 'My Garage',
           address: address || '',
@@ -132,6 +132,37 @@ export class AuthService {
           status: 'PENDING',
         },
       });
+
+      // Notify Super Admins
+      const admins = await this.prisma.user.findMany({
+        where: { role: 'SUPER_ADMIN', isDeleted: false },
+        select: { id: true, email: true },
+      });
+
+      if (admins.length > 0) {
+        const notification = await this.prisma.notification.create({
+          data: {
+            title: `New Garage Pending Approval`,
+            message: `A new garage "${garageName || 'My Garage'}" has been created during signup and is pending approval.`,
+            type: 'CustomerInquiryAlert',
+            createdAt: new Date(),
+            meta: {
+              isGarageApproval: true,
+              garageId: garage.id,
+              userId: newUser.id,
+              date: new Date().toISOString(),
+            },
+          },
+        });
+
+        await this.prisma.userNotification.createMany({
+          data: admins.map((r) => ({
+            userId: r.id,
+            notificationId: notification.id,
+          })),
+          skipDuplicates: true,
+        });
+      }
     }
 
     // Generate and store OTP

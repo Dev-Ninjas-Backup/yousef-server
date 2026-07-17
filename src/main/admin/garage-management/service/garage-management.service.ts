@@ -410,7 +410,19 @@ export class GarageManagementService {
       where: { id: userId },
       data: {
         isGarageVerified: true,
+        garageStatus: 'APPROVE',
         ...trialData,
+      },
+    });
+
+    // -------- Automatically approve all pending garages for this user ----------
+    await this.prisma.garage.updateMany({
+      where: {
+        userId: userId,
+        status: 'PENDING',
+      },
+      data: {
+        status: 'APPROVED',
       },
     });
 
