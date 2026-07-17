@@ -101,6 +101,39 @@ export class AuthService {
       },
     });
 
+    if (role === 'GARAGE_OWNER') {
+      let lat = 0;
+      let lng = 0;
+      if (userLat) {
+        const parsedLat = parseFloat(userLat);
+        if (!isNaN(parsedLat)) lat = parsedLat;
+      }
+      if (userLng) {
+        const parsedLng = parseFloat(userLng);
+        if (!isNaN(parsedLng)) lng = parsedLng;
+      }
+
+      await this.prisma.garage.create({
+        data: {
+          name: garageName || 'My Garage',
+          address: address || '',
+          city: city || '',
+          emirate: emirate || '',
+          garageLat: lat,
+          garageLng: lng,
+          profileImage: garageLogo ?? null,
+          certificationFile: tradeLicense ?? null,
+          services: Array.isArray(serviceCategories)
+            ? (serviceCategories as any)
+            : [],
+          userId: newUser.id,
+          garagePhone: phone || null,
+          email: email || null,
+          status: 'PENDING',
+        },
+      });
+    }
+
     // Generate and store OTP
     const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
     await this.prisma.user.update({
