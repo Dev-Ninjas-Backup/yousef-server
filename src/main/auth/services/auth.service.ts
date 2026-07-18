@@ -101,6 +101,70 @@ export class AuthService {
       },
     });
 
+    if (role === 'GARAGE_OWNER') {
+      let lat = 0;
+      let lng = 0;
+      if (userLat) {
+        const parsedLat = parseFloat(userLat);
+        if (!isNaN(parsedLat)) lat = parsedLat;
+      }
+      if (userLng) {
+        const parsedLng = parseFloat(userLng);
+        if (!isNaN(parsedLng)) lng = parsedLng;
+      }
+
+      const garage = await this.prisma.garage.create({
+        data: {
+          name: garageName || 'My Garage',
+          address: address || '',
+          city: city || '',
+          emirate: emirate || '',
+          garageLat: lat,
+          garageLng: lng,
+          profileImage: garageLogo ?? null,
+          certificationFile: tradeLicense ?? null,
+          services: Array.isArray(serviceCategories)
+            ? (serviceCategories as any)
+            : [],
+          userId: newUser.id,
+          garagePhone: phone || null,
+          email: email || null,
+          status: 'PENDING',
+        },
+      });
+
+      // Notify Super Admins
+      const admins = await this.prisma.user.findMany({
+        where: { role: 'SUPER_ADMIN', isDeleted: false },
+        select: { id: true, email: true },
+      });
+
+      if (admins.length > 0) {
+        const notification = await this.prisma.notification.create({
+          data: {
+            title: `New Garage Pending Approval`,
+            message: `A new garage "${garageName || 'My Garage'}" has been created during signup and is pending approval.`,
+            type: 'CustomerInquiryAlert',
+            createdAt: new Date(),
+            meta: {
+              isGarageApproval: true,
+              garageId: garage.id,
+              userId: newUser.id,
+              date: new Date().toISOString(),
+            },
+          },
+        });
+
+        await this.prisma.userNotification.createMany({
+          data: admins.map((r) => ({
+            userId: r.id,
+            notificationId: notification.id,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
     // Generate and store OTP
     const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
     await this.prisma.user.update({
