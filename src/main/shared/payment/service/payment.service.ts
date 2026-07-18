@@ -198,18 +198,43 @@ export class PaymentService {
     console.log('🔥 Webhook received - handleCheckoutSuccess');
     console.log('Session metadata:', session.metadata);
 
-    const { userId, type, productId, productName, amount } = session.metadata!;
+    const { userId, type, productId, productName, amount, garageId } =
+      session.metadata!;
 
     if (type === 'monthly_subscription') {
-      console.log('💰 Processing monthly subscription for user:', userId);
+      console.log(
+        '💰 Processing monthly subscription for user:',
+        userId,
+        'garage:',
+        garageId,
+      );
       const now = new Date();
       const subscriptionEndDate = new Date(now);
       subscriptionEndDate.setDate(subscriptionEndDate.getDate() + 30); // Strictly 30 days subscription
+
+      // Fetch user email and full name
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, fullName: true },
+      });
+
+      // Fetch garage name
+      let garageName = 'Your Garage';
+      if (garageId) {
+        const dbGarage = await this.prisma.garage.findUnique({
+          where: { id: garageId },
+          select: { name: true },
+        });
+        if (dbGarage) {
+          garageName = dbGarage.name;
+        }
+      }
 
       // Create GarageSubscription record
       const garageSub = await this.prisma.garageSubscription.create({
         data: {
           userId,
+          garageId: garageId || null,
           type: 'PAID',
           amount: parseInt(amount) * 100,
           currency: 'aed',
@@ -237,23 +262,47 @@ export class PaymentService {
         },
       });
 
-      // Update user's subscription status with new columns
-      const updatedUser = await this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          isSubscribed: true,
-          subscriptionStartDate: now,
-          subscriptionEndDate: subscriptionEndDate,
-          nextSubscriptionBillingDate: subscriptionEndDate,
-          garageStatus: 'GARAGE_PAID_OWNER',
-          isSubscriptionTrialActive: false, // End trial if active
-          subscriptionCancelAtPeriodEnd: false, // Reset cancellation flag
-        },
+      // Update specific Garage subscription fields
+      if (garageId) {
+        await this.prisma.garage.update({
+          where: { id: garageId },
+          data: {
+            isSubscribed: true,
+            subscriptionStartDate: now,
+            subscriptionEndDate: subscriptionEndDate,
+            nextSubscriptionBillingDate: subscriptionEndDate,
+            isSubscriptionTrialActive: false,
+            subscriptionCancelAtPeriodEnd: false,
+          },
+        });
+      }
+
+      // Update user's subscription status only if this is their first/default garage
+      const firstGarage = await this.prisma.garage.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true },
       });
+
+      if (!firstGarage || !garageId || firstGarage.id === garageId) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            isSubscribed: true,
+            subscriptionStartDate: now,
+            subscriptionEndDate: subscriptionEndDate,
+            nextSubscriptionBillingDate: subscriptionEndDate,
+            garageStatus: 'GARAGE_PAID_OWNER',
+            isSubscriptionTrialActive: false, // End trial if active
+            subscriptionCancelAtPeriodEnd: false, // Reset cancellation flag
+          },
+        });
+      }
+
       console.log(
-        '✅ User subscription activated:',
-        updatedUser.isSubscribed,
-        updatedUser.subscriptionEndDate,
+        '✅ Garage/User subscription activated:',
+        garageId,
+        subscriptionEndDate,
       );
 
       try {
@@ -307,19 +356,16 @@ export class PaymentService {
 
       // Send email notification
       try {
-        if (notification?.emailNotification) {
-          await this.mailService.sendPaymentConfirmationEmail(
-            updatedUser.email,
-            {
-              userName: updatedUser.fullName || 'Valued Customer',
-              paymentType: 'garage_monthly',
-              amount: parseInt(amount) * 100,
-              transactionId: session.payment_intent as string,
-              garageName: updatedUser.garageName as string,
-              startDate: now,
-              endDate: subscriptionEndDate,
-            },
-          );
+        if (notification?.emailNotification && user?.email) {
+          await this.mailService.sendPaymentConfirmationEmail(user.email, {
+            userName: user.fullName || 'Valued Customer',
+            paymentType: 'garage_monthly',
+            amount: parseInt(amount) * 100,
+            transactionId: session.payment_intent as string,
+            garageName: garageName,
+            startDate: now,
+            endDate: subscriptionEndDate,
+          });
         }
       } catch (emailError) {
         console.error('Failed to send email:', emailError);
@@ -764,9 +810,56 @@ export class PaymentService {
     });
   }
 
-  // Check if user has active monthly subscription
+  // Check if user has active monthly subscription (accepts optional garageId)
   @HandleError('Failed to check monthly subscription')
-  async hasActiveMonthlySubscription(userId: string): Promise<boolean> {
+  async hasActiveMonthlySubscription(
+    userId: string,
+    garageId?: string,
+  ): Promise<boolean> {
+    const now = new Date();
+
+    if (garageId) {
+      // Check Option 2: The specific garage has its own active subscription
+      const garage = await this.prisma.garage.findUnique({
+        where: { id: garageId },
+        select: {
+          id: true,
+          isSubscribed: true,
+          subscriptionEndDate: true,
+          isSubscriptionTrialActive: true,
+          subscriptionTrialEndDate: true,
+          subscriptionEndsAt: true,
+        },
+      });
+
+      if (garage) {
+        const isGarageOwnSubscribed =
+          (garage.isSubscribed &&
+            garage.subscriptionEndDate &&
+            new Date(garage.subscriptionEndDate) > now) ||
+          (garage.isSubscriptionTrialActive &&
+            garage.subscriptionTrialEndDate &&
+            new Date(garage.subscriptionTrialEndDate) > now) ||
+          (garage.subscriptionEndsAt &&
+            new Date(garage.subscriptionEndsAt) > now);
+
+        if (isGarageOwnSubscribed) return true;
+
+        // If not own-subscribed, verify if it is the first/default garage
+        const firstGarage = await this.prisma.garage.findFirst({
+          where: { userId },
+          orderBy: { createdAt: 'asc' },
+          select: { id: true },
+        });
+
+        if (firstGarage && firstGarage.id !== garage.id) {
+          // If it is NOT the first garage, and has no own subscription, it is not active!
+          return false;
+        }
+      }
+    }
+
+    // Default fallback: Check user-level subscription (which covers the user's first garage)
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -779,9 +872,7 @@ export class PaymentService {
       },
     });
 
-    if (!user) throw new NotFoundException('User not found');
-
-    const now = new Date();
+    if (!user) return false;
 
     // Check if user has membership, active subscription, or active trial subscription and hasn't expired
     return (
@@ -799,8 +890,32 @@ export class PaymentService {
 
   // Create checkout session for monthly plan ($99 or dynamic)
   @HandleError('Failed to create monthly plan session')
-  async createMonthlyPlanSession(userId: string): Promise<{ url: string }> {
-    console.log('💰 Creating monthly plan session for user:', userId);
+  async createMonthlyPlanSession(
+    userId: string,
+    garageId?: string,
+  ): Promise<{ url: string }> {
+    console.log(
+      '💰 Creating monthly plan session for user:',
+      userId,
+      'garage:',
+      garageId,
+    );
+
+    let targetGarageId = garageId;
+    if (!targetGarageId) {
+      const firstGarage = await this.prisma.garage.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true },
+      });
+      targetGarageId = firstGarage?.id;
+    }
+
+    if (!targetGarageId) {
+      throw new BadRequestException(
+        'No garage found to subscribe. Please create a garage first.',
+      );
+    }
 
     const paymentConfig = await this.prisma.paymentConfigure.findFirst();
     const garagePlanPrice = Number(paymentConfig?.monthlyGaragePrice || '99');
@@ -826,6 +941,7 @@ export class PaymentService {
 
       metadata: {
         userId,
+        garageId: targetGarageId,
         type: 'monthly_subscription',
         amount: String(garagePlanPrice),
       },

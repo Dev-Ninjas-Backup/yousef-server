@@ -253,8 +253,11 @@ export class ProductController {
     description:
       'Returns user product limit information including used and remaining free listings.',
   })
-  async getUserLimit(@GetUser('userId') userId: string) {
-    return this.productService.getUserProductLimit(userId);
+  async getUserLimit(
+    @GetUser('userId') userId: string,
+    @Query('garageId') garageId?: string,
+  ) {
+    return this.productService.getUserProductLimit(userId, garageId);
   }
 
   // Create checkout session for monthly plan

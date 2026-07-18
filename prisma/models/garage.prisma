@@ -33,8 +33,20 @@ model Garage {
   services String[]
   reviews  Review[]
   products Product[]
+  garageSubscriptions GarageSubscription[]
 
   requestedBrandExpertise String[] @default([])
+
+  // Subscription fields per garage
+  isSubscribed                  Boolean   @default(false)
+  subscriptionStartDate         DateTime?
+  subscriptionEndDate           DateTime?
+  nextSubscriptionBillingDate   DateTime?
+  subscriptionCancelAtPeriodEnd Boolean   @default(false)
+  isSubscriptionTrialActive     Boolean   @default(false)
+  subscriptionTrialStartDate    DateTime?
+  subscriptionTrialEndDate      DateTime?
+  subscriptionEndsAt            DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

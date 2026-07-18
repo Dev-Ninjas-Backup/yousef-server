@@ -47,6 +47,9 @@ model GarageSubscription {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
+  garageId String?
+  garage   Garage? @relation(fields: [garageId], references: [id])
+
   type            SubscriptionType // TRIAL or PAID
   amount          Int? // null for trial
   currency        String?

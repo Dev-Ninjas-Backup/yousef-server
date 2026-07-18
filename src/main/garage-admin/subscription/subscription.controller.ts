@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   GetUser,
@@ -18,8 +18,11 @@ export class SubscriptionController {
     summary: 'Get current plan & trial status for logged-in garage owner',
   })
   @ValidateAuth()
-  async getCurrentPlan(@GetUser('userId') userId: string) {
-    return this.subscriptionService.getCurrentPlan(userId);
+  async getCurrentPlan(
+    @GetUser('userId') userId: string,
+    @Query('garageId') garageId?: string,
+  ) {
+    return this.subscriptionService.getCurrentPlan(userId, garageId);
   }
 
   @Post('monthly-subscription')
@@ -28,8 +31,16 @@ export class SubscriptionController {
   })
   @ValidateAuth()
   @ValidateGarageOwner()
-  async subscribeMonthly(@GetUser('userId') userId: string) {
-    return this.subscriptionService.createMonthlySubscriptionSession(userId);
+  async subscribeMonthly(
+    @GetUser('userId') userId: string,
+    @Body('garageId') bodyGarageId?: string,
+    @Query('garageId') queryGarageId?: string,
+  ) {
+    const garageId = bodyGarageId || queryGarageId;
+    return this.subscriptionService.createMonthlySubscriptionSession(
+      userId,
+      garageId,
+    );
   }
 
   @Get('transaction-history')
@@ -46,8 +57,13 @@ export class SubscriptionController {
   })
   @ValidateAuth()
   @ValidateGarageOwner()
-  async cancelSubscription(@GetUser('userId') userId: string) {
-    return this.subscriptionService.cancelSubscription(userId);
+  async cancelSubscription(
+    @GetUser('userId') userId: string,
+    @Body('garageId') bodyGarageId?: string,
+    @Query('garageId') queryGarageId?: string,
+  ) {
+    const garageId = bodyGarageId || queryGarageId;
+    return this.subscriptionService.cancelSubscription(userId, garageId);
   }
 
   @Patch('downgrade-product-plan')

@@ -135,6 +135,18 @@ export class ProductService {
     let isBasicLimitExceeded = false;
 
     if (!isDraft) {
+      // Security Check: If listing under a garage, verify the garage ownership
+      if (productData.garageId) {
+        const garage = await this.prisma.garage.findUnique({
+          where: { id: productData.garageId },
+        });
+        if (!garage || garage.userId !== userId) {
+          throw new BadRequestException(
+            'Invalid garage specified or garage does not belong to you.',
+          );
+        }
+      }
+
       // Check if user can create product without new payment
       canUseFreeSlot = await this.paymentService.canCreateFreeProduct(userId);
       hasPayPerCredit =
@@ -142,7 +154,10 @@ export class ProductService {
       hasProductMonthlyPlan =
         await this.paymentService.hasActiveProductMonthly(userId);
       hasGarageMonthlyPlan =
-        await this.paymentService.hasActiveMonthlySubscription(userId);
+        await this.paymentService.hasActiveMonthlySubscription(
+          userId,
+          productData.garageId || undefined,
+        );
 
       const limitUser = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -914,6 +929,19 @@ export class ProductService {
       const plan = dto.plan || product.listingPlan || 'PAY_PER';
       const userId = product.createdById;
 
+      const targetGarageId = dto.garageId || product.garageId;
+      // Security Check: If listing under a garage, verify the garage ownership
+      if (targetGarageId) {
+        const garage = await this.prisma.garage.findUnique({
+          where: { id: targetGarageId },
+        });
+        if (!garage || garage.userId !== userId) {
+          throw new BadRequestException(
+            'Invalid garage specified or garage does not belong to you.',
+          );
+        }
+      }
+
       const canUseFreeSlot =
         await this.paymentService.canCreateFreeProduct(userId);
       const hasPayPerCredit =
@@ -921,7 +949,10 @@ export class ProductService {
       const hasProductMonthlyPlan =
         await this.paymentService.hasActiveProductMonthly(userId);
       const hasGarageMonthlyPlan =
-        await this.paymentService.hasActiveMonthlySubscription(userId);
+        await this.paymentService.hasActiveMonthlySubscription(
+          userId,
+          targetGarageId || undefined,
+        );
 
       const limitUser = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -1219,7 +1250,7 @@ export class ProductService {
   }
 
   // User limit status (now shows both Garage & Product Monthly plans)
-  async getUserProductLimit(userId: string) {
+  async getUserProductLimit(userId: string, garageId?: string) {
     const paymentConfig = await this.prisma.paymentConfigure.findFirst();
     const freePromotionalListings = Number(
       paymentConfig?.freePromotionalListings,
@@ -1286,17 +1317,11 @@ export class ProductService {
       user.productMonthlyCancelAtPeriodEnd = false;
     }
 
-    const hasGarageMonthly = Boolean(
-      (user.isMembership &&
-        user.subscriptionEndsAt &&
-        new Date(user.subscriptionEndsAt) > now) ||
-      (user.isSubscribed &&
-        user.subscriptionEndDate &&
-        new Date(user.subscriptionEndDate) > now) ||
-      (user.isSubscriptionTrialActive &&
-        user.subscriptionTrialEndDate &&
-        new Date(user.subscriptionTrialEndDate) > now),
-    );
+    const hasGarageMonthly =
+      await this.paymentService.hasActiveMonthlySubscription(
+        userId,
+        garageId || undefined,
+      );
 
     const hasProductMonthly = Boolean(
       user.productMonthlyActive &&

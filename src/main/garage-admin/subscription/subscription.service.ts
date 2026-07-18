@@ -10,14 +10,44 @@ export class SubscriptionService {
     private readonly paymentService: PaymentService,
   ) {}
 
-  async getCurrentPlan(userId: string) {
+  async getFirstGarageId(userId: string): Promise<string | undefined> {
+    const firstGarage = await this.prisma.garage.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+    return firstGarage?.id;
+  }
+
+  async getCurrentPlan(userId: string, garageId?: string) {
+    const targetGarageId = garageId || (await this.getFirstGarageId(userId));
+
+    if (!targetGarageId) {
+      return {
+        planType: 'NONE',
+        status: 'expired',
+        message: 'No garage found. Please create a garage first.',
+        subscriptionCancelAtPeriodEnd: false,
+        productMonthlyPendingPlanType: null,
+        productMonthlyCancelAtPeriodEnd: false,
+      };
+    }
+
+    const firstGarage = await this.prisma.garage.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+
+    const isFirstGarage = targetGarageId === firstGarage?.id;
+
+    // Fetch user and target garage info
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         subscriptionTrialStartDate: true,
         subscriptionTrialEndDate: true,
         isSubscriptionTrialActive: true,
-
         isSubscribed: true,
         subscriptionStartDate: true,
         subscriptionEndDate: true,
@@ -32,20 +62,111 @@ export class SubscriptionService {
       throw new NotFoundException('User not found');
     }
 
+    const garageObj = await this.prisma.garage.findUnique({
+      where: { id: targetGarageId },
+      select: {
+        subscriptionTrialStartDate: true,
+        subscriptionTrialEndDate: true,
+        isSubscriptionTrialActive: true,
+        isSubscribed: true,
+        subscriptionStartDate: true,
+        subscriptionEndDate: true,
+        nextSubscriptionBillingDate: true,
+        subscriptionCancelAtPeriodEnd: true,
+        subscriptionEndsAt: true,
+      },
+    });
+
+    if (!garageObj) {
+      throw new NotFoundException('Garage not found');
+    }
+
     const now = new Date();
+
+    // Determine subSource: if first garage, we can fall back to user-level sub if it is active.
+    let subSource: {
+      subscriptionTrialStartDate: Date | null;
+      subscriptionTrialEndDate: Date | null;
+      isSubscriptionTrialActive: boolean;
+      isSubscribed: boolean;
+      subscriptionStartDate: Date | null;
+      subscriptionEndDate: Date | null;
+      nextSubscriptionBillingDate: Date | null;
+      subscriptionCancelAtPeriodEnd: boolean;
+      subscriptionEndsAt?: Date | null;
+    };
+
+    if (isFirstGarage) {
+      const isUserActive =
+        (user.isSubscribed &&
+          user.subscriptionEndDate &&
+          new Date(user.subscriptionEndDate) > now) ||
+        (user.isSubscriptionTrialActive &&
+          user.subscriptionTrialEndDate &&
+          new Date(user.subscriptionTrialEndDate) > now);
+
+      const isGarageActive =
+        (garageObj.isSubscribed &&
+          garageObj.subscriptionEndDate &&
+          new Date(garageObj.subscriptionEndDate) > now) ||
+        (garageObj.isSubscriptionTrialActive &&
+          garageObj.subscriptionTrialEndDate &&
+          new Date(garageObj.subscriptionTrialEndDate) > now) ||
+        (garageObj.subscriptionEndsAt &&
+          new Date(garageObj.subscriptionEndsAt) > now);
+
+      if (isUserActive || !isGarageActive) {
+        subSource = {
+          subscriptionTrialStartDate: user.subscriptionTrialStartDate,
+          subscriptionTrialEndDate: user.subscriptionTrialEndDate,
+          isSubscriptionTrialActive: user.isSubscriptionTrialActive,
+          isSubscribed: user.isSubscribed,
+          subscriptionStartDate: user.subscriptionStartDate,
+          subscriptionEndDate: user.subscriptionEndDate,
+          nextSubscriptionBillingDate: user.nextSubscriptionBillingDate,
+          subscriptionCancelAtPeriodEnd: user.subscriptionCancelAtPeriodEnd,
+        };
+      } else {
+        subSource = {
+          subscriptionTrialStartDate: garageObj.subscriptionTrialStartDate,
+          subscriptionTrialEndDate: garageObj.subscriptionTrialEndDate,
+          isSubscriptionTrialActive: garageObj.isSubscriptionTrialActive,
+          isSubscribed: garageObj.isSubscribed,
+          subscriptionStartDate: garageObj.subscriptionStartDate,
+          subscriptionEndDate: garageObj.subscriptionEndDate,
+          nextSubscriptionBillingDate: garageObj.nextSubscriptionBillingDate,
+          subscriptionCancelAtPeriodEnd:
+            garageObj.subscriptionCancelAtPeriodEnd,
+          subscriptionEndsAt: garageObj.subscriptionEndsAt,
+        };
+      }
+    } else {
+      subSource = {
+        subscriptionTrialStartDate: garageObj.subscriptionTrialStartDate,
+        subscriptionTrialEndDate: garageObj.subscriptionTrialEndDate,
+        isSubscriptionTrialActive: garageObj.isSubscriptionTrialActive,
+        isSubscribed: garageObj.isSubscribed,
+        subscriptionStartDate: garageObj.subscriptionStartDate,
+        subscriptionEndDate: garageObj.subscriptionEndDate,
+        nextSubscriptionBillingDate: garageObj.nextSubscriptionBillingDate,
+        subscriptionCancelAtPeriodEnd: garageObj.subscriptionCancelAtPeriodEnd,
+        subscriptionEndsAt: garageObj.subscriptionEndsAt,
+      };
+    }
 
     // -------------------------------
     // 1. ACTIVE TRIAL
     // -------------------------------
     if (
-      user.isSubscriptionTrialActive &&
-      user.subscriptionTrialEndDate &&
-      user.subscriptionTrialEndDate > now
+      subSource.isSubscriptionTrialActive &&
+      subSource.subscriptionTrialEndDate &&
+      new Date(subSource.subscriptionTrialEndDate) > now
     ) {
       const daysRemaining = Math.max(
         0,
         Math.ceil(
-          (user.subscriptionTrialEndDate.getTime() - now.getTime()) /
+          (new Date(subSource.subscriptionTrialEndDate).getTime() -
+            now.getTime()) /
             (1000 * 60 * 60 * 24),
         ),
       );
@@ -53,11 +174,11 @@ export class SubscriptionService {
       return {
         planType: 'TRIAL',
         status: 'active',
-        startDate: user.subscriptionTrialStartDate,
-        endDate: user.subscriptionTrialEndDate,
+        startDate: subSource.subscriptionTrialStartDate,
+        endDate: subSource.subscriptionTrialEndDate,
         daysRemaining,
         message: 'Free trial is currently active',
-        subscriptionCancelAtPeriodEnd: user.subscriptionCancelAtPeriodEnd,
+        subscriptionCancelAtPeriodEnd: subSource.subscriptionCancelAtPeriodEnd,
         productMonthlyPendingPlanType: user.productMonthlyPendingPlanType,
         productMonthlyCancelAtPeriodEnd: user.productMonthlyCancelAtPeriodEnd,
       };
@@ -66,15 +187,21 @@ export class SubscriptionService {
     // -------------------------------
     // 2. ACTIVE PAID SUBSCRIPTION
     // -------------------------------
-    if (
-      user.isSubscribed &&
-      user.subscriptionEndDate &&
-      user.subscriptionEndDate > now
-    ) {
+    const isPaidActive =
+      (subSource.isSubscribed &&
+        subSource.subscriptionEndDate &&
+        new Date(subSource.subscriptionEndDate) > now) ||
+      (subSource.subscriptionEndsAt &&
+        new Date(subSource.subscriptionEndsAt) > now);
+
+    const activeEndDate =
+      subSource.subscriptionEndDate || subSource.subscriptionEndsAt;
+
+    if (isPaidActive && activeEndDate) {
       const daysRemaining = Math.max(
         0,
         Math.ceil(
-          (user.subscriptionEndDate.getTime() - now.getTime()) /
+          (new Date(activeEndDate).getTime() - now.getTime()) /
             (1000 * 60 * 60 * 24),
         ),
       );
@@ -82,12 +209,14 @@ export class SubscriptionService {
       return {
         planType: 'PAID',
         status: 'active',
-        startDate: user.subscriptionStartDate,
-        endDate: user.subscriptionEndDate,
-        nextBillingDate: user.nextSubscriptionBillingDate,
+        startDate:
+          subSource.subscriptionStartDate ||
+          subSource.subscriptionTrialStartDate,
+        endDate: activeEndDate,
+        nextBillingDate: subSource.nextSubscriptionBillingDate || activeEndDate,
         daysRemaining,
         message: 'Paid subscription is active',
-        subscriptionCancelAtPeriodEnd: user.subscriptionCancelAtPeriodEnd,
+        subscriptionCancelAtPeriodEnd: subSource.subscriptionCancelAtPeriodEnd,
         productMonthlyPendingPlanType: user.productMonthlyPendingPlanType,
         productMonthlyCancelAtPeriodEnd: user.productMonthlyCancelAtPeriodEnd,
       };
@@ -101,19 +230,19 @@ export class SubscriptionService {
       status: 'expired',
       message: 'No active plan. Subscription required.',
       subscriptionCancelAtPeriodEnd:
-        user?.subscriptionCancelAtPeriodEnd ?? false,
-      productMonthlyPendingPlanType:
-        user?.productMonthlyPendingPlanType ?? null,
+        subSource.subscriptionCancelAtPeriodEnd ?? false,
+      productMonthlyPendingPlanType: user.productMonthlyPendingPlanType ?? null,
       productMonthlyCancelAtPeriodEnd:
-        user?.productMonthlyCancelAtPeriodEnd ?? false,
+        user.productMonthlyCancelAtPeriodEnd ?? false,
     };
   }
 
   // Create monthly subscription session ($100)
   async createMonthlySubscriptionSession(
     userId: string,
+    garageId?: string,
   ): Promise<{ url: string }> {
-    return this.paymentService.createMonthlyPlanSession(userId);
+    return this.paymentService.createMonthlyPlanSession(userId, garageId);
   }
 
   // Get garage subscription history for a user
@@ -189,7 +318,21 @@ export class SubscriptionService {
 
   // Cancel subscription for user model with isSubscribed & isSubscriptionTrialActive set to false
 
-  async cancelSubscription(userId: string): Promise<any> {
+  async cancelSubscription(userId: string, garageId?: string): Promise<any> {
+    const targetGarageId = garageId || (await this.getFirstGarageId(userId));
+
+    if (!targetGarageId) {
+      throw new AppError(404, 'No garage found to cancel subscription for.');
+    }
+
+    const garage = await this.prisma.garage.findUnique({
+      where: { id: targetGarageId },
+    });
+
+    if (!garage || garage.userId !== userId) {
+      throw new AppError(404, 'Garage not found or does not belong to you.');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -198,18 +341,41 @@ export class SubscriptionService {
       throw new AppError(404, 'User not found');
     }
 
-    // user not subscription
-    if (!user.isSubscribed && !user.isSubscriptionTrialActive) {
-      throw new AppError(400, 'No active subscription found');
+    const firstGarage = await this.prisma.garage.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+
+    const isFirstGarage = targetGarageId === firstGarage?.id;
+
+    // Check subscription status
+    const isGarageActive =
+      garage.isSubscribed ||
+      garage.isSubscriptionTrialActive ||
+      (isFirstGarage && (user.isSubscribed || user.isSubscriptionTrialActive));
+
+    if (!isGarageActive) {
+      throw new AppError(400, 'No active subscription found for this garage');
     }
 
-    // Subscription Status Update
-    await this.prisma.user.update({
-      where: { id: userId },
+    // Cancel on Garage model
+    await this.prisma.garage.update({
+      where: { id: targetGarageId },
       data: {
         subscriptionCancelAtPeriodEnd: true,
       },
     });
+
+    // If first garage, also cancel on User model
+    if (isFirstGarage) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          subscriptionCancelAtPeriodEnd: true,
+        },
+      });
+    }
 
     return {
       message: 'Subscription will be cancelled at the end of current period',
