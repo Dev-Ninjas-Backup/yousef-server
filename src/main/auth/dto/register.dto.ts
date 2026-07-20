@@ -27,9 +27,9 @@ export class RegisterDto {
   @IsNotEmpty()
   phone: string;
 
-  @ApiProperty({ example: '12345678', minLength: 6 })
+  @ApiProperty({ example: '12345678', minLength: 8 })
   @IsNotEmpty()
-  @MinLength(6)
+  @MinLength(8)
   password: string;
 
   @ApiProperty({ example: '12345678' })
