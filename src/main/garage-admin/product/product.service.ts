@@ -112,8 +112,21 @@ export class ProductService {
 
     const isDraft = createProductDto.status === 'DRAFT';
 
+    const shouldUseCredits =
+      dto.useCredits !== false &&
+      dto.useCredits !== 'false' &&
+      dto.usePromotionCredits !== false &&
+      dto.usePromotionCredits !== 'false';
+
     // Check promotion credit availability (but don't consume yet)
     if (isPromoted && !isDraft) {
+      if (!shouldUseCredits) {
+        throw new BadRequestException({
+          message: `${promoPrice} AED payment required for product promotion.`,
+          code: 'PROMOTION_PAYMENT_REQUIRED',
+          amount: promoPrice,
+        });
+      }
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         select: { promotionCredits: true },
@@ -348,7 +361,7 @@ export class ProductService {
     });
 
     // Only consume promotion credit AFTER successful product creation
-    if (isPromoted && !isDraft) {
+    if (isPromoted && !isDraft && shouldUseCredits) {
       await this.prisma.user.update({
         where: { id: userId },
         data: {

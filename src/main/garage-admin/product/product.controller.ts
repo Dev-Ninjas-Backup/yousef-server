@@ -303,10 +303,15 @@ export class ProductController {
   })
   async createPromotionPayment(
     @GetUser('userId') userId: string,
-    @Body() body: { duration?: string; useCredits?: boolean },
+    @Body() body: any,
   ) {
     const duration = body?.duration || '7';
-    const useCredits = body?.useCredits !== false;
+    const rawUseCredits = body?.useCredits ?? body?.usePromotionCredits;
+    const useCredits =
+      rawUseCredits !== false &&
+      rawUseCredits !== 'false' &&
+      rawUseCredits !== 0 &&
+      rawUseCredits !== '0';
     return this.paymentService.createPromotionPaymentSession(
       userId,
       duration,

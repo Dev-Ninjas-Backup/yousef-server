@@ -142,6 +142,24 @@ export class CreateProductDto {
   promotedDuration?: string;
 
   @ApiPropertyOptional({
+    description: 'Whether to use available promotion credits',
+    example: true,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  useCredits?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Alias for useCredits',
+    example: true,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  usePromotionCredits?: boolean;
+
+  @ApiPropertyOptional({
     type: 'array',
     items: { type: 'string', format: 'binary' },
     description: 'Product photos (max 5 files)',
