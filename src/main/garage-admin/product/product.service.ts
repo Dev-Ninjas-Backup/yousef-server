@@ -33,10 +33,15 @@ export class ProductService {
     verificationImageFile?: Express.Multer.File,
   ) {
     const promotedDuration = createProductDto.promotedDuration || '15';
-    const dto = createProductDto as any;
+    const rawUseCredits = (createProductDto as any).useCredits;
+    const rawUsePromotionCredits = (createProductDto as any)
+      .usePromotionCredits;
+    const dto = { ...createProductDto } as any;
     delete dto.promotedDuration;
     delete dto.photos;
     delete dto.verificationImage;
+    delete dto.useCredits;
+    delete dto.usePromotionCredits;
 
     const {
       sellerEmail,
@@ -113,10 +118,10 @@ export class ProductService {
     const isDraft = createProductDto.status === 'DRAFT';
 
     const shouldUseCredits =
-      dto.useCredits !== false &&
-      dto.useCredits !== 'false' &&
-      dto.usePromotionCredits !== false &&
-      dto.usePromotionCredits !== 'false';
+      rawUseCredits !== false &&
+      rawUseCredits !== 'false' &&
+      rawUsePromotionCredits !== false &&
+      rawUsePromotionCredits !== 'false';
 
     // Check promotion credit availability (but don't consume yet)
     if (isPromoted && !isDraft) {
