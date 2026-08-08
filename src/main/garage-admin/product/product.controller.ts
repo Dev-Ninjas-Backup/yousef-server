@@ -78,21 +78,16 @@ export class ProductController {
         photoFiles,
         verificationImageFile,
       );
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Error creating product:', error);
       if (error instanceof HttpException) {
         throw error;
       }
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException ||
-        error.message?.includes('validation') ||
-        error.message?.includes('Payment required') ||
-        error.message?.includes('subscription required') ||
-        error.message?.includes('User not found')
-      ) {
-        throw new BadRequestException(error.message || error);
-      }
-      throw new InternalServerErrorException('Failed to create product');
+      const errorMessage =
+        typeof error === 'string'
+          ? error
+          : error?.message || 'Failed to create product';
+      throw new BadRequestException(errorMessage);
     }
   }
 
