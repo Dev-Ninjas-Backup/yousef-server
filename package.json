@@ -6,9 +6,9 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "node api.js && node init && nest build",
-    "start": "node api.js && node init && nest start",
-    "dev": "node api.js && node init && nest start --watch",
+    "build": "node init && nest build",
+    "start": "node init && nest start",
+    "dev": "node init && nest start --watch",
     "start:debug": "node init && nest start --debug --watch",
     "start:prod": "node init && node dist/src/main.js",
     "start:docker": "node init && prisma generate && prisma migrate deploy && node dist/src/main.js",
